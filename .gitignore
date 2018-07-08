@@ -3,3 +3,4 @@
 .python-version
 .vscode
 pysh.egg-info
+**/__pycache__/
