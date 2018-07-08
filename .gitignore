@@ -1,0 +1,5 @@
+.eggs
+.pytest_cache/
+.python-version
+.vscode
+pysh.egg-info
