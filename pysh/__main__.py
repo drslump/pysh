@@ -1,4 +1,5 @@
-"""
+#XXX assign to a variable to make it compatible with stickytape
+DOCOPT = """
 pysh -- Python for shell scripting
 
 Usage:
@@ -16,6 +17,7 @@ Options:
   --version               Show version.
 """
 import sys
+
 import platform
 from docopt import docopt
 
@@ -32,7 +34,7 @@ def main(argv=None):
         platform.system(),
         platform.machine())
 
-    args = docopt(__doc__, version=version, argv=argv)
+    args = docopt(DOCOPT, version=version, argv=argv)
     # print(args)
 
     if args['--command'] is not None:

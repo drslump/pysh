@@ -5,13 +5,14 @@ import six
 
 
 class Command:
-    __slots__ = ('command', 'hyphenate', 'shortpre', 'longpre', 'valuepre', 'falsepre', 'argspre')
+    __slots__ = ('command', 'ok_status', 'hyphenate', 'shortpre', 'longpre', 'valuepre', 'falsepre', 'argspre')
 
     def __init__(
-        self, command, hyphenate=True,
+        self, command, ok_status=(0,), hyphenate=True,
         shortpre='-', longpre='--', valuepre=None, falsepre=None, argspre=None
         ):
         self.command = command
+        self.ok_status = tuple([ok_status]) if isinstance(ok_status, int) else ok_status
         self.hyphenate = hyphenate
         self.shortpre = shortpre
         self.longpre = longpre
@@ -33,8 +34,8 @@ class Command:
     def catch(self, *args, **kwargs):
         return CommandInvokation(self).catch(*args, **kwargs)
 
-    def to_exitcode(self):
-        return CommandInvokation(self).to_exitcode()
+    def to_status(self):
+        return CommandInvokation(self).to_status()
 
     def to_binary(self):
         return CommandInvokation(self).to_binary()
@@ -66,7 +67,7 @@ class Command:
         return CommandInvokation(self).__xor__(other)
 
     def __int__(self):
-        return self.to_exitcode()
+        return self.to_status()
 
     if six.PY2:
         def __str__(self):
@@ -84,7 +85,7 @@ class Command:
 
 class CommandInvokation:
 
-    __slots__ = ('command', 'args', 'flags', 'no_raise', 'exitcode')
+    __slots__ = ('command', 'args', 'flags', 'no_raise', 'status')
 
     def __init__(self, command):
         self.command = command
@@ -93,7 +94,7 @@ class CommandInvokation:
         self.flags = set()
         self.no_raise = [0]
 
-        self.exitcode = None
+        self.status = None
 
     def __copy__(self):
         """ On copy we don't carry over state, just the configuration
@@ -198,9 +199,9 @@ class CommandInvokation:
     def pipe(self, stdout=None, stderr=None):
         raise NotImplementedError()
 
-    def to_exitcode(self):
+    def to_status(self):
         self.invoke()
-        return self.exitcode
+        return self.status
 
     def to_binary(self):
         self.invoke()
@@ -210,16 +211,16 @@ class CommandInvokation:
         self.invoke()
         return six.u(self.stdout)
 
-    def catch(self, *exitcodes):
-        """ Avoids raising upon given exit codes. If no exitcodes are provided
+    def catch(self, *statuses):
+        """ Avoids raising upon given status codes. If no statuses are provided
             then it'll catch all of them.
         """
-        if not exitcodes:
-            exitcodes = list(range(256))
-        self.no_raise = exitcodes
+        if not statuses:
+            statuses = list(range(256))
+        self.no_raise = statuses
 
     def __invert__(self):
-        """ ~cmd -> supresses all exitcodes
+        """ ~cmd -> supresses all status codes
         """
         self.catch()
         return self
@@ -252,7 +253,7 @@ class CommandInvokation:
         return self.pipe(other)
 
     def __int__(self):
-        return self.to_exitcode()
+        return self.to_status()
 
     if six.PY2:
         def __str__(self):

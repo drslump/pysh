@@ -414,7 +414,7 @@ default `$SHELL`:
 
 ```py
 needle = !! echo foo
-!! echo $PATH | grep $needle
+!! echo $PATH | grep ${needle}
 # env needle=foo $SHELL -c 'echo $PATH | grep $needle'
 ```
 
@@ -423,7 +423,7 @@ expression by following the `!` with a path:
 
 ```py
 maxrand = 100
-!ruby puts 10.times.map{ Random.rand(ENV['max'].to_i) }
+!ruby! puts 10.times.map{ Random.rand(ENV['max'].to_i) } \
 # env maxrand=100 ruby <(echo "puts 10.times.map{ Random.rand(ENV['maxrand'].to_i) }")
 ```
 
