@@ -4,7 +4,7 @@ from .version import __version__
 
 from .path import PathWrapper
 from .env import Env
-from .command import ShCommandBuilder, ShCommandSpec
+from .command import ShCommand, ShSpec
 
 
 # Prelude for scripts
@@ -18,7 +18,7 @@ __all__ = [
 ENV = Env()
 _ = PWD = PathWrapper()
 
-sh = ShCommandBuilder(ShCommandSpec())
+sh = ShCommand(ShSpec())
 
 
 # TODO: Perhaps the ABC module can be used to replace the __new__ code

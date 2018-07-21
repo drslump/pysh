@@ -41,6 +41,8 @@ A least surprising option may be to internally control if the path is
 concrete or a glob, if it's a glob those proxied options would raise an
 error. __len__ for a non glob would return the path length, on glob the
 number of matches.
+
+>>> _['*.jpg']  # slice supports globing
 """
 
 

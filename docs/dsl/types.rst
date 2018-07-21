@@ -105,7 +105,10 @@ For accessing more special paths the slicing syntax can be used as follows:
     ``_['~']`` or ``_['~user']``
         home directory of the logged user or a specific user.
 
-    ``_['c']``
+    ``_['*.jpg']``
+        glob syntax can be used to match multiple paths.
+
+    ``_['c:']``
         select a drive for the path (Windows only).
 
     ``_['//']`` or ``_[r'\\']``
@@ -172,6 +175,8 @@ ways to do so, with slightly different behaviors:
         .. Caution:: There is no parsing of quoted strings on the value, **only
                      whitespace** has special meaning. If you need to provide some
                      text with quotes use the **call** style.
+
+        .. TODO:: experiment with supporing globing inside slice syntax.
 
 Each time we *call* or *slice* on a command a cloned instance is returned with the
 changes, this usually works transparently due to the chained nature of the DSL.

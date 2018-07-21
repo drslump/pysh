@@ -1,4 +1,5 @@
 import os
+import pytest
 
 from pysh.path import PathWrapper
 
@@ -17,6 +18,7 @@ def test_dsl_sanity():
     assert str(q) == 'f/o/o'
     assert len(q.parents) == 3
 
+@pytest.mark.skip(reason="globs not implemented yet")
 def test_dsl_glob():
     p = PathWrapper('.')
     q = p // '*.dummy'

@@ -64,11 +64,15 @@ cat('file.gz').utf16  |   # stdout forces utf16
 cat('file.gz').text |     # convert to text (infer encoding)
 cat('file.gz').io('utf-8') | # convert to text (force encoding)
 
-cat('file.gz').io(out='raw', err='utf-8')
-cat('file.gz').io(in='utf-8', out='binary', err='auto')
-cat('file.gz').io(out='utf-8', lines=1, eol='\0', in_bytes=0)
+cat('file.gz').io(stdout='raw', stderr='utf-8')
+cat('file.gz').io(stdin='utf-8', stdout='binary', stderr='text')
+cat('file.gz').io(stdout='utf-8', lines=1, eol='\0', in_bytes=0)
 
-cmd.pipe(out=grep['foo'])
+cat('file').io(inp='utf-8', out='utf-16', lines=1, eol='\0')
+# read decoding utf-8 to Text, write encoding as utf-16. Buffer lines for input and output
+
+
+cmd.pipe(stdout=grep['foo'])
 
 buffer(0) <= cmd             # unbuffered
 buffer(lines=1) <= cmd       # 1 line at a time

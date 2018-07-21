@@ -1,17 +1,23 @@
 """
 command:
-  - A factory for CommandSpec + CommandBuilder
+  - A factory for a Command with a concrete BaseSpec
 
-CommandSpec:
+BaseSpec (and concrete classes):
   - Defines how a command must be called
   - Understands external commands and also pure python functions
 
-CommandBuilder:
-  - DSL interface for command construction
+Expr:
+  - Base class for all builders.
   - Each operation returns a cloned copy so stored references are immutable
 
-CommandInvokation:
-  - When a CommandBuilder is executed this object tracks it
+Command:
+  - DSL interface for command construction
+
+Pipe, Redirect:
+  - Expression represent an operation
+
+Result:
+  - When a Expr is executed this object tracks it
   - Allows to access streams
   - Allows to query the exit status
 
@@ -21,41 +27,44 @@ import re
 from collections import Iterable
 from pathlib import PurePath
 from abc import abstractmethod, ABCMeta
+from io import IOBase
+
+from pysh.path import PathWrapper
 
 from typing import Optional, Union, List, Any
 
 
 def command(command, **kwargs):
     """
-    Command factory. Returns a :class:`CommandBuilder` configured with a
-    :class:`CommandSpec` suitable for the given command.
+    Command factory. Returns a :class:`Command` configured with concreate
+    implementation of :class:`BaseSpec` suitable for the given command.
 
-    Any additional keyword arguments will be provided to the matched concrete
-    implementation of :class:`CommandSpec`.
+    Any additional keyword arguments will be provided to the implementation
+    of :class:`Spec`.
 
     .. note:: Currently *command* can only be a path-like reference which
-              refers to an external command, check :class:`ExternalCommandSpec`
-              for additional details.
+              refers to an external command, check :class:`ExternalSpec` for
+              additional details.
     """
     if isinstance(command, (str, PurePath)):
-        spec = ExternalCommandSpec(command, **kwargs)
+        spec = ExternalSpec(command, **kwargs)
     else:
         #TODO: Support functions!
         raise RuntimeError('Only external commands are currently supported!')
 
-    return CommandBuilder(spec)
+    return Command(spec)
 
 
-class CommandSpec:  #TODO: (meta=ABCMeta) breaks?
+class BaseSpec:  #TODO: (meta=ABCMeta) breaks?
     """
     Base abstract class for representing how a command should execute.
 
-    Check :class:`ExternalCommandSpec` for a concrete implementation of the
+    Check :class:`ExternalSpec` for a concrete implementation of the
     interface that allows to run external commands.
     """
 
     @abstractmethod
-    def run(self, builder: 'CommandBuilder'):
+    def run(self, builder: 'Command'):
         """
         This is a somewhat internal method to execute a builder according to
         the spec. It's intended to be used by :meth:`CommandBuilder.invoke`.
@@ -71,10 +80,10 @@ class CommandSpec:  #TODO: (meta=ABCMeta) breaks?
         """
 
     def __repr__(self):
-        return 'Command({})'.format(self.command)
+        return '{}({})'.format(self.__class__.name, self.command)
 
 
-class ExternalCommandSpec(CommandSpec):
+class ExternalSpec(BaseSpec):
     """
     Implementation for external commands.
 
@@ -118,23 +127,23 @@ class ExternalCommandSpec(CommandSpec):
             option = (self.shortpre if is_short else self.longpre) + option
 
         if value is True:
-            return [pre + option]
+            return [option]
         elif value in (False, None):
             return []
 
-        if isinstance(value, str):
+        if isinstance(value, str) or not isinstance(value, Iterable):
             value = [value]
 
         if self.repeat is False:
-            return [option] + [v for v in value]  #XXX ignores valuepre in this case
+            return [option] + [str(v) for v in value]  #XXX ignores valuepre in this case
         else:
             if self.repeat is not True:
-                value = [self.repeat.join(value)]  #XXX custom repeat separator
+                value = [self.repeat.join(str(v) for v in value)]  #XXX custom repeat separator
 
             if self.valuepre:
-                return [option + self.valuepre + v for v in value]
+                return [option + self.valuepre + str(v) for v in value]
             else:
-                return sum([[option, v] for v in value], [])  #XXX flattens the list
+                return sum([[option, str(v)] for v in value], [])  #XXX flattens the list
 
     def parse_args(self, *args, **kwargs) -> List[Any]:
         """
@@ -142,7 +151,7 @@ class ExternalCommandSpec(CommandSpec):
         """
         result = []
         for option in sorted(kwargs.keys()):
-            value = kwargs[k]
+            value = kwargs[option]
             #TODO: We need to resolve value at this point to make repeated options reliable
             result.extend(self._parse_option(option, value))
 
@@ -151,18 +160,53 @@ class ExternalCommandSpec(CommandSpec):
 
         #TODO: We need to resolve arg at this point
         for arg in args:
-            if not isinstance(arg, Iterable):
+            if isinstance(arg, str) or not isinstance(arg, Iterable):
                 arg = [arg]
 
             result.extend(str(x) for x in arg)
 
         return result
 
-    def run(self, builder: 'CommandBuilder'):
+    def run(self, builder: 'Command'):
         raise NotImplementedError('sorry!')
 
 
-class CommandBuilder:
+class Expr:  #TODO: breaks?? (meta=ABCMeta):
+    """ Base class for DSL expression builders.
+    """
+    def invoke(self) -> 'Invocation':
+        """ Executes the command as currently configured
+
+            XXX .invoke launch the process and returns immediatly the invocation object.
+                Autoexpr calls it with .wait() so its syncronous. exec is the explicit
+                equivalent to autoexpr
+        """
+        return Result(self)
+
+    def __gt__(self, other) -> 'Redirect':
+        """ :ref:`Redirection: >`
+        """
+        if isinstance(other, Expr):
+            return NotImplemented
+
+        #TODO: support callables
+        if not isinstance(other, (IOBase, str, bytes, PurePath, PathWrapper)):
+            return NotImplemented
+
+        return Redirect(self, other)
+
+    def __lt__(self, other) -> 'Redirect':
+        # Not possible to redirect to a command
+        return NotImplemented
+
+    def _repr(self, value):
+        if isinstance(value, IOBase):
+            return './{}'.format(value.name)
+        return repr(value)
+
+
+
+class Command(Expr):
     """
     .. automethod:: __or__
     .. automethod:: __ror__
@@ -174,26 +218,14 @@ class CommandBuilder:
     """
     __slots__ = ('spec', 'args', 'no_raise', 'lazy_or', 'lazy_and')
 
-    def __init__(self, spec: 'CommandSpec') -> None:
+    def __init__(self, spec: 'BaseSpec') -> None:
         self.spec = spec
         self.args = []
         self.lazy_or = self.lazy_and = None
 
         self.no_raise = [0]
 
-    @property
-    def stdin(self) -> bytes:  #TODO: how to model streams?
-        return b''
-
-    @property
-    def stdout(self) -> bytes:  #TODO: how to model streams?
-        return b''
-
-    @property
-    def stderr(self) -> bytes:  #TODO: how to model streams?
-        return b''
-
-    def __copy__(self) -> 'CommandBuilder':
+    def __copy__(self) -> 'Command':
         clone = type(self)(self.spec)
         clone.args = list(self.args)
         clone.no_raise = list(self.no_raise)
@@ -202,9 +234,10 @@ class CommandBuilder:
         return clone
 
     def __repr__(self):
-        return '<{} {}>'.format(self.spec.command, ' '.join(self.args))
+        cmd = '{} {}'.format(self.spec.command, ' '.join(self.args))
+        return '`{}`'.format(cmd.strip())
 
-    def __getitem__(self, key) -> 'CommandBuilder':
+    def __getitem__(self, key) -> 'Command':
         """ Slice access records arguments almost in verbatim form, however
             there is splitting on whitespace so if you want to pass an argument
             containing whitespace it needs to be escaped with backslash.
@@ -223,25 +256,25 @@ class CommandBuilder:
 
         return clone
 
-    def __call__(self, *args, **kwargs) -> 'CommandBuilder':
+    def __call__(self, *args, **kwargs) -> 'Command':
         clone = self.__copy__()
         clone.args.extend(
             self.spec.parse_args(*args, **kwargs)
         )
         return clone
 
-    def invoke(self) -> 'CommandInvocation':
-        """ Executes the command as currently configured
-
-            XXX .invoke launch the process and returns immediatly the invocation object.
-                Autoexpr calls it with .wait() so its syncronous. exec is the explicit
-                equivalent to autoexpr
-        """
-        return CommandInvocation(self)
-
-    def pipe(self, stdout=None, stderr=None) -> 'CommandBuilder':
+    def pipe(self, stdout=None, *, stderr=None) -> 'Command':
         #TODO: implement it :)
         return self.__copy__()
+
+    def io(self, encoding=None, *, stdin=None, stdout=None, stderr=None):
+        # encoding: applies to all
+        # TODO: buffering stuff to be defined, too many variables, no need
+        #       to expose everything, we need sensible defaults with a clear
+        #       explanation. Probably the best approach would be to allow to
+        #       define them as part of the CommandSpec since buffering is
+        #       usually command specific.
+        pass
 
     def to_status(self) -> int:
         result = self.invoke()
@@ -256,7 +289,7 @@ class CommandBuilder:
         result = self.invoke()
         return result.stdout.decode('utf-8')
 
-    def catch(self, *statuses, **kwargs) -> 'CommandBuilder':
+    def catch(self, *statuses, **kwargs) -> 'Command':
         """ Avoids raising upon given status codes. If no statuses are provided
             then it'll catch all of them.
 
@@ -293,6 +326,7 @@ class CommandBuilder:
         clone.no_raise = statuses
         return clone
 
+    #TODO: Use __lazyboolX__
     def and_then(self, callable):
         clone = self.__copy__()
         clone.lazy_and = callable
@@ -303,26 +337,29 @@ class CommandBuilder:
         clone.lazy_or = callable
         return clone
 
-    def __invert__(self) -> 'CommandBuilder':
+    def __invert__(self) -> 'Command':
         """ :ref:`Reckless: ~`
         """
         return self.pipe(stderr=null).catch()
 
-    def __or__(self, rhs) -> 'CommandBuilder':
+    def __or__(self, rhs) -> 'Pipe':
         """ :ref:`Pipe: |`
         """
-        if isinstance(rhs, CommandBuilder):
-            return self.pipe(rhs)
-        else:
-            return rhs(self)
+        if not isinstance(rhs, Expr):
+            return NotImplemented
 
-    def __ror__(self, lhs) -> 'CommandBuilder':
+        return Pipe(self, rhs)
+
+    def __ror__(self, lhs) -> 'Pipe':
         """ Reverse for :meth:`__or__` to handle ``value | command``.
         """
-        #TODO: lhs should be injected into stdin
-        raise RuntimeError('Unsupported <any> | <cmd>')
+        if not isinstance(lhs, Expr):
+            #TODO: lhs should be injected into stdin
+            return NotImplemented
 
-    def __xor__(self, rhs) -> 'CommandBuilder':
+        return Pipe(lhs, self)
+
+    def __xor__(self, rhs) -> 'Piperr':
         """ :ref:`Piperr: ^ 🚧`
 
             TODO: This doesn't compose well with redirection `>` which has
@@ -332,35 +369,24 @@ class CommandBuilder:
             bad then it's just a matter of training the user to redirect
             always first the stderr.
         """
-        return self.pipe(stderr=rhs)
+        return Piperr(self, rhs)
 
-    def __gt__(self, other) -> 'CommandBuilder':
-        """ :ref:`Redirection: >`
-        """
-        assert not isinstance(other, CommandBuilder)
-        return self.pipe(other)
 
-    def __lt__(self, other):
-        """ Reverse for :meth:`__gt__` to handle ``value < command``
-        """
-        assert not isinstance(other, CommandBuilder)
-        raise RuntimeError('`val < cmd` not implemented yet')
-
-    def __le__(self, other):
+    def __le__(self, other) -> 'Command':
         """ :ref:`Lazy application: <= 🚧`
         """
         return self(other)
 
-    def __ge__(self, other):
+    def __ge__(self, other) -> 'Command':
         """ Reverse for :meth:`__le__` to handle ``func <= command``
         """
         return other(self)
 
-    def __rshift__(self, rhs):
+    def __rshift__(self, rhs) -> 'Redirect':
         """ :ref:`Appending Redirection: >>`
         """
-        assert not isinstance(rhs, CommandBuilder)
-        raise RuntimeError('`cmd >> val` not implemented yet')
+        assert not isinstance(rhs, Command)
+        return Redirect(self, rhs, appending=True)
 
     def __lazybooland__(self, rhs_callable):
         """ Lazy boolean protocol for ``and``.
@@ -395,11 +421,45 @@ class CommandBuilder:
         return self.to_text()
 
 
-class CommandInvocation:
-    __slots__ = ('command', 'status', 'stdin', 'stdout', 'stderr')
+class Pipe(Expr):
+    """ Represents a pipe ``|`` operation.
+    """
+    def __init__(self, lhs, rhs):
+        self.lhs = lhs
+        self.rhs = rhs
 
-    def __init__(self, command: CommandBuilder) -> None:
-        self.command = command
+    def __repr__(self):
+        return '({!r} | {!r})'.format(self.lhs, self.rhs)
+
+
+class Piperr(Pipe):
+    """ Represents a piperr `^` operation.
+    """
+    def __repr__(self):
+        rhs = self.rhs.name if isinstance(self.rhs, IOBase) else repr(self.rhs)
+        return '({!r} ^ {})'.format(self.lhs, rhs)
+
+
+class Redirect(Expr):
+    """ Represents a redirection ``>`` or ``>>`` operation.
+    """
+    def __init__(self, lhs, rhs, *, appending=False):
+        self.lhs = lhs
+        self.rhs = rhs
+        self.appending = appending
+
+    def __repr__(self):
+        op = '>>' if self.appending else '>'
+        rhs = self.rhs.name if isinstance(self.rhs, IOBase) else repr(self.rhs)
+        return '({!r} {} {})'.format(
+            self.lhs, op, rhs)
+
+
+class Result:
+    __slots__ = ('expr', 'status', 'stdin', 'stdout', 'stderr')
+
+    def __init__(self, expr: Expr) -> None:
+        self.expr = expr
         self.status: Optional[int] = None
         self.stdout = b''
         self.stderr = b''
@@ -412,7 +472,7 @@ class CommandInvocation:
         return '{!r}()'.format(self.command)
 
 
-class ShCommandSpec(CommandSpec):
+class ShSpec(BaseSpec):
     """ Runs a command via a shell.
 
         The first argument is the command to run, it'll be extended with
@@ -429,16 +489,15 @@ class ShCommandSpec(CommandSpec):
         they can be matched against the current locals/globals and exposed
         on the environment when running it.
     """
-
     def __init__(self):
         pass
 
 
-class ShCommandBuilder(CommandBuilder):
+class ShCommand(Command):
 
     def __getattribute__(self, name):
         """ Allows for ``sh.cat`` style shortcuts """
-        # Once the first argument was given just forward to CommandBuilder
+        # Once the first argument was given just forward to Command
         if self.args:
             return super().__getattribute__(name)
 
@@ -447,6 +506,8 @@ class ShCommandBuilder(CommandBuilder):
         return clone
 
 
+
+### ----------
 
 class LazyEnvInterpolator:
 
