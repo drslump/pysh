@@ -4,6 +4,8 @@ Python for shell scripting
 
 > :warning: This is totally **experimental**, fully **broken**. Do not use yet!
 
+[![Build Status](https://travis-ci.org/drslump/pysh.svg?branch=master)](https://travis-ci.org/drslump/pysh)
+
 ## Goals
 
  - Syntax is standard Python (full IDE support)

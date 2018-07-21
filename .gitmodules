@@ -1,6 +1,6 @@
 [submodule "docs/gh-pages"]
 	path = docs/gh-pages
-	url = git@github.com:drslump/pysh
+	url = https://github.com/drslump/pysh.git
 	branch = gh-pages
 	ignore = dirty
 

@@ -27,4 +27,13 @@ version-%:
 	@ sed -i '' "s/r'[^']*'/r'$*'/" pysh/version.py
 	@ cat pysh/version.py | grep __version__
 
+	@ echo "Last commits for the release notes"
+	@ git log -15 --pretty=format:"- %s"
+
+dev:
+	pip install -e .[dev]
+
+test:
+	pytest
+
 .PHONY: docs
