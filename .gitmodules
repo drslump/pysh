@@ -1,0 +1,4 @@
+[submodule "docs/gh-pages"]
+	path = docs/gh-pages
+	url = git@github.com:drslump/pysh
+	branch = gh-pages
