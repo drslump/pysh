@@ -10,6 +10,8 @@ gh-pages: docs
 #
 # That branch is totally clean (no project files), just with a .nojekyll
 # file to signal GH we don't want Jekyll for our pages.
+# Also note that docs/gh-pages should be ignored, adding `ignore = dirty` on
+# its section in the .gitmodules file. This avoids having to track its changes.
 #
 # Then we just copy the locally generated docs to that submodule and push
 # to github.

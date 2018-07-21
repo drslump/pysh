@@ -2,3 +2,5 @@
 	path = docs/gh-pages
 	url = git@github.com:drslump/pysh
 	branch = gh-pages
+	ignore = dirty
+

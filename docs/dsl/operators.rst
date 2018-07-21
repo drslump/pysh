@@ -67,6 +67,23 @@ Piperr: ^ 🚧
 
 .. Warning:: 🚧 Validate that it'll work as documented
 
+🚧 **command** ``^`` (**stream** | **path** | **str**) 🚧
+
+    Redirect *stderr* to a stream or a file.
+
+    >>> gcc ^ null
+    discard stderr output
+
+    >>> gcc ^ stdout | wc['-l']
+    merge stderr into stdout and count all the lines from both
+
+    >>> gcc ^ errors.txt | wc['-l']
+    store stderr in a file and count the lines on stdout
+
+    .. admonition:: meanwhile in Bash
+
+        quite similar, the ``^`` is ``2>``. An example: ``gcc 2>errors.txt | wc -l``
+
 🚧 **command** ``^`` **command** 🚧
 
     Pipe *stderr* from the command on the left to *stdin* from the command on
@@ -93,24 +110,6 @@ Piperr: ^ 🚧
     .. admonition:: meanwhile in Bash
 
         a bit cryptic but not far off: ``gcc 2>&1 >/dev/null | grep foo | head``
-
-
-🚧 **command** ``^`` (**stream** | **path** | **str**) 🚧
-
-    Redirect *stderr* to a stream or a file.
-
-    >>> gcc ^ null
-    discard stderr output
-
-    >>> gcc ^ stdout | wc['-l']
-    merge stderr into stdout and count all the lines from both
-
-    >>> gcc ^ errors.txt | wc['-l']
-    store stderr in a file and count the lines on stdout
-
-    .. admonition:: meanwhile in Bash
-
-        quite similar, the ``^`` is ``2>``. An example: ``gcc 2>errors.txt | wc -l``
 
 
 Redirection: >
