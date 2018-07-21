@@ -156,7 +156,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'pysh.tex', 'pysh Documentation',
-     'Iván Montes', 'manual'),
+     u'Iván Montes', 'manual'),
 ]
 
 
