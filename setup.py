@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 #
 # For developement:
 #
@@ -27,7 +26,7 @@ except ImportError:
 
 
 # Fetch version without importing the package
-version_globals = {}
+version_globals = {}  # type: ignore
 with open(convert_path('pysh/version.py')) as fd:
     exec(fd.read(), version_globals)
 
@@ -49,7 +48,7 @@ setup(
         "Intended Audience :: System Administrators",
         "License :: OSI Approved :: MIT License",
         "Operating System :: POSIX",
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
         "Programming Language :: Unix Shell",
         "Topic :: Software Development",
         "Topic :: System :: Shells",
@@ -66,22 +65,25 @@ setup(
     packages=find_packages(exclude=['docs', 'tests']),
 
     install_requires=[
-        "six",
         "docopt",
     ],
     extras_require={
         "dev": [
             "pytest",
             "pytest-runner",
+        ],
+        "build": [
+            # docs
             "sphinx",
             "sphinx_rtd_theme",
+            "recommonmark",
         ],
     },
 
     package_data={},
     data_files=[],
 
-    entry_points = {
+    entry_points={
         "console_scripts": [
             "pysh=pysh.__main__:main",
         ],

@@ -30,13 +30,13 @@ class Env:
             else:
                 environ[k] = v
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str):
         name = name.upper()
         if name in self.vars:
             return self.vars[name]
         return environ[name]
 
-    def __setitem__(self, name, value):
+    def __setitem__(self, name: str, value: str):
         name = name.upper()
 
         if name not in self.saved:
