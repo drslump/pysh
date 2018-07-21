@@ -33,7 +33,15 @@ version-%:
 dev:
 	pip install -e .[dev]
 
+builder:
+	pip install --upgrade pip setuptools wheel twine
+	pip install -e .[dev,build]
+	wget --content-on-error -q -O docs/plantuml.jar http://sourceforge.net/projects/plantuml/files/plantuml.jar
+
+travis: builder
+	pytest
+
 test:
 	pytest
 
-.PHONY: docs
+.PHONY: docs gh-pages test travis dev builder

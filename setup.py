@@ -7,6 +7,7 @@
 # For packaging first install the latest versions of the tooling:
 #
 #   pip install --upgrade pip setuptools wheel twine
+#   pip install -e .[dev,build]
 #
 
 from setuptools import setup, find_packages
@@ -76,6 +77,7 @@ setup(
             # docs
             "sphinx",
             "sphinx_rtd_theme",
+            "sphinxcontrib-plantuml",
             "recommonmark",
         ],
     },

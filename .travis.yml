@@ -6,4 +6,4 @@ python:
 install:
   - pip install -e .[dev,build]
 script:
-  - make test
+  - make travis

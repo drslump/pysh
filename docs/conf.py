@@ -51,6 +51,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',  # just generates a .nojekyll file in the build
     'sphinx.ext.autosectionlabel',
+    'sphinxcontrib.plantuml',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -186,3 +187,7 @@ texinfo_documents = [
 
 todo_include_todos = True   # expose todo admonitions in the docs
 todo_link_only = True       # do not print the todo location
+
+# plantuml.jar should be in the same docs directory
+plantuml = 'java -jar plantuml.jar'
+plantuml_output_format = 'svg'
