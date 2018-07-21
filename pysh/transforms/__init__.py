@@ -135,7 +135,7 @@ class Compiler:
         comp = compile(wrapper, fname, 'exec')
 
         # Execute to trigger the creation of the wrapping function as a global
-        glbls = dict(self.symbols)
+        glbls = dict(ChainMap(self.symbols, builtins.__dict__))
         exec(comp, glbls)
 
         return glbls[name]

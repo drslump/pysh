@@ -25,6 +25,7 @@ Project goals
     :glob:
 
     preface
+    usage
     dsl/index
 
 .. toctree::
