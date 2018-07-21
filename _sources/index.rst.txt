@@ -27,12 +27,17 @@ Project goals
     preface
     dsl/index
 
-
 .. toctree::
     :maxdepth: 3
     :caption: API Reference:
 
     _apidoc/pysh
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Changelog:
+
+    changelog
 
 
 Todo list
