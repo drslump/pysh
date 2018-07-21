@@ -85,8 +85,8 @@
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dsl/index.html">Domain Specific Language</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../changelog.html">pysh changelog</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference:</span></p>
 <ul class="current">
@@ -104,6 +104,12 @@
 </li>
 </ul>
 </li>
+</ul>
+<p class="caption"><span class="caption-text">Changelog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Unreleased</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html#version-0-0-3">Version 0.0.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html#version-0-0-1">Version 0.0.1</a></li>
 </ul>
 
             
@@ -216,6 +222,9 @@ work.</p>
 concrete or a glob, if it’s a glob those proxied options would raise an
 error. __len__ for a non glob would return the path length, on glob the
 number of matches.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="p">[</span><span class="s1">&#39;*.jpg&#39;</span><span class="p">]</span>  <span class="c1"># slice supports globing</span>
+</pre></div>
+</div>
 <dl class="class">
 <dt id="pysh.path.PathWrapper">
 <em class="property">class </em><code class="descclassname">pysh.path.</code><code class="descname">PathWrapper</code><a class="reference internal" href="../_modules/pysh/path.html#PathWrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.path.PathWrapper" title="Permalink to this definition">¶</a></dt>

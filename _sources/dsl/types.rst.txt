@@ -59,8 +59,8 @@ we have **quite different semantics**:
         modification is applied to it.
 
         This is required for **lazy evaluation** to work without surprises,
-        otherwise we might reuse a path instance used in a previous command which
-        might be executed in the future.
+        otherwise we might inadvertily modify a path instance that might be used
+        in the future.
 
 Given those semantics we should think about *pysh paths* as *path builders*, where
 there is a setup step that is later used as many times as required.
@@ -105,7 +105,10 @@ For accessing more special paths the slicing syntax can be used as follows:
     ``_['~']`` or ``_['~user']``
         home directory of the logged user or a specific user.
 
-    ``_['c']``
+    ``_['*.jpg']``
+        glob syntax can be used to match multiple paths.
+
+    ``_['c:']``
         select a drive for the path (Windows only).
 
     ``_['//']`` or ``_[r'\\']``
@@ -132,7 +135,7 @@ Commands
 
 Commands also have **lazy evaluation** and **immutability** semantics. They need
 them to simplify composition, which is a core mechanic in *pysh* to make scripts
-ergonomic while easy to maintain.
+ergonomic but easy to maintain.
 
 Creating a command for an external utility is as simple as calling the ``command``
 factory function:
@@ -140,13 +143,13 @@ factory function:
 >>> grep = command('grep')
     CommandBuilder<grep>
 
-Now we can construct an invocation by providing arguments to it. There are two
-ways to do so, with slightly different behaviours:
+Now we can *build an invocation* by providing arguments to it. There are two
+ways to do so, with slightly different behaviors:
 
     **call**
 
-        The value provided as argument is used verbatim on the called command. No
-        need to think about strange quoting and escaping rules.
+        The value provided as argument is used verbatim on the called command.
+        No need to think about strange quoting and escaping rules.
 
         >>> grep('-e', 'foo bar')
             grep -e 'foo bar'
@@ -157,14 +160,23 @@ ways to do so, with slightly different behaviours:
         >>> grep('foo bar', 'myfile.txt', A=3, line_buffered=True)
             grep -A 3 --line-buffered 'foo bar' myfile.txt
 
+        .. Hint:: See :class:`pysh.command.ExternalCommandSpec` for more details.
+
     **slice**
 
         When slicing the value is splitted on whitespace, similarly to what a
-        shell would do, so one or more arguments can be added to the called
-        command.
+        shell would do, so one or more arguments can be added to the command.
 
         >>> grep['-e   foo    bar']
             grep -e foo bar
+        >>> grep[r'-e escaped\ whitespace\ \ is\ \ preserved']
+            grep -e "escaped whitespace  is  preserved"
+
+        .. Caution:: There is no parsing of quoted strings on the value, **only
+                     whitespace** has special meaning. If you need to provide some
+                     text with quotes use the **call** style.
+
+        .. TODO:: experiment with supporing globing inside slice syntax.
 
 Each time we *call* or *slice* on a command a cloned instance is returned with the
 changes, this usually works transparently due to the chained nature of the DSL.
@@ -180,7 +192,7 @@ However if you try to use a more imperative style you need to be aware of it:
 >>> a_grep
     grep -e foo  # also works since we're using the returned copy
 
-Evaluation of the configured command happens explicitly when we cast it to a
+Evaluation of the built command happens explicitly when we cast it to a
 primitive value:
 
 >>> str( grep['foo'] )
@@ -188,12 +200,30 @@ primitive value:
 >>> bytes( grep['foo'] )
     executes and returns stdout as binary data
 >>> int( grep['foo'] )
-    executes and returns the exitcode
+    executes and returns the exit status code
 >>> bool( grep['foo'] )
     executes and returns True if it exited with 0, False otherwise
 >>> for line in grep['foo']:
 >>>     print(line)
     execution is also triggered by iteration
+
+
+AutoExpr transformation
+~~~~~~~~~~~~~~~~~~~~~~~
+
+A key ergonomics feature is a transformation applied to scripts by *pysh*
+where it will detect expressions that form a statement on their own,
+usually meaning that they are not part of an assignment or a flow control
+construct. Those expressions will be automatically evaluated when the
+script executes, given the laziness semantics of a *command* this allows
+to overcome the requirement of casting it to force its evaluation.
+
+>>> grep('foo')        # grep is invoked when the script reaches this line
+>>> cmd = grep('foo')  # only built and assigned, grep is not invoked
+>>> cmd                # grep is invoked now
+
+.. Note:: This transformation is applied by default when executing a script
+          with the ``pysh`` command line interface.
 
 
 Shell command: sh
@@ -208,7 +238,7 @@ With the ``sh`` command we can do that easily and with some degree of safety if
 it's used sparingly.
 
 >>> sh('ls *.jpg')
-    /bin/sh -e -c 'ls *.jpg'   # globbing is done by the shell
+    /bin/sh -e -c 'ls *.jpg'   # globing is done by the shell
 >>> sh(' cat file.txt | grep foo ')
     /bin/sh -e -c 'cat file.txt | grep foo'  # piping is handled by the shell
 
@@ -238,7 +268,7 @@ making those available in the *environment* when executing the script.
     fname=./file.txt pattern=foo /bin/sh -e -c 'cat "$fname" | grep "pre-${pattern}"'
 
 For longer snippets where we don't want to pipe or redirect its output, it's handy
-to use the :ref:`Lazy application: <= 🚧` operator with a raw multiline literal:
+to use the :ref:`Lazy: <= 🚧` operator with a raw multiline literal:
 
 >>> sh <= r'''
 >>>     num_files=$(ls | wc -l)

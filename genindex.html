@@ -84,6 +84,7 @@
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dsl/index.html">Domain Specific Language</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference:</span></p>
@@ -187,21 +188,21 @@
 <h2 id="_">_</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.__ge__">__ge__() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.__ge__">__ge__() (pysh.command.Command method)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.__invert__">__invert__() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.__invert__">__invert__() (pysh.command.Command method)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.__le__">__le__() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.__le__">__le__() (pysh.command.Command method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.__or__">__or__() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.__or__">__or__() (pysh.command.Command method)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.__ror__">__ror__() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.__ror__">__ror__() (pysh.command.Command method)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.__rshift__">__rshift__() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.__rshift__">__rshift__() (pysh.command.Command method)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.__xor__">__xor__() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.__xor__">__xor__() (pysh.command.Command method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -211,11 +212,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_apidoc/pysh.transforms.html#pysh.transforms.Compiler.add_transform">add_transform() (pysh.transforms.Compiler method)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.and_then">and_then() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.and_then">and_then() (pysh.command.Command method)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.args">args (pysh.command.CommandBuilder attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.args">args (pysh.command.Command attribute)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalCommandSpec.argspre">argspre (pysh.command.ExternalCommandSpec attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalSpec.argspre">argspre (pysh.command.ExternalSpec attribute)</a>
 </li>
       <li><a href="_apidoc/pysh.arguments.html#pysh.arguments.Arguments">Arguments (class in pysh.arguments)</a>
 </li>
@@ -263,6 +264,10 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.BaseSpec">BaseSpec (class in pysh.command)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_apidoc/pysh.stream.html#pysh.stream.Stream.binary">binary (pysh.stream.Stream attribute)</a>
 </li>
   </ul></td>
@@ -271,27 +276,19 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.catch">catch() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.catch">catch() (pysh.command.Command method)</a>
 </li>
       <li><a href="_apidoc/pysh.stream.html#pysh.stream.NullStream.close">close() (pysh.stream.NullStream method)</a>
 </li>
       <li><a href="_apidoc/pysh.stream.html#pysh.stream.NullStream.closed">closed (pysh.stream.NullStream attribute)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandInvocation.command">command (pysh.command.CommandInvocation attribute)</a>
-
-      <ul>
-        <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalCommandSpec.command">(pysh.command.ExternalCommandSpec attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command">Command (class in pysh.command)</a>
 </li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalSpec.command">command (pysh.command.ExternalSpec attribute)</a>
+</li>
       <li><a href="_apidoc/pysh.command.html#pysh.command.command">command() (in module pysh.command)</a>
-</li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder">CommandBuilder (class in pysh.command)</a>
-</li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandInvocation">CommandInvocation (class in pysh.command)</a>
-</li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandSpec">CommandSpec (class in pysh.command)</a>
 </li>
       <li><a href="_apidoc/pysh.transforms.html#pysh.transforms.Compiler.compile">compile() (pysh.transforms.Compiler method)</a>
 </li>
@@ -323,10 +320,10 @@
 </li>
       <li><a href="_apidoc/pysh.html#pysh.Exit4Error">Exit4Error</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_apidoc/pysh.html#pysh.Exit5Error">Exit5Error</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_apidoc/pysh.html#pysh.Exit6Error">Exit6Error</a>
 </li>
       <li><a href="_apidoc/pysh.html#pysh.Exit7Error">Exit7Error</a>
@@ -337,7 +334,11 @@
 </li>
       <li><a href="_apidoc/pysh.html#pysh.ExitError">ExitError</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalCommandSpec">ExternalCommandSpec (class in pysh.command)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Expr">Expr (class in pysh.command)</a>
+</li>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Result.expr">expr (pysh.command.Result attribute)</a>
+</li>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalSpec">ExternalSpec (class in pysh.command)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -347,7 +348,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_apidoc/pysh.transforms.html#pysh.transforms.Compiler.FALLBACK_PREFIXES">FALLBACK_PREFIXES (pysh.transforms.Compiler attribute)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalCommandSpec.falsepre">falsepre (pysh.command.ExternalCommandSpec attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalSpec.falsepre">falsepre (pysh.command.ExternalSpec attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -383,7 +384,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalCommandSpec.hyphenate">hyphenate (pysh.command.ExternalCommandSpec attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalSpec.hyphenate">hyphenate (pysh.command.ExternalSpec attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -391,10 +392,12 @@
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.invoke">invoke() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Expr.invoke">invoke() (pysh.command.Expr method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.io">io() (pysh.command.Command method)</a>
+</li>
       <li><a href="_apidoc/pysh.stream.html#pysh.stream.NullStream.isatty">isatty() (pysh.stream.NullStream method)</a>
 </li>
   </ul></td>
@@ -403,9 +406,9 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.lazy_and">lazy_and (pysh.command.CommandBuilder attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.lazy_and">lazy_and (pysh.command.Command attribute)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.lazy_or">lazy_or (pysh.command.CommandBuilder attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.lazy_or">lazy_or (pysh.command.Command attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -413,7 +416,7 @@
 </li>
       <li><a href="_apidoc/pysh.arguments.html#pysh.arguments.Arguments.len">len() (pysh.arguments.Arguments method)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalCommandSpec.longpre">longpre (pysh.command.ExternalCommandSpec attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalSpec.longpre">longpre (pysh.command.ExternalSpec attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -429,7 +432,7 @@
 <h2 id="N">N</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.no_raise">no_raise (pysh.command.CommandBuilder attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.no_raise">no_raise (pysh.command.Command attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -443,13 +446,13 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalCommandSpec.ok_status">ok_status (pysh.command.ExternalCommandSpec attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalSpec.ok_status">ok_status (pysh.command.ExternalSpec attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_apidoc/pysh.arguments.html#pysh.arguments.Arguments.one">one() (pysh.arguments.Arguments method)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.or_else">or_else() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.or_else">or_else() (pysh.command.Command method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -457,10 +460,10 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandSpec.parse_args">parse_args() (pysh.command.CommandSpec method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.BaseSpec.parse_args">parse_args() (pysh.command.BaseSpec method)</a>
 
       <ul>
-        <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalCommandSpec.parse_args">(pysh.command.ExternalCommandSpec method)</a>
+        <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalSpec.parse_args">(pysh.command.ExternalSpec method)</a>
 </li>
       </ul></li>
       <li><a href="_apidoc/pysh.transforms.autoreturn.html#pysh.transforms.autoreturn.parser">parser() (in module pysh.transforms.autoreturn)</a>
@@ -471,7 +474,11 @@
       </ul></li>
       <li><a href="_apidoc/pysh.path.html#pysh.path.PathWrapper">PathWrapper (class in pysh.path)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.pipe">pipe() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Pipe">Pipe (class in pysh.command)</a>
+</li>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.pipe">pipe() (pysh.command.Command method)</a>
+</li>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Piperr">Piperr (class in pysh.command)</a>
 </li>
       <li><a href="_apidoc/pysh.transforms.protectnames.html#pysh.transforms.protectnames.ProtectNamesTransformer">ProtectNamesTransformer (class in pysh.transforms.protectnames)</a>
 </li>
@@ -479,10 +486,10 @@
 </li>
       <li><a href="_apidoc/pysh.arguments.html#module-pysh.arguments">pysh.arguments (module)</a>
 </li>
-      <li><a href="_apidoc/pysh.cli.html#module-pysh.cli">pysh.cli (module)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_apidoc/pysh.cli.html#module-pysh.cli">pysh.cli (module)</a>
+</li>
       <li><a href="_apidoc/pysh.command.html#module-pysh.command">pysh.command (module)</a>
 </li>
       <li><a href="_apidoc/pysh.env.html#module-pysh.env">pysh.env (module)</a>
@@ -492,8 +499,6 @@
       <li><a href="_apidoc/pysh.stream.html#module-pysh.stream">pysh.stream (module)</a>
 </li>
       <li><a href="_apidoc/pysh.transforms.html#module-pysh.transforms">pysh.transforms (module)</a>
-</li>
-      <li><a href="_apidoc/pysh.transforms.autoexpr.html#module-pysh.transforms.autoexpr">pysh.transforms.autoexpr (module)</a>
 </li>
       <li><a href="_apidoc/pysh.transforms.autoimport.html#module-pysh.transforms.autoimport">pysh.transforms.autoimport (module)</a>
 </li>
@@ -517,16 +522,20 @@
 </li>
       <li><a href="_apidoc/pysh.stream.html#pysh.stream.NullStream.readinto">readinto() (pysh.stream.NullStream method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="_apidoc/pysh.stream.html#pysh.stream.NullStream.readline">readline() (pysh.stream.NullStream method)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalCommandSpec.repeat">repeat (pysh.command.ExternalCommandSpec attribute)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Redirect">Redirect (class in pysh.command)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandSpec.run">run() (pysh.command.CommandSpec method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalSpec.repeat">repeat (pysh.command.ExternalSpec attribute)</a>
+</li>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Result">Result (class in pysh.command)</a>
+</li>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.BaseSpec.run">run() (pysh.command.BaseSpec method)</a>
 
       <ul>
-        <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalCommandSpec.run">(pysh.command.ExternalCommandSpec method)</a>
+        <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalSpec.run">(pysh.command.ExternalSpec method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -539,15 +548,15 @@
 </li>
       <li><a href="_apidoc/pysh.stream.html#pysh.stream.NullStream.seekable">seekable() (pysh.stream.NullStream method)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.ShCommandBuilder">ShCommandBuilder (class in pysh.command)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.ShCommand">ShCommand (class in pysh.command)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.ShCommandSpec">ShCommandSpec (class in pysh.command)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalSpec.shortpre">shortpre (pysh.command.ExternalSpec attribute)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalCommandSpec.shortpre">shortpre (pysh.command.ExternalCommandSpec attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.ShSpec">ShSpec (class in pysh.command)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.spec">spec (pysh.command.CommandBuilder attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.spec">spec (pysh.command.Command attribute)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandInvocation.status">status (pysh.command.CommandInvocation attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Result.status">status (pysh.command.Result attribute)</a>
 
       <ul>
         <li><a href="_apidoc/pysh.html#pysh.Exit0Error.status">(pysh.Exit0Error attribute)</a>
@@ -573,24 +582,12 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.stderr">stderr (pysh.command.CommandBuilder attribute)</a>
-
-      <ul>
-        <li><a href="_apidoc/pysh.command.html#pysh.command.CommandInvocation.stderr">(pysh.command.CommandInvocation attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Result.stderr">stderr (pysh.command.Result attribute)</a>
 </li>
-      </ul></li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.stdin">stdin (pysh.command.CommandBuilder attribute)</a>
-
-      <ul>
-        <li><a href="_apidoc/pysh.command.html#pysh.command.CommandInvocation.stdin">(pysh.command.CommandInvocation attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Result.stdin">stdin (pysh.command.Result attribute)</a>
 </li>
-      </ul></li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.stdout">stdout (pysh.command.CommandBuilder attribute)</a>
-
-      <ul>
-        <li><a href="_apidoc/pysh.command.html#pysh.command.CommandInvocation.stdout">(pysh.command.CommandInvocation attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Result.stdout">stdout (pysh.command.Result attribute)</a>
 </li>
-      </ul></li>
       <li><a href="_apidoc/pysh.stream.html#pysh.stream.Stream">Stream (class in pysh.stream)</a>
 </li>
   </ul></td>
@@ -599,13 +596,13 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.to_binary">to_binary() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.to_binary">to_binary() (pysh.command.Command method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.to_status">to_status() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.to_status">to_status() (pysh.command.Command method)</a>
 </li>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandBuilder.to_text">to_text() (pysh.command.CommandBuilder method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Command.to_text">to_text() (pysh.command.Command method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -625,7 +622,7 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalCommandSpec.valuepre">valuepre (pysh.command.ExternalCommandSpec attribute)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.ExternalSpec.valuepre">valuepre (pysh.command.ExternalSpec attribute)</a>
 </li>
       <li><a href="_apidoc/pysh.env.html#pysh.env.Env.vars">vars (pysh.env.Env attribute)</a>
 </li>
@@ -657,7 +654,7 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="_apidoc/pysh.command.html#pysh.command.CommandInvocation.wait">wait() (pysh.command.CommandInvocation method)</a>
+      <li><a href="_apidoc/pysh.command.html#pysh.command.Result.wait">wait() (pysh.command.Result method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>

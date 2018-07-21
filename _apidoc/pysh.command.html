@@ -85,8 +85,8 @@
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../dsl/index.html">Domain Specific Language</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../changelog.html">pysh changelog</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference:</span></p>
 <ul class="current">
@@ -104,6 +104,12 @@
 </li>
 </ul>
 </li>
+</ul>
+<p class="caption"><span class="caption-text">Changelog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Unreleased</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html#version-0-0-3">Version 0.0.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html#version-0-0-1">Version 0.0.1</a></li>
 </ul>
 
             
@@ -175,48 +181,85 @@
 <dl class="docutils">
 <dt>command:</dt>
 <dd><ul class="first last simple">
-<li>A factory for CommandSpec + CommandBuilder</li>
+<li>A factory for a Command with a concrete BaseSpec</li>
 </ul>
 </dd>
-<dt>CommandSpec:</dt>
+<dt>BaseSpec (and concrete classes):</dt>
 <dd><ul class="first last simple">
 <li>Defines how a command must be called</li>
 <li>Understands external commands and also pure python functions</li>
 </ul>
 </dd>
-<dt>CommandBuilder:</dt>
+<dt>Expr:</dt>
 <dd><ul class="first last simple">
-<li>DSL interface for command construction</li>
+<li>Base class for all builders.</li>
 <li>Each operation returns a cloned copy so stored references are immutable</li>
 </ul>
 </dd>
-<dt>CommandInvokation:</dt>
+<dt>Command:</dt>
 <dd><ul class="first last simple">
-<li>When a CommandBuilder is executed this object tracks it</li>
+<li>DSL interface for command construction</li>
+</ul>
+</dd>
+<dt>Pipe, Redirect:</dt>
+<dd><ul class="first last simple">
+<li>Expression represent an operation</li>
+</ul>
+</dd>
+<dt>Result:</dt>
+<dd><ul class="first last simple">
+<li>When a Expr is executed this object tracks it</li>
 <li>Allows to access streams</li>
 <li>Allows to query the exit status</li>
 </ul>
 </dd>
 </dl>
 <dl class="class">
-<dt id="pysh.command.CommandBuilder">
-<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">CommandBuilder</code><span class="sig-paren">(</span><em>spec: pysh.command.CommandSpec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.BaseSpec">
+<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">BaseSpec</code><a class="reference internal" href="../_modules/pysh/command.html#BaseSpec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.BaseSpec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base abstract class for representing how a command should execute.</p>
+<p>Check <a class="reference internal" href="#pysh.command.ExternalSpec" title="pysh.command.ExternalSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExternalSpec</span></code></a> for a concrete implementation of the
+interface that allows to run external commands.</p>
 <dl class="method">
-<dt id="pysh.command.CommandBuilder.__or__">
-<code class="descname">__or__</code><span class="sig-paren">(</span><em>rhs</em><span class="sig-paren">)</span> &#x2192; pysh.command.CommandBuilder<a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.__or__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.__or__" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.BaseSpec.parse_args">
+<code class="descname">parse_args</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; List[Any]<a class="reference internal" href="../_modules/pysh/command.html#BaseSpec.parse_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.BaseSpec.parse_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used by <code class="xref py py-meth docutils literal notranslate"><span class="pre">CommandBuilder()</span></code> call and slicing protocols to convert
+their received values into arguments according to the spec.</p>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Does it belong in the interface? shouldn’t it be part of External?</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.command.BaseSpec.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>builder: pysh.command.Command</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#BaseSpec.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.BaseSpec.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a somewhat internal method to execute a builder according to
+the spec. It’s intended to be used by <code class="xref py py-meth docutils literal notranslate"><span class="pre">CommandBuilder.invoke()</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.command.Command">
+<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">Command</code><span class="sig-paren">(</span><em>spec: pysh.command.BaseSpec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.command.Expr" title="pysh.command.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.command.Expr</span></code></a></p>
+<dl class="method">
+<dt id="pysh.command.Command.__or__">
+<code class="descname">__or__</code><span class="sig-paren">(</span><em>rhs</em><span class="sig-paren">)</span> &#x2192; pysh.command.Pipe<a class="reference internal" href="../_modules/pysh/command.html#Command.__or__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.__or__" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="../dsl/operators.html#pipe"><span class="std std-ref">Pipe: |</span></a></p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pysh.command.CommandBuilder.__ror__">
-<code class="descname">__ror__</code><span class="sig-paren">(</span><em>lhs</em><span class="sig-paren">)</span> &#x2192; pysh.command.CommandBuilder<a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.__ror__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.__ror__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reverse for <a class="reference internal" href="#pysh.command.CommandBuilder.__or__" title="pysh.command.CommandBuilder.__or__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__or__()</span></code></a> to handle <code class="docutils literal notranslate"><span class="pre">value</span> <span class="pre">|</span> <span class="pre">command</span></code>.</p>
+<dt id="pysh.command.Command.__ror__">
+<code class="descname">__ror__</code><span class="sig-paren">(</span><em>lhs</em><span class="sig-paren">)</span> &#x2192; pysh.command.Pipe<a class="reference internal" href="../_modules/pysh/command.html#Command.__ror__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.__ror__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverse for <a class="reference internal" href="#pysh.command.Command.__or__" title="pysh.command.Command.__or__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__or__()</span></code></a> to handle <code class="docutils literal notranslate"><span class="pre">value</span> <span class="pre">|</span> <span class="pre">command</span></code>.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pysh.command.CommandBuilder.__xor__">
-<code class="descname">__xor__</code><span class="sig-paren">(</span><em>rhs</em><span class="sig-paren">)</span> &#x2192; pysh.command.CommandBuilder<a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.__xor__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.__xor__" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.Command.__xor__">
+<code class="descname">__xor__</code><span class="sig-paren">(</span><em>rhs</em><span class="sig-paren">)</span> &#x2192; pysh.command.Piperr<a class="reference internal" href="../_modules/pysh/command.html#Command.__xor__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.__xor__" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="../dsl/operators.html#piperr"><span class="std std-ref">Piperr: ^ 🚧</span></a></p>
 <p>TODO: This doesn’t compose well with redirection <cite>&gt;</cite> which has
 a lower precendence than ^. So <cite>cmd &gt; fname ^ null</cite> would be
@@ -227,42 +270,42 @@ always first the stderr.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pysh.command.CommandBuilder.__le__">
-<code class="descname">__le__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.__le__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.__le__" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="../dsl/operators.html#lazy-application"><span class="std std-ref">Lazy application: &lt;= 🚧</span></a></p>
+<dt id="pysh.command.Command.__le__">
+<code class="descname">__le__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span> &#x2192; pysh.command.Command<a class="reference internal" href="../_modules/pysh/command.html#Command.__le__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.__le__" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="xref std std-ref">Lazy application: &lt;= 🚧</span></p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pysh.command.CommandBuilder.__ge__">
-<code class="descname">__ge__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.__ge__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.__ge__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reverse for <a class="reference internal" href="#pysh.command.CommandBuilder.__le__" title="pysh.command.CommandBuilder.__le__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__le__()</span></code></a> to handle <code class="docutils literal notranslate"><span class="pre">func</span> <span class="pre">&lt;=</span> <span class="pre">command</span></code></p>
+<dt id="pysh.command.Command.__ge__">
+<code class="descname">__ge__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span> &#x2192; pysh.command.Command<a class="reference internal" href="../_modules/pysh/command.html#Command.__ge__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.__ge__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverse for <a class="reference internal" href="#pysh.command.Command.__le__" title="pysh.command.Command.__le__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__le__()</span></code></a> to handle <code class="docutils literal notranslate"><span class="pre">func</span> <span class="pre">&lt;=</span> <span class="pre">command</span></code></p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pysh.command.CommandBuilder.__rshift__">
-<code class="descname">__rshift__</code><span class="sig-paren">(</span><em>rhs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.__rshift__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.__rshift__" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="../dsl/operators.html#appending-redirection"><span class="std std-ref">Appending Redirection: &gt;&gt;</span></a></p>
+<dt id="pysh.command.Command.__rshift__">
+<code class="descname">__rshift__</code><span class="sig-paren">(</span><em>rhs</em><span class="sig-paren">)</span> &#x2192; pysh.command.Redirect<a class="reference internal" href="../_modules/pysh/command.html#Command.__rshift__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.__rshift__" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="xref std std-ref">Appending Redirection: &gt;&gt;</span></p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pysh.command.CommandBuilder.__invert__">
-<code class="descname">__invert__</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pysh.command.CommandBuilder<a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.__invert__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.__invert__" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.Command.__invert__">
+<code class="descname">__invert__</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pysh.command.Command<a class="reference internal" href="../_modules/pysh/command.html#Command.__invert__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.__invert__" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="../dsl/operators.html#reckless"><span class="std std-ref">Reckless: ~</span></a></p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pysh.command.CommandBuilder.and_then">
-<code class="descname">and_then</code><span class="sig-paren">(</span><em>callable</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.and_then"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.and_then" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.Command.and_then">
+<code class="descname">and_then</code><span class="sig-paren">(</span><em>callable</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#Command.and_then"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.and_then" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="pysh.command.CommandBuilder.args">
-<code class="descname">args</code><a class="headerlink" href="#pysh.command.CommandBuilder.args" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.Command.args">
+<code class="descname">args</code><a class="headerlink" href="#pysh.command.Command.args" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pysh.command.CommandBuilder.catch">
-<code class="descname">catch</code><span class="sig-paren">(</span><em>*statuses</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; pysh.command.CommandBuilder<a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.catch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.catch" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.Command.catch">
+<code class="descname">catch</code><span class="sig-paren">(</span><em>*statuses</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; pysh.command.Command<a class="reference internal" href="../_modules/pysh/command.html#Command.catch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.catch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Avoids raising upon given status codes. If no statuses are provided
 then it’ll catch all of them.</p>
 <p>grep[‘foo’].catch()   # ignore any exit status
@@ -291,8 +334,65 @@ grep[‘foo’].catch(0, -signals.SIGHUP)
 </dd></dl>
 
 <dl class="method">
-<dt id="pysh.command.CommandBuilder.invoke">
-<code class="descname">invoke</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; pysh.command.CommandInvocation<a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.invoke"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.invoke" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.Command.io">
+<code class="descname">io</code><span class="sig-paren">(</span><em>encoding=None</em>, <em>*</em>, <em>stdin=None</em>, <em>stdout=None</em>, <em>stderr=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#Command.io"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.io" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.command.Command.lazy_and">
+<code class="descname">lazy_and</code><a class="headerlink" href="#pysh.command.Command.lazy_and" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.command.Command.lazy_or">
+<code class="descname">lazy_or</code><a class="headerlink" href="#pysh.command.Command.lazy_or" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.command.Command.no_raise">
+<code class="descname">no_raise</code><a class="headerlink" href="#pysh.command.Command.no_raise" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysh.command.Command.or_else">
+<code class="descname">or_else</code><span class="sig-paren">(</span><em>callable</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#Command.or_else"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.or_else" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysh.command.Command.pipe">
+<code class="descname">pipe</code><span class="sig-paren">(</span><em>stdout=None</em>, <em>*</em>, <em>stderr=None</em><span class="sig-paren">)</span> &#x2192; pysh.command.Command<a class="reference internal" href="../_modules/pysh/command.html#Command.pipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.pipe" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.command.Command.spec">
+<code class="descname">spec</code><a class="headerlink" href="#pysh.command.Command.spec" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysh.command.Command.to_binary">
+<code class="descname">to_binary</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bytes<a class="reference internal" href="../_modules/pysh/command.html#Command.to_binary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.to_binary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysh.command.Command.to_status">
+<code class="descname">to_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/pysh/command.html#Command.to_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.to_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysh.command.Command.to_text">
+<code class="descname">to_text</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/pysh/command.html#Command.to_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Command.to_text" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.command.Expr">
+<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">Expr</code><a class="reference internal" href="../_modules/pysh/command.html#Expr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for DSL expression builders.</p>
+<dl class="method">
+<dt id="pysh.command.Expr.invoke">
+<code class="descname">invoke</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; Invocation<a class="reference internal" href="../_modules/pysh/command.html#Expr.invoke"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Expr.invoke" title="Permalink to this definition">¶</a></dt>
 <dd><p>Executes the command as currently configured</p>
 <dl class="docutils">
 <dt>XXX .invoke launch the process and returns immediatly the invocation object.</dt>
@@ -301,136 +401,12 @@ equivalent to autoexpr</dd>
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="pysh.command.CommandBuilder.lazy_and">
-<code class="descname">lazy_and</code><a class="headerlink" href="#pysh.command.CommandBuilder.lazy_and" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.command.CommandBuilder.lazy_or">
-<code class="descname">lazy_or</code><a class="headerlink" href="#pysh.command.CommandBuilder.lazy_or" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.command.CommandBuilder.no_raise">
-<code class="descname">no_raise</code><a class="headerlink" href="#pysh.command.CommandBuilder.no_raise" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.command.CommandBuilder.or_else">
-<code class="descname">or_else</code><span class="sig-paren">(</span><em>callable</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.or_else"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.or_else" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.command.CommandBuilder.pipe">
-<code class="descname">pipe</code><span class="sig-paren">(</span><em>stdout=None</em>, <em>stderr=None</em><span class="sig-paren">)</span> &#x2192; pysh.command.CommandBuilder<a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.pipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.pipe" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.command.CommandBuilder.spec">
-<code class="descname">spec</code><a class="headerlink" href="#pysh.command.CommandBuilder.spec" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.command.CommandBuilder.stderr">
-<code class="descname">stderr</code><a class="headerlink" href="#pysh.command.CommandBuilder.stderr" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.command.CommandBuilder.stdin">
-<code class="descname">stdin</code><a class="headerlink" href="#pysh.command.CommandBuilder.stdin" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.command.CommandBuilder.stdout">
-<code class="descname">stdout</code><a class="headerlink" href="#pysh.command.CommandBuilder.stdout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.command.CommandBuilder.to_binary">
-<code class="descname">to_binary</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; bytes<a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.to_binary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.to_binary" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.command.CommandBuilder.to_status">
-<code class="descname">to_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.to_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.to_status" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.command.CommandBuilder.to_text">
-<code class="descname">to_text</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../_modules/pysh/command.html#CommandBuilder.to_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandBuilder.to_text" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="class">
-<dt id="pysh.command.CommandInvocation">
-<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">CommandInvocation</code><span class="sig-paren">(</span><em>command: pysh.command.CommandBuilder</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#CommandInvocation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandInvocation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="attribute">
-<dt id="pysh.command.CommandInvocation.command">
-<code class="descname">command</code><a class="headerlink" href="#pysh.command.CommandInvocation.command" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.command.CommandInvocation.status">
-<code class="descname">status</code><a class="headerlink" href="#pysh.command.CommandInvocation.status" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.command.CommandInvocation.stderr">
-<code class="descname">stderr</code><a class="headerlink" href="#pysh.command.CommandInvocation.stderr" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.command.CommandInvocation.stdin">
-<code class="descname">stdin</code><a class="headerlink" href="#pysh.command.CommandInvocation.stdin" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.command.CommandInvocation.stdout">
-<code class="descname">stdout</code><a class="headerlink" href="#pysh.command.CommandInvocation.stdout" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.command.CommandInvocation.wait">
-<code class="descname">wait</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#CommandInvocation.wait"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandInvocation.wait" title="Permalink to this definition">¶</a></dt>
-<dd><p>Block until the command terminates.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="pysh.command.CommandSpec">
-<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">CommandSpec</code><a class="reference internal" href="../_modules/pysh/command.html#CommandSpec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandSpec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Base abstract class for representing how a command should execute.</p>
-<p>Check <a class="reference internal" href="#pysh.command.ExternalCommandSpec" title="pysh.command.ExternalCommandSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExternalCommandSpec</span></code></a> for a concrete implementation of the
-interface that allows to run external commands.</p>
-<dl class="method">
-<dt id="pysh.command.CommandSpec.parse_args">
-<code class="descname">parse_args</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; List[Any]<a class="reference internal" href="../_modules/pysh/command.html#CommandSpec.parse_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandSpec.parse_args" title="Permalink to this definition">¶</a></dt>
-<dd><p>Used by <a class="reference internal" href="#pysh.command.CommandBuilder" title="pysh.command.CommandBuilder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CommandBuilder()</span></code></a> call and slicing protocols to convert
-their received values into arguments according to the spec.</p>
-<div class="admonition-todo admonition" id="index-0">
-<p class="first admonition-title">Todo</p>
-<p class="last">Does it belong in the interface? shouldn’t it be part of External?</p>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysh.command.CommandSpec.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>builder: pysh.command.CommandBuilder</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#CommandSpec.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.CommandSpec.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is a somewhat internal method to execute a builder according to
-the spec. It’s intended to be used by <a class="reference internal" href="#pysh.command.CommandBuilder.invoke" title="pysh.command.CommandBuilder.invoke"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CommandBuilder.invoke()</span></code></a>.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="pysh.command.ExternalCommandSpec">
-<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">ExternalCommandSpec</code><span class="sig-paren">(</span><em>command: str</em>, <em>*</em>, <em>ok_status=(0</em>, <em>)</em>, <em>hyphenate=True</em>, <em>repeat: Union[bool</em>, <em>str] = True</em>, <em>shortpre='-'</em>, <em>longpre='--'</em>, <em>valuepre: Union[str</em>, <em>NoneType] = None</em>, <em>argspre: Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#ExternalCommandSpec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.ExternalCommandSpec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pysh.command.CommandSpec" title="pysh.command.CommandSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.command.CommandSpec</span></code></a></p>
+<dt id="pysh.command.ExternalSpec">
+<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">ExternalSpec</code><span class="sig-paren">(</span><em>command: str</em>, <em>*</em>, <em>ok_status=(0</em>, <em>)</em>, <em>hyphenate=True</em>, <em>repeat: Union[bool</em>, <em>str] = True</em>, <em>shortpre='-'</em>, <em>longpre='--'</em>, <em>valuepre: Union[str</em>, <em>NoneType] = None</em>, <em>argspre: Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#ExternalSpec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.ExternalSpec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.command.BaseSpec" title="pysh.command.BaseSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.command.BaseSpec</span></code></a></p>
 <p>Implementation for external commands.</p>
 <p>Handles arguments according to the following rules:</p>
 <ul class="simple">
@@ -448,60 +424,60 @@ joining them with the value of <em>repeat</em> if it’s a string. When <em>repe
 is <em>False</em> additional arguments are placed after the option.</li>
 </ul>
 <dl class="attribute">
-<dt id="pysh.command.ExternalCommandSpec.argspre">
-<code class="descname">argspre</code><a class="headerlink" href="#pysh.command.ExternalCommandSpec.argspre" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.ExternalSpec.argspre">
+<code class="descname">argspre</code><a class="headerlink" href="#pysh.command.ExternalSpec.argspre" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="pysh.command.ExternalCommandSpec.command">
-<code class="descname">command</code><a class="headerlink" href="#pysh.command.ExternalCommandSpec.command" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.ExternalSpec.command">
+<code class="descname">command</code><a class="headerlink" href="#pysh.command.ExternalSpec.command" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="pysh.command.ExternalCommandSpec.falsepre">
-<code class="descname">falsepre</code><a class="headerlink" href="#pysh.command.ExternalCommandSpec.falsepre" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.ExternalSpec.falsepre">
+<code class="descname">falsepre</code><a class="headerlink" href="#pysh.command.ExternalSpec.falsepre" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="pysh.command.ExternalCommandSpec.hyphenate">
-<code class="descname">hyphenate</code><a class="headerlink" href="#pysh.command.ExternalCommandSpec.hyphenate" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.ExternalSpec.hyphenate">
+<code class="descname">hyphenate</code><a class="headerlink" href="#pysh.command.ExternalSpec.hyphenate" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="pysh.command.ExternalCommandSpec.longpre">
-<code class="descname">longpre</code><a class="headerlink" href="#pysh.command.ExternalCommandSpec.longpre" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.ExternalSpec.longpre">
+<code class="descname">longpre</code><a class="headerlink" href="#pysh.command.ExternalSpec.longpre" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="pysh.command.ExternalCommandSpec.ok_status">
-<code class="descname">ok_status</code><a class="headerlink" href="#pysh.command.ExternalCommandSpec.ok_status" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.ExternalSpec.ok_status">
+<code class="descname">ok_status</code><a class="headerlink" href="#pysh.command.ExternalSpec.ok_status" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pysh.command.ExternalCommandSpec.parse_args">
-<code class="descname">parse_args</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; List[Any]<a class="reference internal" href="../_modules/pysh/command.html#ExternalCommandSpec.parse_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.ExternalCommandSpec.parse_args" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.ExternalSpec.parse_args">
+<code class="descname">parse_args</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span> &#x2192; List[Any]<a class="reference internal" href="../_modules/pysh/command.html#ExternalSpec.parse_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.ExternalSpec.parse_args" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="pysh.command.ExternalCommandSpec.repeat">
-<code class="descname">repeat</code><a class="headerlink" href="#pysh.command.ExternalCommandSpec.repeat" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.ExternalSpec.repeat">
+<code class="descname">repeat</code><a class="headerlink" href="#pysh.command.ExternalSpec.repeat" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="pysh.command.ExternalCommandSpec.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>builder: pysh.command.CommandBuilder</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#ExternalCommandSpec.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.ExternalCommandSpec.run" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.ExternalSpec.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>builder: pysh.command.Command</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#ExternalSpec.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.ExternalSpec.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a somewhat internal method to execute a builder according to
-the spec. It’s intended to be used by <a class="reference internal" href="#pysh.command.CommandBuilder.invoke" title="pysh.command.CommandBuilder.invoke"><code class="xref py py-meth docutils literal notranslate"><span class="pre">CommandBuilder.invoke()</span></code></a>.</p>
+the spec. It’s intended to be used by <code class="xref py py-meth docutils literal notranslate"><span class="pre">CommandBuilder.invoke()</span></code>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="pysh.command.ExternalCommandSpec.shortpre">
-<code class="descname">shortpre</code><a class="headerlink" href="#pysh.command.ExternalCommandSpec.shortpre" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.ExternalSpec.shortpre">
+<code class="descname">shortpre</code><a class="headerlink" href="#pysh.command.ExternalSpec.shortpre" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="pysh.command.ExternalCommandSpec.valuepre">
-<code class="descname">valuepre</code><a class="headerlink" href="#pysh.command.ExternalCommandSpec.valuepre" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.command.ExternalSpec.valuepre">
+<code class="descname">valuepre</code><a class="headerlink" href="#pysh.command.ExternalSpec.valuepre" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -524,15 +500,73 @@ the spec. It’s intended to be used by <a class="reference internal" href="#pys
 </dd></dl>
 
 <dl class="class">
-<dt id="pysh.command.ShCommandBuilder">
-<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">ShCommandBuilder</code><span class="sig-paren">(</span><em>spec: pysh.command.CommandSpec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#ShCommandBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.ShCommandBuilder" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pysh.command.CommandBuilder" title="pysh.command.CommandBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.command.CommandBuilder</span></code></a></p>
+<dt id="pysh.command.Pipe">
+<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">Pipe</code><span class="sig-paren">(</span><em>lhs</em>, <em>rhs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#Pipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Pipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.command.Expr" title="pysh.command.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.command.Expr</span></code></a></p>
+<p>Represents a pipe <code class="docutils literal notranslate"><span class="pre">|</span></code> operation.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="pysh.command.ShCommandSpec">
-<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">ShCommandSpec</code><a class="reference internal" href="../_modules/pysh/command.html#ShCommandSpec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.ShCommandSpec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pysh.command.CommandSpec" title="pysh.command.CommandSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.command.CommandSpec</span></code></a></p>
+<dt id="pysh.command.Piperr">
+<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">Piperr</code><span class="sig-paren">(</span><em>lhs</em>, <em>rhs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#Piperr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Piperr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.command.Pipe" title="pysh.command.Pipe"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.command.Pipe</span></code></a></p>
+<p>Represents a piperr <cite>^</cite> operation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.command.Redirect">
+<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">Redirect</code><span class="sig-paren">(</span><em>lhs</em>, <em>rhs</em>, <em>*</em>, <em>appending=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#Redirect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Redirect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.command.Expr" title="pysh.command.Expr"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.command.Expr</span></code></a></p>
+<p>Represents a redirection <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code> operation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.command.Result">
+<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">Result</code><span class="sig-paren">(</span><em>expr: pysh.command.Expr</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#Result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="pysh.command.Result.expr">
+<code class="descname">expr</code><a class="headerlink" href="#pysh.command.Result.expr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.command.Result.status">
+<code class="descname">status</code><a class="headerlink" href="#pysh.command.Result.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.command.Result.stderr">
+<code class="descname">stderr</code><a class="headerlink" href="#pysh.command.Result.stderr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.command.Result.stdin">
+<code class="descname">stdin</code><a class="headerlink" href="#pysh.command.Result.stdin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.command.Result.stdout">
+<code class="descname">stdout</code><a class="headerlink" href="#pysh.command.Result.stdout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysh.command.Result.wait">
+<code class="descname">wait</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#Result.wait"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.Result.wait" title="Permalink to this definition">¶</a></dt>
+<dd><p>Block until the command terminates.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.command.ShCommand">
+<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">ShCommand</code><span class="sig-paren">(</span><em>spec: pysh.command.BaseSpec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#ShCommand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.ShCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.command.Command" title="pysh.command.Command"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.command.Command</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.command.ShSpec">
+<em class="property">class </em><code class="descclassname">pysh.command.</code><code class="descname">ShSpec</code><a class="reference internal" href="../_modules/pysh/command.html#ShSpec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.ShSpec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.command.BaseSpec" title="pysh.command.BaseSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.command.BaseSpec</span></code></a></p>
 <p>Runs a command via a shell.</p>
 <p>The first argument is the command to run, it’ll be extended with
 the arguments expansion, so the shell can forward any extra arguments
@@ -551,15 +585,15 @@ on the environment when running it.</p>
 <dl class="function">
 <dt id="pysh.command.command">
 <code class="descclassname">pysh.command.</code><code class="descname">command</code><span class="sig-paren">(</span><em>command</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command.command" title="Permalink to this definition">¶</a></dt>
-<dd><p>Command factory. Returns a <a class="reference internal" href="#pysh.command.CommandBuilder" title="pysh.command.CommandBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandBuilder</span></code></a> configured with a
-<a class="reference internal" href="#pysh.command.CommandSpec" title="pysh.command.CommandSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandSpec</span></code></a> suitable for the given command.</p>
-<p>Any additional keyword arguments will be provided to the matched concrete
-implementation of <a class="reference internal" href="#pysh.command.CommandSpec" title="pysh.command.CommandSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">CommandSpec</span></code></a>.</p>
+<dd><p>Command factory. Returns a <a class="reference internal" href="#pysh.command.Command" title="pysh.command.Command"><code class="xref py py-class docutils literal notranslate"><span class="pre">Command</span></code></a> configured with concreate
+implementation of <a class="reference internal" href="#pysh.command.BaseSpec" title="pysh.command.BaseSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseSpec</span></code></a> suitable for the given command.</p>
+<p>Any additional keyword arguments will be provided to the implementation
+of <code class="xref py py-class docutils literal notranslate"><span class="pre">Spec</span></code>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Currently <em>command</em> can only be a path-like reference which
-refers to an external command, check <a class="reference internal" href="#pysh.command.ExternalCommandSpec" title="pysh.command.ExternalCommandSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExternalCommandSpec</span></code></a>
-for additional details.</p>
+refers to an external command, check <a class="reference internal" href="#pysh.command.ExternalSpec" title="pysh.command.ExternalSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExternalSpec</span></code></a> for
+additional details.</p>
 </div>
 </dd></dl>
 

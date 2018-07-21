@@ -1,0 +1,293 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usage &mdash; pysh 0.0.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Domain Specific Language" href="dsl/index.html" />
+    <link rel="prev" title="Preface" href="preface.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="preface.html">Preface</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#eval-mode">Eval mode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#transformations">Transformations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dsl/index.html">Domain Specific Language</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_apidoc/pysh.html">pysh package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Changelog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Unreleased</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html#version-0-0-3">Version 0.0.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html#version-0-0-1">Version 0.0.1</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Usage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pysh</span> <span class="o">--</span><span class="n">help</span>
+</pre></div>
+</div>
+<div class="section" id="eval-mode">
+<h2>Eval mode<a class="headerlink" href="#eval-mode" title="Permalink to this headline">¶</a></h2>
+<div class="code highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pysh</span> <span class="o">-</span><span class="n">e</span> <span class="o">&lt;</span><span class="n">expr</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>This mode is useful for one liners, mainly to use on interactive shells. It’s
+similar to <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-c</span></code> but with the following twists:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">NameError</span></code> will try to automatically import a package before failing.</li>
+<li>last expression is automatically printed to stdout unless it’s <code class="docutils literal notranslate"><span class="pre">None</span></code>.</li>
+<li>when last expression is a boolean True exits with 0 and False with 1.</li>
+</ul>
+<p>Given that names are automatically imported it becomes trivial to use Python’s
+libraries from the shell:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># automatically access some library function</span>
+<span class="nv">random</span><span class="o">=</span><span class="k">$(</span>pysh -e <span class="s1">&#39;random.randint(10, 50)&#39;</span><span class="k">)</span>
+<span class="nb">echo</span> <span class="s2">&quot;Please do </span><span class="nv">$random</span><span class="s2"> push ups&quot;</span>
+
+<span class="c1"># consume from stdin</span>
+seq <span class="m">10</span> <span class="p">|</span> pysh -e <span class="s1">&#39;sum(int(x) for x in sys.stdin)&#39;</span>
+</pre></div>
+</div>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Allow arguments and environment variables interpolation in the code snippet.</p>
+</div>
+</div>
+<div class="section" id="transformations">
+<h2>Transformations<a class="headerlink" href="#transformations" title="Permalink to this headline">¶</a></h2>
+<p>Even if <em>pysh</em> tries to remain very close to Python, in order to make its
+usage ergonomic, some source code transformations are needed before the code
+is executed. For the most part this is transparent when using <em>pysh</em>, it’s
+performed under the hood automatically.</p>
+<p>The transformation framework however is exposed at the library level and also
+to the command line runner. The <code class="docutils literal notranslate"><span class="pre">--transform</span></code> option allows to load an arbitrary
+<em>transformation module</em>, either from the set of standard ones or from a third
+party. Multiple transformations are supported, just use additional options
+and they’ll be applied in the given order.</p>
+<p>For instance, we can use the <a class="reference internal" href="_apidoc/pysh.transforms.autoimport.html#module-pysh.transforms.autoimport" title="pysh.transforms.autoimport"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pysh.transforms.autoimport</span></code></a> transformation,
+which is only enabled for <a class="reference internal" href="#eval-mode"><span class="std std-ref">Eval mode</span></a>, for an arbitrary script just by
+using <code class="docutils literal notranslate"><span class="pre">--transform</span> <span class="pre">autoimport</span></code>. That will make code in the script able to use
+any module just by referencing its name.</p>
+<p>Much more advanced transformations are possible and users are encouraged to
+develop their own ones in order to experiment with new syntax and constructs.
+There are no plans though to include them in the official <em>pysh</em> distribution,
+the idea here is to allow free experimentation by the community and use the
+best ones as inspiration for driving changes in future versions of <em>pysh</em>, not
+necessarily as a transformation.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Check <a class="reference internal" href="_apidoc/pysh.transforms.html#module-pysh.transforms" title="pysh.transforms"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pysh.transforms</span></code></a> for technical details about the implementation.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dsl/index.html" class="btn btn-neutral float-right" title="Domain Specific Language" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="preface.html" class="btn btn-neutral" title="Preface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

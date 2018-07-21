@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="pysh changelog" href="../changelog.html" />
+    <link rel="next" title="pysh package" href="../_apidoc/pysh.html" />
     <link rel="prev" title="Types" href="types.html" /> 
 
   
@@ -85,28 +85,33 @@
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Domain Specific Language</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="types.html">Types</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Operators</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pipe">Pipe: |</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#piperr">Piperr: ^ 🚧</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#redirection">Redirection: &gt;</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#appending-redirection">Appending Redirection: &gt;&gt;</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#redirection-and">Redirection: &gt; and &gt;&gt;</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#reckless">Reckless: ~</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#lazy-application">Lazy application: &lt;= 🚧</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#lazy">Lazy: &lt;= 🚧</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#context-manager-with">Context Manager: with 🚧</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#path-concatenation">Path concatenation: /</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#path-globbing-and">Path globbing: * and **</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#path-regexp">Path regexp: //</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#path-globing-and">Path globing: * and **</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#path-regex">Path regex: //</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../changelog.html">pysh changelog</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../_apidoc/pysh.html">pysh package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Changelog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Unreleased</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html#version-0-0-3">Version 0.0.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html#version-0-0-1">Version 0.0.1</a></li>
 </ul>
 
             
@@ -293,8 +298,8 @@ redirection.</p>
 </div>
 </div></blockquote>
 </div>
-<div class="section" id="redirection">
-<h2>Redirection: &gt;<a class="headerlink" href="#redirection" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="redirection-and">
+<h2>Redirection: &gt; and &gt;&gt;<a class="headerlink" href="#redirection-and" title="Permalink to this headline">¶</a></h2>
 <p><strong>command</strong> <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> (<strong>stream</strong> | <strong>path</strong> | <strong>str</strong>)</p>
 <blockquote>
 <div><p>Like in a standard shell the redirection places the output from the <em>command</em>
@@ -331,9 +336,6 @@ and then passed as an argument to the target function.</p>
 </pre></div>
 </div>
 </div></blockquote>
-</div>
-<div class="section" id="appending-redirection">
-<h2>Appending Redirection: &gt;&gt;<a class="headerlink" href="#appending-redirection" title="Permalink to this headline">¶</a></h2>
 <p><strong>command</strong> <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code> (<strong>path</strong> | <strong>str</strong>)</p>
 <blockquote>
 <div><p>Works exactly like the redirection operator <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> but if the target file exists
@@ -381,8 +383,8 @@ with a conditional and a subshell:
 </div>
 </div></blockquote>
 </div>
-<div class="section" id="lazy-application">
-<h2>Lazy application: &lt;= 🚧<a class="headerlink" href="#lazy-application" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="lazy">
+<h2>Lazy: &lt;= 🚧<a class="headerlink" href="#lazy" title="Permalink to this headline">¶</a></h2>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">🚧 Validate that it’ll work as documented</p>
@@ -460,8 +462,8 @@ can itself contain directories.</p>
 </div>
 </div></blockquote>
 </div>
-<div class="section" id="path-globbing-and">
-<h2>Path globbing: * and **<a class="headerlink" href="#path-globbing-and" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="path-globing-and">
+<h2>Path globing: * and **<a class="headerlink" href="#path-globing-and" title="Permalink to this headline">¶</a></h2>
 <p><strong>path</strong> <code class="docutils literal notranslate"><span class="pre">*</span></code> <strong>str</strong></p>
 <blockquote>
 <div><p>Performs a shell style globbing match against the directory entries under
@@ -472,8 +474,8 @@ can itself contain directories.</p>
 <span class="go">./part-?.dat</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
 <p class="last">for more details about the supported syntax see <a class="reference external" href="https://docs.python.org/3/library/glob.html">https://docs.python.org/3/library/glob.html</a></p>
 </div>
 </div></blockquote>
@@ -489,13 +491,13 @@ glob all over the directory tree under <em>path</em>.</p>
 </div>
 </div></blockquote>
 </div>
-<div class="section" id="path-regexp">
-<h2>Path regexp: //<a class="headerlink" href="#path-regexp" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="path-regex">
+<h2>Path regex: //<a class="headerlink" href="#path-regex" title="Permalink to this headline">¶</a></h2>
 <p><strong>path</strong> <code class="docutils literal notranslate"><span class="pre">//</span></code> (<strong>str</strong> | <strong>pattern</strong>)</p>
 <blockquote>
 <div><div class="admonition caution">
 <p class="first admonition-title">Caution</p>
-<p class="last">Try to use the globbing operators when possible, matching by regexp is
+<p class="last">Try to use the globing operators when possible, matching by regexp is
 expensive unless the pattern is very well defined, since for non anchored
 cases like <code class="docutils literal notranslate"><span class="pre">\.jpe?g$</span></code> it has to traverse the whole directory tree.</p>
 </div>
@@ -511,7 +513,7 @@ cases like <code class="docutils literal notranslate"><span class="pre">\.jpe?g$
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../changelog.html" class="btn btn-neutral float-right" title="pysh changelog" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="../_apidoc/pysh.html" class="btn btn-neutral float-right" title="pysh package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="types.html" class="btn btn-neutral" title="Types" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

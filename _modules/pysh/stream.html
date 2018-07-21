@@ -83,6 +83,7 @@
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../dsl/index.html">Domain Specific Language</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference:</span></p>
@@ -225,11 +226,15 @@
 <span class="sd">cat(&#39;file.gz&#39;).text |     # convert to text (infer encoding)</span>
 <span class="sd">cat(&#39;file.gz&#39;).io(&#39;utf-8&#39;) | # convert to text (force encoding)</span>
 
-<span class="sd">cat(&#39;file.gz&#39;).io(out=&#39;raw&#39;, err=&#39;utf-8&#39;)</span>
-<span class="sd">cat(&#39;file.gz&#39;).io(in=&#39;utf-8&#39;, out=&#39;binary&#39;, err=&#39;auto&#39;)</span>
-<span class="sd">cat(&#39;file.gz&#39;).io(out=&#39;utf-8&#39;, lines=1, eol=&#39;\0&#39;, in_bytes=0)</span>
+<span class="sd">cat(&#39;file.gz&#39;).io(stdout=&#39;raw&#39;, stderr=&#39;utf-8&#39;)</span>
+<span class="sd">cat(&#39;file.gz&#39;).io(stdin=&#39;utf-8&#39;, stdout=&#39;binary&#39;, stderr=&#39;text&#39;)</span>
+<span class="sd">cat(&#39;file.gz&#39;).io(stdout=&#39;utf-8&#39;, lines=1, eol=&#39;\0&#39;, in_bytes=0)</span>
 
-<span class="sd">cmd.pipe(out=grep[&#39;foo&#39;])</span>
+<span class="sd">cat(&#39;file&#39;).io(inp=&#39;utf-8&#39;, out=&#39;utf-16&#39;, lines=1, eol=&#39;\0&#39;)</span>
+<span class="sd"># read decoding utf-8 to Text, write encoding as utf-16. Buffer lines for input and output</span>
+
+
+<span class="sd">cmd.pipe(stdout=grep[&#39;foo&#39;])</span>
 
 <span class="sd">buffer(0) &lt;= cmd             # unbuffered</span>
 <span class="sd">buffer(lines=1) &lt;= cmd       # 1 line at a time</span>

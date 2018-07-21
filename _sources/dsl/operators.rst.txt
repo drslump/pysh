@@ -112,8 +112,8 @@ Piperr: ^ 🚧
         a bit cryptic but not far off: ``gcc 2>&1 >/dev/null | grep foo | head``
 
 
-Redirection: >
---------------
+Redirection: > and >>
+---------------------
 
 **command** ``>`` (**stream** | **path** | **str**)
 
@@ -148,10 +148,6 @@ Redirection: >
 
     >>> echo("hello") > len
     6  # len(b"hello\n")
-
-
-Appending Redirection: >>
--------------------------
 
 **command** ``>>`` (**path** | **str**)
 
@@ -200,8 +196,8 @@ Reckless: ~
         ``cat fname | (grep foo 2>/dev/null || true) | wc -l``
 
 
-Lazy application: <= 🚧
------------------------
+Lazy: <= 🚧
+-----------
 
 .. Warning:: 🚧 Validate that it'll work as documented
 
@@ -276,7 +272,7 @@ Path concatenation: /
     ./path/to/my/file.txt
 
 
-Path globbing: * and **
+Path globing: * and **
 -----------------------
 
 **path** ``*`` **str**
@@ -289,7 +285,7 @@ Path globbing: * and **
     >>> _ * 'part-?.dat'
     ./part-?.dat
 
-    .. Note::
+    .. seealso::
         for more details about the supported syntax see https://docs.python.org/3/library/glob.html
 
 
@@ -304,13 +300,13 @@ Path globbing: * and **
     ./**/*.jpg
 
 
-Path regexp: //
----------------
+Path regex: //
+--------------
 
 **path** ``//`` (**str** | **pattern**)
 
     .. Caution::
-        Try to use the globbing operators when possible, matching by regexp is
+        Try to use the globing operators when possible, matching by regexp is
         expensive unless the pattern is very well defined, since for non anchored
         cases like ``\.jpe?g$`` it has to traverse the whole directory tree.
 
