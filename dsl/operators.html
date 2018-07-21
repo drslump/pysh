@@ -240,6 +240,26 @@ so it can be feed to the <em>command</em> on the right.</p>
 <p class="first admonition-title">Warning</p>
 <p class="last">🚧 Validate that it’ll work as documented</p>
 </div>
+<p>🚧 <strong>command</strong> <code class="docutils literal notranslate"><span class="pre">^</span></code> (<strong>stream</strong> | <strong>path</strong> | <strong>str</strong>) 🚧</p>
+<blockquote>
+<div><p>Redirect <em>stderr</em> to a stream or a file.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gcc</span> <span class="o">^</span> <span class="n">null</span>
+<span class="go">discard stderr output</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gcc</span> <span class="o">^</span> <span class="n">stdout</span> <span class="o">|</span> <span class="n">wc</span><span class="p">[</span><span class="s1">&#39;-l&#39;</span><span class="p">]</span>
+<span class="go">merge stderr into stdout and count all the lines from both</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gcc</span> <span class="o">^</span> <span class="n">errors</span><span class="o">.</span><span class="n">txt</span> <span class="o">|</span> <span class="n">wc</span><span class="p">[</span><span class="s1">&#39;-l&#39;</span><span class="p">]</span>
+<span class="go">store stderr in a file and count the lines on stdout</span>
+</pre></div>
+</div>
+<div class="admonition-meanwhile-in-bash admonition">
+<p class="first admonition-title">meanwhile in Bash</p>
+<p class="last">quite similar, the <code class="docutils literal notranslate"><span class="pre">^</span></code> is <code class="docutils literal notranslate"><span class="pre">2&gt;</span></code>. An example: <code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">2&gt;errors.txt</span> <span class="pre">|</span> <span class="pre">wc</span> <span class="pre">-l</span></code></p>
+</div>
+</div></blockquote>
 <p>🚧 <strong>command</strong> <code class="docutils literal notranslate"><span class="pre">^</span></code> <strong>command</strong> 🚧</p>
 <blockquote>
 <div><p>Pipe <em>stderr</em> from the command on the left to <em>stdin</em> from the command on
@@ -269,26 +289,6 @@ redirection.</p>
 <div class="admonition-meanwhile-in-bash admonition">
 <p class="first admonition-title">meanwhile in Bash</p>
 <p class="last">a bit cryptic but not far off: <code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">2&gt;&amp;1</span> <span class="pre">&gt;/dev/null</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">foo</span> <span class="pre">|</span> <span class="pre">head</span></code></p>
-</div>
-</div></blockquote>
-<p>🚧 <strong>command</strong> <code class="docutils literal notranslate"><span class="pre">^</span></code> (<strong>stream</strong> | <strong>path</strong> | <strong>str</strong>) 🚧</p>
-<blockquote>
-<div><p>Redirect <em>stderr</em> to a stream or a file.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gcc</span> <span class="o">^</span> <span class="n">null</span>
-<span class="go">discard stderr output</span>
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gcc</span> <span class="o">^</span> <span class="n">stdout</span> <span class="o">|</span> <span class="n">wc</span><span class="p">[</span><span class="s1">&#39;-l&#39;</span><span class="p">]</span>
-<span class="go">merge stderr into stdout and count all the lines from both</span>
-</pre></div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gcc</span> <span class="o">^</span> <span class="n">errors</span><span class="o">.</span><span class="n">txt</span> <span class="o">|</span> <span class="n">wc</span><span class="p">[</span><span class="s1">&#39;-l&#39;</span><span class="p">]</span>
-<span class="go">store stderr in a file and count the lines on stdout</span>
-</pre></div>
-</div>
-<div class="admonition-meanwhile-in-bash admonition">
-<p class="first admonition-title">meanwhile in Bash</p>
-<p class="last">quite similar, the <code class="docutils literal notranslate"><span class="pre">^</span></code> is <code class="docutils literal notranslate"><span class="pre">2&gt;</span></code>. An example: <code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">2&gt;errors.txt</span> <span class="pre">|</span> <span class="pre">wc</span> <span class="pre">-l</span></code></p>
 </div>
 </div></blockquote>
 </div>
