@@ -1,0 +1,7 @@
+pysh.stream module
+==================
+
+.. automodule:: pysh.stream
+    :members:
+    :undoc-members:
+    :show-inheritance:

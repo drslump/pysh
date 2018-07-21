@@ -1,0 +1,7 @@
+pysh.command module
+===================
+
+.. automodule:: pysh.command
+    :members:
+    :undoc-members:
+    :show-inheritance:

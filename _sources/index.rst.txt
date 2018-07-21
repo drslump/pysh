@@ -1,0 +1,54 @@
+.. pysh documentation master file, created by
+   sphinx-quickstart on Tue Jul 10 07:51:21 2018.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to pysh's documentation!
+================================
+
+*pysh* is a shell scripting framework for Python.
+
+..  Danger::
+
+     ⚠️ This is totally **experimental**, fully **broken**. Do not use yet! ☠️
+
+
+Project goals
+-------------
+
+ - Syntax is standard Python (full IDE support)
+ - Ergonomic (pipes, redirections, autoexpr, paths, ...)
+ - Sensible defaults (i.e. docopt, env defaults, logging, ...)
+ - Strong support for paralelism
+ - Biased towards unix scripting (barebones windows support)
+ - No support for interactive mode!
+
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Contents:
+    :glob:
+
+    preface
+    dsl/index
+
+
+.. toctree::
+    :maxdepth: 3
+    :caption: API Reference:
+
+    _apidoc/pysh
+
+
+Todo list
+---------
+
+.. todolist::
+
+
+Indices and tables
+------------------
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

@@ -1,0 +1,7 @@
+pysh.path module
+================
+
+.. automodule:: pysh.path
+    :members:
+    :undoc-members:
+    :show-inheritance:

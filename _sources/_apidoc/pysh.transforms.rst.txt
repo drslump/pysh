@@ -1,0 +1,20 @@
+pysh.transforms package
+=======================
+
+.. automodule:: pysh.transforms
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+
+   pysh.transforms.autoexpr
+   pysh.transforms.autoimport
+   pysh.transforms.autoreturn
+   pysh.transforms.bangexpr
+   pysh.transforms.lazybools
+   pysh.transforms.protectnames
+

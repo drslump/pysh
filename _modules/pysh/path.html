@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysh.path &mdash; pysh 0.0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dsl/index.html">Domain Specific Language</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_apidoc/pysh.html">pysh package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../pysh.html">pysh</a> &raquo;</li>
+        
+      <li>pysh.path</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pysh.path</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. TODO::</span>
+<span class="sd">    Paths globbing should be lazy too. This means that we need to use</span>
+<span class="sd">    pathlib internally and expose a custom interface that resolves on str and</span>
+<span class="sd">    iter. That would allow to do this:</span>
+
+<span class="sd">    &gt;&gt;&gt; imgs = _ // &#39;*.jpg&#39; + &#39;*.gif&#39; + &#39;*.png&#39;</span>
+<span class="sd">    &gt;&gt;&gt; if len(imgs) &gt; 5:  # globbing is computed</span>
+<span class="sd">    &gt;&gt;&gt;   zip(imgs)      # globbing is computed again</span>
+
+<span class="sd">Internally a PathWrapper is always a collection with 0 or more elements.</span>
+<span class="sd">The rules are:</span>
+
+<span class="sd">    &gt;&gt;&gt; str(*.py)  -&gt;  &#39;foo.py bar.py&#39;  # space separated</span>
+<span class="sd">    &gt;&gt;&gt; int(path) -&gt; len(path) -&gt; number of matching files  # globs can yield 0</span>
+<span class="sd">    &gt;&gt;&gt; list(path) -&gt; get a snapshot of the current paths</span>
+<span class="sd">    &gt;&gt;&gt; bool(gpath) -&gt; gpath.exists()  -&gt; at least one match</span>
+
+<span class="sd">    &gt;&gt;&gt; glob1 + glob2 -&gt; adds glob2 to glob1</span>
+<span class="sd">    &gt;&gt;&gt; glob1 - glob2 -&gt; substracts glob2 from glob1</span>
+<span class="sd">    &gt;&gt;&gt; _ ** &#39;tmp-?.py&#39; -&gt; recursive glob -&gt; _ // &#39;**/tmp-?.py&#39;</span>
+
+<span class="sd">One problem of handling paths as collections is that we lose some of the</span>
+<span class="sd">functionality of pathlib (i.e `.is_file`). Even if the collection yields</span>
+<span class="sd">Path objects, the ergonomics do not seem to be great:</span>
+
+<span class="sd">    &gt;&gt;&gt; p = _ / &#39;foo.txt&#39;</span>
+<span class="sd">    &gt;&gt;&gt; p.is_file()  # error</span>
+<span class="sd">    &gt;&gt;&gt; p[0].is_file()   # works</span>
+
+<span class="sd">One solution would be to proxy those methods to the whole collection like:</span>
+
+<span class="sd">    &gt;&gt;&gt; p.is_file()  -&gt; all(x.is_file for x in p)</span>
+
+<span class="sd">But it can perhaps be very confusing if the path matches different items,</span>
+<span class="sd">for instance if there is a directory on it. Although for normal use this</span>
+<span class="sd">probably makes sense. However things like `.rename` or `.open` wouldn&#39;t</span>
+<span class="sd">work.</span>
+
+<span class="sd">A least surprising option may be to internally control if the path is</span>
+<span class="sd">concrete or a glob, if it&#39;s a glob those proxied options would raise an</span>
+<span class="sd">error. __len__ for a non glob would return the path length, on glob the</span>
+<span class="sd">number of matches.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">PurePath</span><span class="p">,</span> <span class="n">PosixPath</span><span class="p">,</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">cast</span>
+<span class="n">TPathLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PurePath</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="PathWrapper"><a class="viewcode-back" href="../../_apidoc/pysh.path.html#pysh.path.PathWrapper">[docs]</a><span class="k">class</span> <span class="nc">PathWrapper</span><span class="p">(</span><span class="n">PosixPath</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__floordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot; regexp is anchored to the start. This avoids expensive traversals</span>
+<span class="sd">            for simple use cases. User can always start with `*` (we convert to .*)</span>
+<span class="sd">            if anchored is not ok for the use case.</span>
+
+<span class="sd">            - starts with `*` -&gt; [^/]*?  (no recursive)</span>
+<span class="sd">            - starts with `**` -&gt; .*?  (recursive)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__rfloordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Overload equality so we can support comparison against plain strings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#TODO: try to resolve before comparing equality?</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">PathWrapper</span><span class="p">):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">PathWrapper</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">TPathLike</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">slice</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;~&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PathWrapper</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">spec</span><span class="p">))</span>
+
+        <span class="c1">#TODO: check slice</span>
+
+        <span class="c1"># if spec in (&#39;.&#39;, &#39;/&#39;, &#39;~&#39;, r&#39;\\&#39;):</span>
+        <span class="c1">#     return Path(spec=spec)</span>
+        <span class="c1"># elif spec == r&#39;\&#39;:</span>
+        <span class="c1">#     return Path(spec=&#39;/&#39;)</span>
+        <span class="c1"># elif spec == &#39;//&#39;:</span>
+        <span class="c1">#     return Path(spec=r&#39;\\&#39;)</span>
+        <span class="c1"># elif spec.is_letter():</span>
+        <span class="c1">#     return Path(spec=spec.lower())</span>
+        <span class="c1"># elif all(ch == &#39;.&#39; for ch in spec):</span>
+        <span class="c1">#     return Path(spec=spec)</span>
+        <span class="c1"># else:</span>
+
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unsupported path spec </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">spec</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">TPathLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; use: _(&#39;path/to/file&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">PathWrapper</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PathWrapper.as_path"><a class="viewcode-back" href="../../_apidoc/pysh.path.html#pysh.path.PathWrapper.as_path">[docs]</a>    <span class="k">def</span> <span class="nf">as_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">glob</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Path</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot; Returns a path object if no globbing is setup. If glob is set</span>
+<span class="sd">            it returns an Iterator of path objects, otherwise raises ValueError.</span>
+
+<span class="sd">            It&#39;ll return a Path/Posix/Windows path object according to the</span>
+<span class="sd">            current configuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

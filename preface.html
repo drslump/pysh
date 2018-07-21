@@ -1,0 +1,290 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Preface &mdash; pysh 0.0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Domain Specific Language" href="dsl/index.html" />
+    <link rel="prev" title="Welcome to pysh’s documentation!" href="index.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Preface</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#motivation">Motivation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#requeriments">Requeriments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#prior-art">Prior art</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dsl/index.html">Domain Specific Language</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="_apidoc/pysh.html">pysh package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Preface</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/preface.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="preface">
+<h1>Preface<a class="headerlink" href="#preface" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="motivation">
+<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this headline">¶</a></h2>
+<p>The overall consensus is that <em>shell scripting</em> with <em>sh</em> can get messy real
+quick, it’s a tool that feels arcane to many programmers and while in general
+it’s great for instrumenting simple tasks it requires a very depth knowledge
+of the tool to even understand a moderately complex script, let alone write
+one with confidence.</p>
+<p>Personally I think the main problem with using a <em>shell</em> for <em>shell scripting</em>
+is that they solve two completely different problems with the same tool. On one
+side they need to provide an <em>interactive mode</em> where syntax should be very terse
+to be useful, while on the other they reuse that syntax and semantics for actual
+<em>programming</em> tasks. Some shells like <em>fish</em> seem like a good step on solving that
+problem but still focus on its primary use case of being an <em>interactive shell</em>.</p>
+<p>Another important issue with <em>sh</em> based scripting is portability, while <em>bash</em>
+is ubiquitous nowadays and is usually good enough to assume its syntax, it relies
+on the <em>standard unix utilities</em> which unfortunately are not fully compatible
+between systems with GNU or BSD roots, let alone Windows. This becomes obvious
+when developing on <em>macOS</em> (BSD roots) but running on <em>Linux</em> (GNU roots).</p>
+<p>Then there is <em>perl</em> and <em>tcl</em>, which should help with those problems but
+unfortunately they also have an arcane feeling for many or a very limited standard
+library in <em>tcl</em>’s case. Next is a myriad of <em>scripting</em> languages like <em>python</em>,
+<em>ruby</em>, <em>php</em> or <em>lua</em>, that have found their sweet spots in other domains and
+while capable of <em>shell scripting</em> don’t offer an ergonomic solution for it.</p>
+<p>From the scripting languages <em>python</em> crosses many t’s. The most important
+being its good readability even for inexperienced programmers, <em>bateries included</em>
+philosophy with a very rich and portable standard library, solid packaging story
+and its mixture of dynamic runtime with strong typing that makes errors more
+obvious.</p>
+<p>If we can make <em>python</em> behave a bit more like <em>tcl</em> we might have a winner.</p>
+</div>
+<div class="section" id="requeriments">
+<h2>Requeriments<a class="headerlink" href="#requeriments" title="Permalink to this headline">¶</a></h2>
+<p>The <strong>target runtime is Python 3.6</strong> (CPython implementation) on <em>posix</em> systems.
+Targeting that specific version for the <em>initial prototype</em> makes coding it more
+fun, allowing to focus on solving the problems without thinking about backwards
+compatibility, it also enables some interesting features like type hinting.</p>
+<p>Once the project matures it should be possible to add support for older Python3
+versions. Supporting Python2 would be much harder though and it’s not planned
+unless there is someone strongly motivated to do it.</p>
+<p>As for supported operating systems the story is similar, the goal is to fully
+support Linux and macOS/OSX. Supporting Windows and less popular unixes will
+depend on finding a motivated contributor to implement it. That being said, the
+bare basics <em>should</em> work on every system with <em>CPython</em> support.</p>
+</div>
+<div class="section" id="prior-art">
+<h2>Prior art<a class="headerlink" href="#prior-art" title="Permalink to this headline">¶</a></h2>
+<p>Searching for similar software turned out quite a few options, perhaps one of
+them might work best for your use case.</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference external" href="https://github.com/tomerfiliba/plumbum">Plumbum</a></li>
+<li><a class="reference external" href="https://github.com/lamerman/shellpy">shellpy</a></li>
+<li><a class="reference external" href="http://sarge.readthedocs.io/en/latest/">Sarge</a></li>
+<li><a class="reference external" href="http://amoffat.github.io/sh/">sh</a></li>
+<li><a class="reference external" href="https://github.com/kennethreitz/delegator.py">Delegator</a></li>
+<li><a class="reference external" href="https://github.com/pexpect/pexpect">pexpect</a></li>
+</ul>
+</div></blockquote>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dsl/index.html" class="btn btn-neutral float-right" title="Domain Specific Language" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to pysh’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

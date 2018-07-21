@@ -1,0 +1,477 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Types &mdash; pysh 0.0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Operators" href="operators.html" />
+    <link rel="prev" title="Domain Specific Language" href="index.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../preface.html">Preface</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Domain Specific Language</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#streams">Streams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#paths">Paths</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#path-factory">Path factory: _</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#commands">Commands</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#shell-command-sh">Shell command: sh</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="operators.html">Operators</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../_apidoc/pysh.html">pysh package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Domain Specific Language</a> &raquo;</li>
+        
+      <li>Types</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/dsl/types.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="types">
+<h1>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h1>
+<p>These are the main types exposed in the DSL, while their internal details are
+out of the scope for this section or even required for using them in a script,
+it’s important to understand their semantics.</p>
+<div class="section" id="streams">
+<h2>Streams<a class="headerlink" href="#streams" title="Permalink to this headline">¶</a></h2>
+<p>A <em>stream</em> is a file-like object, inheriting from <em>Python’s stdlib</em> <a class="reference external" href="https://docs.python.org/3/library/io.html?highlight=stringio#io.IOBase">IOBase</a>,
+it allows to read and write to it. Since we build upon the stdlib it simplifies
+the integration with plain Python code, for instance the file object returned
+by the <a class="reference external" href="https://docs.python.org/3/library/functions.html#open">open</a> function is fully compatible.</p>
+<p>Every script starts with the following streams defined:</p>
+<p><strong>null</strong></p>
+<blockquote>
+<div>Ignores anything we send to it, so it’s always empty.</div></blockquote>
+<p><strong>stdin</strong></p>
+<blockquote>
+<div>Receives data from another program.</div></blockquote>
+<p><strong>stdout</strong></p>
+<blockquote>
+<div>Used to output data from our script.</div></blockquote>
+<p><strong>stderr</strong></p>
+<blockquote>
+<div>Used to output diagnosis information from our script.</div></blockquote>
+</div>
+<div class="section" id="paths">
+<h2>Paths<a class="headerlink" href="#paths" title="Permalink to this headline">¶</a></h2>
+<p>Python offers the <a class="reference external" href="https://docs.python.org/3/library/pathlib.html">pathlib</a> module in the <em>standard library</em>, which offers an
+object oriented interface for paths, while we inherit from its <code class="docutils literal notranslate"><span class="pre">Path</span></code> class
+we have <strong>quite different semantics</strong>:</p>
+<blockquote>
+<div><p><strong>lazy evaluation</strong></p>
+<blockquote>
+<div><p>When a path is defined, or even globbed, the result is not immediately
+evaluated. Instead it stores the current configuration so it gets applied
+when we force its evaluation (for instance when casting <code class="docutils literal notranslate"><span class="pre">str(path)</span></code>).</p>
+<p>This detail is specially important if we are defining relative paths
+and then change the directory between their definition and their
+evaluation. In that case the paths will evaluate with the working
+directory currently active.</p>
+</div></blockquote>
+<p><strong>immutability</strong></p>
+<blockquote>
+<div><p>While Python usually mutates the internal state of an object when we
+modify it somehow, in the case of paths this doesn’t happen, instead a
+cloned instance is returned with its current configuration and then the
+modification is applied to it.</p>
+<p>This is required for <strong>lazy evaluation</strong> to work without surprises,
+otherwise we might reuse a path instance used in a previous command which
+might be executed in the future.</p>
+</div></blockquote>
+</div></blockquote>
+<p>Given those semantics we should think about <em>pysh paths</em> as <em>path builders</em>, where
+there is a setup step that is later used as many times as required.</p>
+<div class="section" id="path-factory">
+<h3>Path factory: _<a class="headerlink" href="#path-factory" title="Permalink to this headline">¶</a></h3>
+<p>Allows to easily define paths in a concise style. The symbol by itself refers
+to the <em>current working directory</em> (the <code class="docutils literal notranslate"><span class="pre">$PWD</span></code> variable in <em>Bash</em>).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span> <span class="n">_</span> <span class="p">)</span>
+<span class="go">the current working dir</span>
+</pre></div>
+</div>
+<p>Additionally it allows to create a path to an arbitrary file or directory,
+accepting relative and absolute paths:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="p">(</span><span class="s1">&#39;relative/path/to/file&#39;</span><span class="p">)</span>
+<span class="go">resolves to: ./relative/path/to/file</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="p">(</span><span class="s1">&#39;/usr/bin/bash&#39;</span><span class="p">)</span>
+<span class="go">absolute path: /usr/bin/bash</span>
+</pre></div>
+</div>
+<p>For accessing more special paths the slicing syntax can be used as follows:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt><code class="docutils literal notranslate"><span class="pre">_['.']</span></code></dt>
+<dd>current working directory, exactly equal to plain <code class="docutils literal notranslate"><span class="pre">_</span></code>.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">_['..']</span></code></dt>
+<dd>parent directory, meaning <code class="docutils literal notranslate"><span class="pre">./../</span></code> in a shell. Each additional dot will
+navigate one level up in the directory structure, so <code class="docutils literal notranslate"><span class="pre">_['....']</span></code> means
+<code class="docutils literal notranslate"><span class="pre">./../../../</span></code>.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">_[-N]</span></code></dt>
+<dd>navigates up the path the given number of directories. For example <code class="docutils literal notranslate"><span class="pre">-2</span></code>
+would mean <code class="docutils literal notranslate"><span class="pre">../../</span></code>.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">_['/']</span></code></dt>
+<dd>root directory of the file system, same as <code class="docutils literal notranslate"><span class="pre">_('/')</span></code>.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">_['~']</span></code> or <code class="docutils literal notranslate"><span class="pre">_['~user']</span></code></dt>
+<dd>home directory of the logged user or a specific user.</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">_['c']</span></code></dt>
+<dd>select a drive for the path (Windows only).</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">_['//']</span></code> or <code class="docutils literal notranslate"><span class="pre">_[r'\\']</span></code></dt>
+<dd>UNC path (Windows only).</dd>
+</dl>
+</div></blockquote>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">the slicing syntax is available on all path instances, even if they already
+point to a different path than the default <code class="docutils literal notranslate"><span class="pre">.</span></code>. So it’s possible to have
+something like: <code class="docutils literal notranslate"><span class="pre">_('/absoulute/path/to')['..']</span></code>.</p>
+</div>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">The <code class="docutils literal notranslate"><span class="pre">_</span></code> variable name is considered protected on <em>pysh</em> scripts. If you
+try to assign a value to it (i.e: <code class="docutils literal notranslate"><span class="pre">_</span> <span class="pre">=</span> <span class="pre">None</span></code>) the script will fail with a
+syntax error.
+This is done because in some programming styles the <code class="docutils literal notranslate"><span class="pre">_</span></code> symbol is used
+to signify an unused value, usually when unpacking, so we try to catch these
+cases as early as possible.</p>
+</div>
+</div>
+</div>
+<div class="section" id="commands">
+<h2>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h2>
+<p>Commands also have <strong>lazy evaluation</strong> and <strong>immutability</strong> semantics. They need
+them to simplify composition, which is a core mechanic in <em>pysh</em> to make scripts
+ergonomic while easy to maintain.</p>
+<p>Creating a command for an external utility is as simple as calling the <code class="docutils literal notranslate"><span class="pre">command</span></code>
+factory function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span> <span class="o">=</span> <span class="n">command</span><span class="p">(</span><span class="s1">&#39;grep&#39;</span><span class="p">)</span>
+<span class="go">    CommandBuilder&lt;grep&gt;</span>
+</pre></div>
+</div>
+<p>Now we can construct an invocation by providing arguments to it. There are two
+ways to do so, with slightly different behaviours:</p>
+<blockquote>
+<div><p><strong>call</strong></p>
+<blockquote>
+<div><p>The value provided as argument is used verbatim on the called command. No
+need to think about strange quoting and escaping rules.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">(</span><span class="s1">&#39;-e&#39;</span><span class="p">,</span> <span class="s1">&#39;foo bar&#39;</span><span class="p">)</span>
+<span class="go">    grep -e &#39;foo bar&#39;</span>
+</pre></div>
+</div>
+<p>Keyword arguments are automatically converted to options following a
+set of rules which can be tuned when creating a command.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">(</span><span class="s1">&#39;foo bar&#39;</span><span class="p">,</span> <span class="s1">&#39;myfile.txt&#39;</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">line_buffered</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="go">    grep -A 3 --line-buffered &#39;foo bar&#39; myfile.txt</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p><strong>slice</strong></p>
+<blockquote>
+<div><p>When slicing the value is splitted on whitespace, similarly to what a
+shell would do, so one or more arguments can be added to the called
+command.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">[</span><span class="s1">&#39;-e   foo    bar&#39;</span><span class="p">]</span>
+<span class="go">    grep -e foo bar</span>
+</pre></div>
+</div>
+</div></blockquote>
+</div></blockquote>
+<p>Each time we <em>call</em> or <em>slice</em> on a command a cloned instance is returned with the
+changes, this usually works transparently due to the chained nature of the DSL.
+However if you try to use a more imperative style you need to be aware of it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">[</span><span class="s1">&#39;-e&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+<span class="go">    grep foo  # not what we might be expecting</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">[</span><span class="s1">&#39;-e&#39;</span><span class="p">](</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+<span class="go">    grep -e foo  # now it works</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_grep</span> <span class="o">=</span> <span class="n">grep</span><span class="p">[</span><span class="s1">&#39;-e&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_grep</span> <span class="o">=</span> <span class="n">a_grep</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a_grep</span>
+<span class="go">    grep -e foo  # also works since we&#39;re using the returned copy</span>
+</pre></div>
+</div>
+<p>Evaluation of the configured command happens explicitly when we cast it to a
+primitive value:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span> <span class="n">grep</span><span class="p">[</span><span class="s1">&#39;foo&#39;</span><span class="p">]</span> <span class="p">)</span>
+<span class="go">    executes and returns stdout as a string</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">bytes</span><span class="p">(</span> <span class="n">grep</span><span class="p">[</span><span class="s1">&#39;foo&#39;</span><span class="p">]</span> <span class="p">)</span>
+<span class="go">    executes and returns stdout as binary data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">int</span><span class="p">(</span> <span class="n">grep</span><span class="p">[</span><span class="s1">&#39;foo&#39;</span><span class="p">]</span> <span class="p">)</span>
+<span class="go">    executes and returns the exitcode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span> <span class="n">grep</span><span class="p">[</span><span class="s1">&#39;foo&#39;</span><span class="p">]</span> <span class="p">)</span>
+<span class="go">    executes and returns True if it exited with 0, False otherwise</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">grep</span><span class="p">[</span><span class="s1">&#39;foo&#39;</span><span class="p">]:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+<span class="go">    execution is also triggered by iteration</span>
+</pre></div>
+</div>
+<div class="section" id="shell-command-sh">
+<h3>Shell command: sh<a class="headerlink" href="#shell-command-sh" title="Permalink to this headline">¶</a></h3>
+<p>There are many good reasons to use an <em>sh compatible shell</em> to run a command,
+sometimes it’s just easier to express something with its syntax, maybe we’re
+copy-pasting a one liner from a Stack Overflow answer or perhaps we’re porting
+some existing shell script and want to have something running quick.</p>
+<p>With the <code class="docutils literal notranslate"><span class="pre">sh</span></code> command we can do that easily and with some degree of safety if
+it’s used sparingly.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sh</span><span class="p">(</span><span class="s1">&#39;ls *.jpg&#39;</span><span class="p">)</span>
+<span class="go">    /bin/sh -e -c &#39;ls *.jpg&#39;   # globbing is done by the shell</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sh</span><span class="p">(</span><span class="s1">&#39; cat file.txt | grep foo &#39;</span><span class="p">)</span>
+<span class="go">    /bin/sh -e -c &#39;cat file.txt | grep foo&#39;  # piping is handled by the shell</span>
+</pre></div>
+</div>
+<p>Additional arguments are supported so we don’t have to worry about quoting and
+escaping stuff:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sh</span><span class="p">(</span><span class="s1">&#39;grep&#39;</span><span class="p">,</span> <span class="s1">&#39;-e&#39;</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+<span class="go">    /bin/sh -e -c &#39;grep &quot;$@&quot;&#39; -- -e foo  # note how &quot;$@&quot; was added to receive the args</span>
+</pre></div>
+</div>
+<p>It also implements the <em>attribute access protocol</em>  as a quick way to use external
+commands without interacting with the <code class="docutils literal notranslate"><span class="pre">command</span></code> factory.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ext_cat</span> <span class="o">=</span> <span class="n">sh</span><span class="o">.</span><span class="n">cat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ext_cat</span><span class="p">(</span><span class="s1">&#39;file.txt&#39;</span><span class="p">)</span>
+<span class="go">    /bin/sh -e -c &#39;cat &quot;$@&quot;&#39; -- file.txt</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sh</span><span class="o">.</span><span class="n">git_status</span><span class="p">[</span><span class="s1">&#39;--pretty&#39;</span><span class="p">]</span>  <span class="c1"># _ will fallback to - if not found</span>
+<span class="go">    /bin/sh -e -c &#39;git-status &quot;$@&quot;&#39; -- --pretty</span>
+</pre></div>
+</div>
+<p>Variables in the scope can also be used, the <code class="docutils literal notranslate"><span class="pre">sh</span></code> command will parse the
+<strong>first argument</strong> to detect references like <code class="docutils literal notranslate"><span class="pre">$variable</span></code> or <code class="docutils literal notranslate"><span class="pre">${variable</span></code>,
+making those available in the <em>environment</em> when executing the script.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">=</span> <span class="n">_</span> <span class="o">/</span> <span class="s1">&#39;file.txt&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="s1">&#39;foo&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sh</span><span class="p">(</span><span class="s1">&#39;cat &quot;$fname&quot; | grep &quot;pre-$</span><span class="si">{pattern}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+<span class="go">    fname=./file.txt pattern=foo /bin/sh -e -c &#39;cat &quot;$fname&quot; | grep &quot;pre-${pattern}&quot;&#39;</span>
+</pre></div>
+</div>
+<p>For longer snippets where we don’t want to pipe or redirect its output, it’s handy
+to use the <a class="reference internal" href="operators.html#lazy-application"><span class="std std-ref">Lazy application: &lt;= 🚧</span></a> operator with a raw multiline literal:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sh</span> <span class="o">&lt;=</span> <span class="sa">r</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">    num_files=$(ls | wc -l)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">    echo &quot;Number of files: $num_files&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="s1">&#39;&#39;&#39;</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><code class="docutils literal notranslate"><span class="pre">sh</span></code> will launch <code class="docutils literal notranslate"><span class="pre">/bin/sh</span></code> which on many systems is actually <em>bash</em> or
+<em>dash</em> in <em>posix mode</em>. However restricting to <em>posix syntax</em> is recommended
+if you want to keep the script portable.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="operators.html" class="btn btn-neutral float-right" title="Operators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Domain Specific Language" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

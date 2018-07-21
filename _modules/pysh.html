@@ -1,0 +1,307 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysh &mdash; pysh 0.0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dsl/index.html">Domain Specific Language</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../_apidoc/pysh.html">pysh package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>pysh</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pysh</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">.version</span> <span class="k">import</span> <span class="n">__version__</span>
+
+<span class="kn">from</span> <span class="nn">.path</span> <span class="k">import</span> <span class="n">PathWrapper</span>
+<span class="kn">from</span> <span class="nn">.env</span> <span class="k">import</span> <span class="n">Env</span>
+<span class="kn">from</span> <span class="nn">.command</span> <span class="k">import</span> <span class="n">ShCommandBuilder</span><span class="p">,</span> <span class="n">ShCommandSpec</span>
+
+
+<span class="c1"># Prelude for scripts</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;PWD&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;ENV&#39;</span><span class="p">,</span>
+    <span class="c1"># Augmented at the bottom for all the Exit stuff</span>
+<span class="p">]</span>
+
+
+<span class="n">ENV</span> <span class="o">=</span> <span class="n">Env</span><span class="p">()</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">PWD</span> <span class="o">=</span> <span class="n">PathWrapper</span><span class="p">()</span>
+
+<span class="n">sh</span> <span class="o">=</span> <span class="n">ShCommandBuilder</span><span class="p">(</span><span class="n">ShCommandSpec</span><span class="p">())</span>
+
+
+<span class="c1"># TODO: Perhaps the ABC module can be used to replace the __new__ code</span>
+<div class="viewcode-block" id="ExitError"><a class="viewcode-back" href="../_apidoc/pysh.html#pysh.ExitError">[docs]</a><span class="k">class</span> <span class="nc">ExitError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents an exit status error after running a command.</span>
+
+<span class="sd">        There are a number of predefined ones named ``ExitErrorN``, where N is a</span>
+<span class="sd">        number matching the desired exit status. Additionally ``ExitN`` are *ready</span>
+<span class="sd">        to raise* instances of those errors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Control the creation of these classes so we can intantiate a concrete</span>
+<span class="sd">            one if available. This allows for except blocks to capture a specific</span>
+<span class="sd">            error no matter if it was raised from the generic or the specific one.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">cls</span> <span class="ow">is</span> <span class="n">ExitError</span><span class="p">:</span>
+            <span class="n">concrete</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Exit</span><span class="si">{}</span><span class="s1">Error&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="n">concrete</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">concrete</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">status</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;&lt;ExitError:</span><span class="si">{}</span><span class="s1">&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;Exit:</span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;Exit:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">)</span></div>
+
+
+<span class="k">class</span> <span class="nc">_ExitError</span><span class="p">(</span><span class="n">ExitError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Private class so we override the constructor for the specialized.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status_or_message</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1">#hack: workaround __new__ sending the status from ExitError</span>
+        <span class="k">if</span> <span class="n">status_or_message</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">and</span> <span class="n">message</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="n">status_or_message</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+
+
+<span class="c1"># Some common statuses have specialized version</span>
+<div class="viewcode-block" id="Exit0Error"><a class="viewcode-back" href="../_apidoc/pysh.html#pysh.Exit0Error">[docs]</a><span class="k">class</span> <span class="nc">Exit0Error</span><span class="p">(</span><span class="n">_ExitError</span><span class="p">):</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">0</span></div>
+<div class="viewcode-block" id="Exit1Error"><a class="viewcode-back" href="../_apidoc/pysh.html#pysh.Exit1Error">[docs]</a><span class="k">class</span> <span class="nc">Exit1Error</span><span class="p">(</span><span class="n">_ExitError</span><span class="p">):</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">1</span></div>
+<div class="viewcode-block" id="Exit2Error"><a class="viewcode-back" href="../_apidoc/pysh.html#pysh.Exit2Error">[docs]</a><span class="k">class</span> <span class="nc">Exit2Error</span><span class="p">(</span><span class="n">_ExitError</span><span class="p">):</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">2</span></div>
+<div class="viewcode-block" id="Exit3Error"><a class="viewcode-back" href="../_apidoc/pysh.html#pysh.Exit3Error">[docs]</a><span class="k">class</span> <span class="nc">Exit3Error</span><span class="p">(</span><span class="n">_ExitError</span><span class="p">):</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">3</span></div>
+<div class="viewcode-block" id="Exit4Error"><a class="viewcode-back" href="../_apidoc/pysh.html#pysh.Exit4Error">[docs]</a><span class="k">class</span> <span class="nc">Exit4Error</span><span class="p">(</span><span class="n">_ExitError</span><span class="p">):</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">4</span></div>
+<div class="viewcode-block" id="Exit5Error"><a class="viewcode-back" href="../_apidoc/pysh.html#pysh.Exit5Error">[docs]</a><span class="k">class</span> <span class="nc">Exit5Error</span><span class="p">(</span><span class="n">_ExitError</span><span class="p">):</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">5</span></div>
+<div class="viewcode-block" id="Exit6Error"><a class="viewcode-back" href="../_apidoc/pysh.html#pysh.Exit6Error">[docs]</a><span class="k">class</span> <span class="nc">Exit6Error</span><span class="p">(</span><span class="n">_ExitError</span><span class="p">):</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">6</span></div>
+<div class="viewcode-block" id="Exit7Error"><a class="viewcode-back" href="../_apidoc/pysh.html#pysh.Exit7Error">[docs]</a><span class="k">class</span> <span class="nc">Exit7Error</span><span class="p">(</span><span class="n">_ExitError</span><span class="p">):</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">7</span></div>
+<div class="viewcode-block" id="Exit8Error"><a class="viewcode-back" href="../_apidoc/pysh.html#pysh.Exit8Error">[docs]</a><span class="k">class</span> <span class="nc">Exit8Error</span><span class="p">(</span><span class="n">_ExitError</span><span class="p">):</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">8</span></div>
+<div class="viewcode-block" id="Exit9Error"><a class="viewcode-back" href="../_apidoc/pysh.html#pysh.Exit9Error">[docs]</a><span class="k">class</span> <span class="nc">Exit9Error</span><span class="p">(</span><span class="n">_ExitError</span><span class="p">):</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">9</span></div>
+
+<span class="c1"># Also some default instances to raise around when no message is needed</span>
+<span class="n">Exit0</span> <span class="o">=</span> <span class="n">Exit0Error</span><span class="p">()</span>
+<span class="n">Exit1</span> <span class="o">=</span> <span class="n">Exit1Error</span><span class="p">()</span>
+<span class="n">Exit2</span> <span class="o">=</span> <span class="n">Exit2Error</span><span class="p">()</span>
+<span class="n">Exit3</span> <span class="o">=</span> <span class="n">Exit3Error</span><span class="p">()</span>
+<span class="n">Exit4</span> <span class="o">=</span> <span class="n">Exit4Error</span><span class="p">()</span>
+<span class="n">Exit5</span> <span class="o">=</span> <span class="n">Exit5Error</span><span class="p">()</span>
+<span class="n">Exit6</span> <span class="o">=</span> <span class="n">Exit6Error</span><span class="p">()</span>
+<span class="n">Exit7</span> <span class="o">=</span> <span class="n">Exit7Error</span><span class="p">()</span>
+<span class="n">Exit8</span> <span class="o">=</span> <span class="n">Exit8Error</span><span class="p">()</span>
+<span class="n">Exit9</span> <span class="o">=</span> <span class="n">Exit9Error</span><span class="p">()</span>
+
+
+<span class="c1"># Augment the prelude with all the Exit stuff</span>
+<span class="n">__all__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">globals</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;Exit&#39;</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

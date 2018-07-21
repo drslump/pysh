@@ -1,0 +1,7 @@
+pysh.transforms.protectnames module
+===================================
+
+.. automodule:: pysh.transforms.protectnames
+    :members:
+    :undoc-members:
+    :show-inheritance:

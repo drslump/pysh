@@ -1,0 +1,7 @@
+pysh.arguments module
+=====================
+
+.. automodule:: pysh.arguments
+    :members:
+    :undoc-members:
+    :show-inheritance:

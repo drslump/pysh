@@ -1,0 +1,395 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysh package &mdash; pysh 0.0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pysh.transforms package" href="pysh.transforms.html" />
+    <link rel="prev" title="Operators" href="../dsl/operators.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dsl/index.html">Domain Specific Language</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">pysh package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.html">pysh.transforms package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysh.arguments.html">pysh.arguments module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.cli.html">pysh.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.command.html">pysh.command module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.env.html">pysh.env module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.path.html">pysh.path module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.stream.html">pysh.stream module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.version.html">pysh.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>pysh package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/_apidoc/pysh.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pysh">
+<span id="pysh-package"></span><h1>pysh package<a class="headerlink" href="#module-pysh" title="Permalink to this headline">¶</a></h1>
+<dl class="exception">
+<dt id="pysh.ExitError">
+<em class="property">exception </em><code class="descclassname">pysh.</code><code class="descname">ExitError</code><span class="sig-paren">(</span><em>status</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh.html#ExitError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.ExitError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Represents an exit status error after running a command.</p>
+<p>There are a number of predefined ones named <code class="docutils literal notranslate"><span class="pre">ExitErrorN</span></code>, where N is a
+number matching the desired exit status. Additionally <code class="docutils literal notranslate"><span class="pre">ExitN</span></code> are <em>ready
+to raise</em> instances of those errors.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="pysh.Exit0Error">
+<em class="property">exception </em><code class="descclassname">pysh.</code><code class="descname">Exit0Error</code><span class="sig-paren">(</span><em>status_or_message=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh.html#Exit0Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.Exit0Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pysh._ExitError</span></code></p>
+<dl class="attribute">
+<dt id="pysh.Exit0Error.status">
+<code class="descname">status</code><em class="property"> = 0</em><a class="headerlink" href="#pysh.Exit0Error.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="pysh.Exit1Error">
+<em class="property">exception </em><code class="descclassname">pysh.</code><code class="descname">Exit1Error</code><span class="sig-paren">(</span><em>status_or_message=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh.html#Exit1Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.Exit1Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pysh._ExitError</span></code></p>
+<dl class="attribute">
+<dt id="pysh.Exit1Error.status">
+<code class="descname">status</code><em class="property"> = 1</em><a class="headerlink" href="#pysh.Exit1Error.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="pysh.Exit2Error">
+<em class="property">exception </em><code class="descclassname">pysh.</code><code class="descname">Exit2Error</code><span class="sig-paren">(</span><em>status_or_message=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh.html#Exit2Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.Exit2Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pysh._ExitError</span></code></p>
+<dl class="attribute">
+<dt id="pysh.Exit2Error.status">
+<code class="descname">status</code><em class="property"> = 2</em><a class="headerlink" href="#pysh.Exit2Error.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="pysh.Exit3Error">
+<em class="property">exception </em><code class="descclassname">pysh.</code><code class="descname">Exit3Error</code><span class="sig-paren">(</span><em>status_or_message=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh.html#Exit3Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.Exit3Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pysh._ExitError</span></code></p>
+<dl class="attribute">
+<dt id="pysh.Exit3Error.status">
+<code class="descname">status</code><em class="property"> = 3</em><a class="headerlink" href="#pysh.Exit3Error.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="pysh.Exit4Error">
+<em class="property">exception </em><code class="descclassname">pysh.</code><code class="descname">Exit4Error</code><span class="sig-paren">(</span><em>status_or_message=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh.html#Exit4Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.Exit4Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pysh._ExitError</span></code></p>
+<dl class="attribute">
+<dt id="pysh.Exit4Error.status">
+<code class="descname">status</code><em class="property"> = 4</em><a class="headerlink" href="#pysh.Exit4Error.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="pysh.Exit5Error">
+<em class="property">exception </em><code class="descclassname">pysh.</code><code class="descname">Exit5Error</code><span class="sig-paren">(</span><em>status_or_message=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh.html#Exit5Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.Exit5Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pysh._ExitError</span></code></p>
+<dl class="attribute">
+<dt id="pysh.Exit5Error.status">
+<code class="descname">status</code><em class="property"> = 5</em><a class="headerlink" href="#pysh.Exit5Error.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="pysh.Exit6Error">
+<em class="property">exception </em><code class="descclassname">pysh.</code><code class="descname">Exit6Error</code><span class="sig-paren">(</span><em>status_or_message=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh.html#Exit6Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.Exit6Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pysh._ExitError</span></code></p>
+<dl class="attribute">
+<dt id="pysh.Exit6Error.status">
+<code class="descname">status</code><em class="property"> = 6</em><a class="headerlink" href="#pysh.Exit6Error.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="pysh.Exit7Error">
+<em class="property">exception </em><code class="descclassname">pysh.</code><code class="descname">Exit7Error</code><span class="sig-paren">(</span><em>status_or_message=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh.html#Exit7Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.Exit7Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pysh._ExitError</span></code></p>
+<dl class="attribute">
+<dt id="pysh.Exit7Error.status">
+<code class="descname">status</code><em class="property"> = 7</em><a class="headerlink" href="#pysh.Exit7Error.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="pysh.Exit8Error">
+<em class="property">exception </em><code class="descclassname">pysh.</code><code class="descname">Exit8Error</code><span class="sig-paren">(</span><em>status_or_message=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh.html#Exit8Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.Exit8Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pysh._ExitError</span></code></p>
+<dl class="attribute">
+<dt id="pysh.Exit8Error.status">
+<code class="descname">status</code><em class="property"> = 8</em><a class="headerlink" href="#pysh.Exit8Error.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="pysh.Exit9Error">
+<em class="property">exception </em><code class="descclassname">pysh.</code><code class="descname">Exit9Error</code><span class="sig-paren">(</span><em>status_or_message=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh.html#Exit9Error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.Exit9Error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pysh._ExitError</span></code></p>
+<dl class="attribute">
+<dt id="pysh.Exit9Error.status">
+<code class="descname">status</code><em class="property"> = 9</em><a class="headerlink" href="#pysh.Exit9Error.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pysh.transforms.html">pysh.transforms package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="pysh.transforms.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.autoexpr.html">pysh.transforms.autoexpr module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.autoimport.html">pysh.transforms.autoimport module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.autoreturn.html">pysh.transforms.autoreturn module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.bangexpr.html">pysh.transforms.bangexpr module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.lazybools.html">pysh.transforms.lazybools module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.protectnames.html">pysh.transforms.protectnames module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pysh.arguments.html">pysh.arguments module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.cli.html">pysh.cli module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.command.html">pysh.command module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.env.html">pysh.env module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.path.html">pysh.path module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.stream.html">pysh.stream module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.version.html">pysh.version module</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pysh.transforms.html" class="btn btn-neutral float-right" title="pysh.transforms package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../dsl/operators.html" class="btn btn-neutral" title="Operators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

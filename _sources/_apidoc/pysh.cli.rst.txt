@@ -1,0 +1,7 @@
+pysh.cli module
+===============
+
+.. automodule:: pysh.cli
+    :members:
+    :undoc-members:
+    :show-inheritance:

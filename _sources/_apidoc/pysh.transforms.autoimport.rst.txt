@@ -1,0 +1,7 @@
+pysh.transforms.autoimport module
+=================================
+
+.. automodule:: pysh.transforms.autoimport
+    :members:
+    :undoc-members:
+    :show-inheritance:

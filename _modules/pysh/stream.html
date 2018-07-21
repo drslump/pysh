@@ -1,0 +1,442 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysh.stream &mdash; pysh 0.0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dsl/index.html">Domain Specific Language</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_apidoc/pysh.html">pysh package</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../pysh.html">pysh</a> &raquo;</li>
+        
+      <li>pysh.stream</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pysh.stream</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">A *stream* is a file-like object, inheriting from stdlib&#39;s IOBase, allowing</span>
+<span class="sd">to read and write to it.</span>
+
+<span class="sd">Streams are operated by default in buffered binary mode to allow arbitary data</span>
+<span class="sd">and optimum performance, supporting commands like ``gzip`` transparently.</span>
+
+<span class="sd">Commands can customize their streams with their ``.io()`` method.</span>
+
+
+<span class="sd">Buffers, buffers everywhere...</span>
+
+<span class="sd">    - StdIn / StdOut:</span>
+<span class="sd">        - TTY: line buffered (~1Kb)</span>
+<span class="sd">        - Pipe: buffered (~4Kb)</span>
+<span class="sd">    - StdErr: is unbuffered according to POSIX</span>
+
+
+<span class="sd">    Then we have that the stdout of a command might be piped to the stdin of</span>
+<span class="sd">    another, so even if the stdout is unbuffered the stdin might not be, ending</span>
+<span class="sd">    with the same problem.</span>
+
+<span class="sd">    Finally we have streams in Python which also buffer data, so we have quite</span>
+<span class="sd">    a bunch of buffering going on.</span>
+
+
+<span class="sd">On normal operation the pipes are binary:</span>
+
+<span class="sd">    &gt;&gt;&gt; cat | head</span>
+<span class="sd">    cat.stdin = sys.stdin</span>
+<span class="sd">    head.stdin = cat.stdout</span>
+<span class="sd">    head.stdout = sys.stdout</span>
+
+<span class="sd">When interacting with Python functions it&#39;s interesting to read text though:</span>
+
+<span class="sd">    &gt;&gt;&gt; cat.text | pipe_map(lambda ln: ln.upper())</span>
+<span class="sd">    cat.stdin = sys.stdin</span>
+<span class="sd">    # detect stdout encoding from environment</span>
+<span class="sd">    cat.stdout = TextIOWrapper(cat.stdout, encoding=detected)</span>
+<span class="sd">    pipe_map.stdin = cat.stdout</span>
+<span class="sd">    pipe_map.stdout = sys.stdout</span>
+
+
+
+
+<span class="sd">stdin | wc[&#39;-l&#39;]        # buffered input</span>
+<span class="sd">stdin.raw | wc[&#39;-l&#39;]    # unbuffered input</span>
+<span class="sd">stdin.text | wc[&#39;-l&#39;]   # convert to text (infer encoding)</span>
+<span class="sd">stdin.enc(&#39;utf-8&#39;) | wc[&#39;-l&#39;]  # convert to text (force encoding)</span>
+
+
+<span class="sd">cmd.utf8 | gzip</span>
+<span class="sd">cmd.stdout.utf8 | gzip.binary</span>
+
+<span class="sd">cmd -[binary]-&gt; [utf8-&gt;unicode] -[utf8]-&gt; gzip -[binary]-&gt;</span>
+
+<span class="sd">cat(&#39;file.gz&#39;) | gunzip   # stdout is binary buffered</span>
+<span class="sd">cat(&#39;file.gz&#39;).stdout | gunzip   # stdout is binary buffered</span>
+<span class="sd">cat(&#39;file.gz&#39;).raw |      # stdout is binary unbuffered</span>
+<span class="sd">cat(&#39;file.gz&#39;).binary |   # stdout is binary buffered</span>
+<span class="sd">cat(&#39;file.gz&#39;).ascii |   # stdout forces ascii buffered</span>
+<span class="sd">cat(&#39;file.gz&#39;).utf8  |   # stdout forces utf8</span>
+<span class="sd">cat(&#39;file.gz&#39;).utf16  |   # stdout forces utf16</span>
+<span class="sd">cat(&#39;file.gz&#39;).text |     # convert to text (infer encoding)</span>
+<span class="sd">cat(&#39;file.gz&#39;).io(&#39;utf-8&#39;) | # convert to text (force encoding)</span>
+
+<span class="sd">cat(&#39;file.gz&#39;).io(out=&#39;raw&#39;, err=&#39;utf-8&#39;)</span>
+<span class="sd">cat(&#39;file.gz&#39;).io(in=&#39;utf-8&#39;, out=&#39;binary&#39;, err=&#39;auto&#39;)</span>
+<span class="sd">cat(&#39;file.gz&#39;).io(out=&#39;utf-8&#39;, lines=1, eol=&#39;\0&#39;, in_bytes=0)</span>
+
+<span class="sd">cmd.pipe(out=grep[&#39;foo&#39;])</span>
+
+<span class="sd">buffer(0) &lt;= cmd             # unbuffered</span>
+<span class="sd">buffer(lines=1) &lt;= cmd       # 1 line at a time</span>
+<span class="sd">buffer(kb=10) &lt;= cmd       # 10Kb at a time</span>
+<span class="sd">buffer(mb=1) | cmd       # 1Mb buffer</span>
+
+<span class="sd">cat.io(&#39;utf-8&#39;) | cmd       # decode utf-8 and pass text to cmd</span>
+<span class="sd">cmd | cat.io(&#39;utf-8&#39;)       # get utf-8 binary and produce text</span>
+<span class="sd">cmd | cat.io(out=&#39;utf-8&#39;)       # get text and produce binary in utf-8</span>
+
+<span class="sd">cmd.raw ^ head  # this will fail because .raw is a stream so ^ doesn&#39;t match the command</span>
+
+<span class="sd">cat(&#39;file.gz&#39;).stdout.raw ... same as above</span>
+
+<span class="sd">cat | progress(lines=100, kb=4, eol=&#39;\n&#39;, bytes=10)</span>
+<span class="sd">cat | progress(lines=100, interval=10)  # display progress every 10 seconds</span>
+<span class="sd">cat | rate(mb=1, lines=1, eol=&#39;\n&#39;, enabled=True) | grep[&#39;foo&#39;]  # rate 1Mb/s</span>
+
+<span class="sd">TODO: Check http://www.pixelbeat.org/programming/stdio_buffering/.</span>
+<span class="sd">      If the stdbuf command is available it can be used to try to setup the</span>
+<span class="sd">      launched command in a similar fashion to the python streams.</span>
+<span class="sd">      Guarded under a --pysh:stdbuf flag.</span>
+<span class="sd">      Can we build stdbuf and bundle it with pysh?</span>
+
+<span class="sd">TODO: An alternative that comes with OSX to disable buffering might be</span>
+<span class="sd">      expect -c &#39;spawn -noecho  ls -la  ; expect&#39;</span>
+
+<span class="sd">TODO: Also for unbuffered some common env vars like `PYTHONUNBUFFERED=1`</span>
+<span class="sd">      might be set</span>
+
+<span class="sd">TODO: Check os.sendfile for optimized pipe copy on Mac/Linux/BSD</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">IOBase</span><span class="p">,</span> <span class="n">TextIOWrapper</span><span class="p">,</span> <span class="n">TextIOBase</span><span class="p">,</span> <span class="n">BufferedIOBase</span><span class="p">,</span> <span class="n">BufferedReader</span>
+
+
+<div class="viewcode-block" id="Stream"><a class="viewcode-back" href="../../_apidoc/pysh.stream.html#pysh.stream.Stream">[docs]</a><span class="k">class</span> <span class="nc">Stream</span><span class="p">(</span><span class="n">IOBase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The base stream class for pysh streams</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">utf16</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">BufferedIOBase</span><span class="p">):</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">BufferedReader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">TextIOWrapper</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-16&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">utf8</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">BufferedIOBase</span><span class="p">):</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">BufferedReader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">TextIOWrapper</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">ascii</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">BufferedIOBase</span><span class="p">):</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">buffer</span> <span class="o">=</span> <span class="n">BufferedReader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">TextIOWrapper</span><span class="p">(</span><span class="n">buffer</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">binary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">TextIOBase</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+
+<div class="viewcode-block" id="NullStream"><a class="viewcode-back" href="../../_apidoc/pysh.stream.html#pysh.stream.NullStream">[docs]</a><span class="k">class</span> <span class="nc">NullStream</span><span class="p">(</span><span class="n">Stream</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Emulates /dev/null semantics on pure Python code so we avoid</span>
+<span class="sd">        the syscalls.</span>
+
+<span class="sd">        TODO: Use os.devnull? https://docs.python.org/3/library/os.html#os.devnull</span>
+
+<span class="sd">            io.open(os.devnull, mode=&#39;rw&#39;) ?</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">closed</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="NullStream.isatty"><a class="viewcode-back" href="../../_apidoc/pysh.stream.html#pysh.stream.NullStream.isatty">[docs]</a>    <span class="k">def</span> <span class="nf">isatty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="NullStream.readable"><a class="viewcode-back" href="../../_apidoc/pysh.stream.html#pysh.stream.NullStream.readable">[docs]</a>    <span class="k">def</span> <span class="nf">readable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="NullStream.writable"><a class="viewcode-back" href="../../_apidoc/pysh.stream.html#pysh.stream.NullStream.writable">[docs]</a>    <span class="k">def</span> <span class="nf">writable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="NullStream.seekable"><a class="viewcode-back" href="../../_apidoc/pysh.stream.html#pysh.stream.NullStream.seekable">[docs]</a>    <span class="k">def</span> <span class="nf">seekable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="NullStream.read"><a class="viewcode-back" href="../../_apidoc/pysh.stream.html#pysh.stream.NullStream.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Null.read(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+        <span class="k">return</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="NullStream.readinto"><a class="viewcode-back" href="../../_apidoc/pysh.stream.html#pysh.stream.NullStream.readinto">[docs]</a>    <span class="k">def</span> <span class="nf">readinto</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Null.readinto(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">b</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="NullStream.readline"><a class="viewcode-back" href="../../_apidoc/pysh.stream.html#pysh.stream.NullStream.readline">[docs]</a>    <span class="k">def</span> <span class="nf">readline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Used for iteration &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Null.readline(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">size</span><span class="p">))</span>
+        <span class="k">return</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span></div>
+
+<div class="viewcode-block" id="NullStream.write"><a class="viewcode-back" href="../../_apidoc/pysh.stream.html#pysh.stream.NullStream.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Null.write(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
+        <span class="k">return</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="NullStream.close"><a class="viewcode-back" href="../../_apidoc/pysh.stream.html#pysh.stream.NullStream.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>  <span class="c1"># null streams are always open</span></div>
+
+    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+
+<div class="viewcode-block" id="noblock"><a class="viewcode-back" href="../../_apidoc/pysh.stream.html#pysh.stream.noblock">[docs]</a><span class="k">def</span> <span class="nf">noblock</span><span class="p">(</span><span class="n">stream</span><span class="p">:</span> <span class="n">IOBase</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">256</span><span class="o">*</span><span class="mi">1024</span><span class="p">):</span>
+    <span class="c1">#TODO: This is a placeholder, prototype pending</span>
+
+    <span class="kn">from</span> <span class="nn">threading</span> <span class="k">import</span> <span class="n">Thread</span>
+    <span class="kn">from</span> <span class="nn">queue</span> <span class="k">import</span> <span class="n">SimpleQueue</span><span class="p">,</span> <span class="n">Empty</span>
+
+    <span class="k">def</span> <span class="nf">consume</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">queue</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">stream</span><span class="p">:</span> <span class="c1"># use .readline(size=XXX)</span>
+            <span class="c1">#XXX check max_size against queue contents</span>
+            <span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+    <span class="n">q</span> <span class="o">=</span> <span class="n">SimpleQueue</span><span class="p">()</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">consume</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">q</span><span class="p">))</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># do not block the parent from exiting</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">class</span> <span class="nc">NoBlock</span><span class="p">(</span><span class="n">IOBase</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">readline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+            <span class="c1"># pop from queue until we have enough size/nl</span>
+            <span class="c1"># feed back the remainder at the top of the queue (threadsafe?)</span>
+            <span class="c1"># return what we got</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">readline</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">pass</span>  <span class="c1"># kill thread?</span>
+
+    <span class="k">return</span> <span class="n">NoBlock</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span></div>
+
+
+<span class="n">null</span> <span class="o">=</span> <span class="n">NullStream</span><span class="p">()</span>
+<span class="n">stdin</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/dev/stdin&#39;</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">null</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;!!LINE&#39;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">null</span><span class="p">)</span>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.2',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

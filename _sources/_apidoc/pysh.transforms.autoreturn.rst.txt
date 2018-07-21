@@ -1,0 +1,7 @@
+pysh.transforms.autoreturn module
+=================================
+
+.. automodule:: pysh.transforms.autoreturn
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -1,0 +1,7 @@
+pysh.version module
+===================
+
+.. automodule:: pysh.version
+    :members:
+    :undoc-members:
+    :show-inheritance:

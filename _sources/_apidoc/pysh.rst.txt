@@ -1,0 +1,28 @@
+pysh package
+============
+
+.. automodule:: pysh
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+    pysh.transforms
+
+Submodules
+----------
+
+.. toctree::
+
+   pysh.arguments
+   pysh.cli
+   pysh.command
+   pysh.env
+   pysh.path
+   pysh.stream
+   pysh.version
+
