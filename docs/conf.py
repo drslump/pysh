@@ -20,8 +20,8 @@ sys.path.insert(0, os.path.abspath('../'))
 # -- Project information -----------------------------------------------------
 
 project = 'pysh'
-copyright = '2018, Iván Montes'
-author = 'Iván Montes'
+copyright = u'2018, Iván Montes'
+author = u'Iván Montes'
 
 
 version_globals = {}
