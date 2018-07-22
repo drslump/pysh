@@ -21,7 +21,9 @@ gh-pages: docs
 	@ cd docs/gh-pages ; \
 	  	git add * ; \
 	  	git commit -m "make gh-pages" ; \
-	  	git push origin gh-pages
+	  	git push origin gh-pages; \
+		cd -; \
+		git reset --quiet docs/gh-pages/
 
 version-%:
 	@ sed -i '' "s/r'[^']*'/r'$*'/" pysh/version.py

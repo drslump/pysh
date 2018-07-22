@@ -4,13 +4,13 @@ pysh %version% -- Python for shell scripting
 Usage:
   %program% [options] [--transform MODULE]... [--] [FILE]
   %program% [options] -e CODE
-  %program% -h|--help
+  %program% -h|--help [SYMBOL]
   %program% --version
 
 Options:
   --transform MODULE      Enables a source code transform.
   -e --eval CODE          Eval the given code with auto imports.
-  -h --help               Show this screen.
+  -h --help               Show this screen or help for a symbol.
   -v --verbose            Enables verbose mode.
   --debug                 Enables debug mode.
   --quiet                 Enables quiet mode.
@@ -97,8 +97,22 @@ def main(argv=None):
     #TODO: `--transform foo --transform bar` yields ['foo', 'bar', 'bar']
     opts = dict(version=pysh.__version__, program=PurePath(sys.argv[0]).name)
     doc = re.sub(r'%([A-Za-z_]+)%', lambda m: opts[m.group(1)], __doc__)
-    args = docopt(doc, version=version, argv=argv)
+    args = docopt(doc, help=False, version=version, argv=argv)
     # print(args)
+
+    if args['--help']:
+        symbol = args['SYMBOL']
+        if symbol:
+            if symbol not in pysh.__dict__:
+                print('Unknown symbol {}'.format(symbol), file=sys.stderr)
+                raise SystemExit(1)
+
+            help(pysh.__dict__[symbol])
+        else:
+            print(doc, file=sys.stderr)
+
+        raise SystemExit(0)
+
 
     # Tune log level based on flags
     if args['--verbose']:

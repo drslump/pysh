@@ -1,6 +1,8 @@
 Unreleased
 ----------
 
+- Rudimentary quick help about symbols with ``pysh -h <symbol>``
+- Travis CI setup
 - Documentation now published at https://drslump.github.io/pysh/
 
 Version 0.0.3

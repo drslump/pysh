@@ -4,13 +4,16 @@ from .version import __version__
 
 from .path import PathWrapper
 from .env import Env
-from .command import ShCommand, ShSpec
+from .command import command, ShCommand, ShSpec
 
 
 # Prelude for scripts
 __all__ = [
     '_', 'PWD',
     'ENV',
+    #TODO: these break sphinx!
+    # 'command',
+    # 'sh',
     # Augmented at the bottom for all the Exit stuff
 ]
 
