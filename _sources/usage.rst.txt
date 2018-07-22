@@ -6,6 +6,9 @@ Usage
     pysh --help
 
 
+.. tip:: Get quick information about any *pysh* symbol with ``pyenv -h <symbol>``
+
+
 Eval mode
 ---------
 

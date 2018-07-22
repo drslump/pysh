@@ -164,13 +164,16 @@
 
 <span class="kn">from</span> <span class="nn">.path</span> <span class="k">import</span> <span class="n">PathWrapper</span>
 <span class="kn">from</span> <span class="nn">.env</span> <span class="k">import</span> <span class="n">Env</span>
-<span class="kn">from</span> <span class="nn">.command</span> <span class="k">import</span> <span class="n">ShCommand</span><span class="p">,</span> <span class="n">ShSpec</span>
+<span class="kn">from</span> <span class="nn">.command</span> <span class="k">import</span> <span class="n">command</span><span class="p">,</span> <span class="n">ShCommand</span><span class="p">,</span> <span class="n">ShSpec</span>
 
 
 <span class="c1"># Prelude for scripts</span>
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;PWD&#39;</span><span class="p">,</span>
     <span class="s1">&#39;ENV&#39;</span><span class="p">,</span>
+    <span class="c1">#TODO: these break sphinx!</span>
+    <span class="c1"># &#39;command&#39;,</span>
+    <span class="c1"># &#39;sh&#39;,</span>
     <span class="c1"># Augmented at the bottom for all the Exit stuff</span>
 <span class="p">]</span>
 
