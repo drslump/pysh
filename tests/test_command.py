@@ -1,7 +1,7 @@
 import pytest
 
-from pysh.command import command, Pipe, Piperr, Redirect
-from pysh.path import PathWrapper
+from pysh.command import command, Command, Pipe, Piperr, Redirect, Reckless, Application
+from pysh.path import Path
 
 foo = command('foo')
 bar = command('bar')
@@ -26,7 +26,7 @@ def test_cmd_pipe_file():
 
 def test_cmd_pipe_path():
     with pytest.raises(TypeError):
-        expr = foo | PathWrapper('test.txt')
+        expr = foo | Path('test.txt')
 
 def test_cmd_pipe_str():
     with pytest.raises(TypeError):
@@ -40,7 +40,7 @@ def test_file_pipe_cmd():
 def test_path_pipe_cmd():
     # not implemented yet
     with pytest.raises(TypeError):
-        expr = PathWrapper('test.txt') | foo
+        expr = Path('test.txt') | foo
 
 def test_any_pipe_cmd():
     # not implemented yet
@@ -60,14 +60,14 @@ def test_cmd_piperr_file():
     assert type(expr.rhs) is type(null)
 
 def test_cmd_piperr_path():
-    expr = foo ^ PathWrapper('errors.log')
+    expr = foo ^ Path('errors.log')
     assert type(expr) is Piperr
-    assert type(expr.rhs) is PathWrapper
+    assert type(expr.rhs) is Path
 
 def test_cmd_piperr_str():
     expr = foo ^ 'errors.log'
     assert type(expr) is Piperr
-    assert type(expr.rhs) is str   #XXX should be PathWrapper
+    assert type(expr.rhs) is str   #XXX should be Path
 
 
 # redirect
@@ -83,14 +83,14 @@ def test_cmd_gt_cmd():
         expr = foo > bar
 
 def test_cmd_gt_path():
-    expr = foo > PathWrapper('out.txt')
+    expr = foo > Path('out.txt')
     assert type(expr) is Redirect
-    assert type(expr.rhs) is PathWrapper
+    assert type(expr.rhs) is Path
 
 def test_cmd_gt_str():
     expr = foo > 'out.txt'
     assert type(expr) is Redirect
-    assert type(expr.rhs) is str  #XXX should be PathWrapper
+    assert type(expr.rhs) is str  #XXX should be Path
 
 def test_cmd_gt_int():
     with pytest.raises(TypeError):
@@ -110,7 +110,36 @@ def test_file_lt_cmd():
 def test_str_lt_cmd():
     expr = 'out.txt' < foo
     assert type(expr) is Redirect
-    assert type(expr.rhs) is str  #XXX should be PathWrapper
+    assert type(expr.rhs) is str  #XXX should be Path
+
+
+# reckless
+
+def test_tilde_cmd():
+    expr = ~foo
+    assert type(expr) is Reckless
+    assert expr.expr is foo
+
+def test_tilde_cmd_arg():
+    expr = ~foo('fname')
+    assert type(expr) is Reckless
+    assert type(expr.expr) is Command
+    assert expr.expr.args == ['fname']
+
+    expr = ~foo['fname']
+    assert type(expr) is Reckless
+    assert type(expr.expr) is Command
+    assert expr.expr.args == ['fname']
+
+def test_tilde_pipe():
+    expr = ~(foo | bar)
+    assert type(expr) is Reckless
+    assert type(expr.expr) is Pipe
+
+def test_tilde_redirect():
+    expr = ~foo > 'out.txt'
+    assert type(expr) is Redirect
+    assert type(expr.lhs) is Reckless
 
 
 # compound
@@ -119,17 +148,19 @@ def test_cmd_pipe_cmd_gt_file():
     expr = foo | bar > null
     assert type(expr) is Redirect
     assert type(expr.lhs) is Pipe
-    assert expr.rhs is null
-    assert expr.lhs.lhs is foo
-    assert expr.lhs.rhs is bar
+    lhs, rhs = expr.lhs, expr.rhs
+    assert lhs.lhs is foo
+    assert lhs.rhs is bar
+    assert rhs is null
 
 def test_cmd_piperr_file_pipe_cmd():
     expr = foo ^null | bar
     assert type(expr) is Pipe
     assert type(expr.lhs) is Piperr
-    assert expr.lhs.lhs is foo
-    assert expr.lhs.rhs is null
-    assert expr.rhs is bar
+    lhs, rhs = expr.lhs, expr.rhs
+    assert lhs.lhs is foo
+    assert lhs.rhs is null
+    assert rhs is bar
 
 def test_cmd_gt_file_pipe_cmd():
     with pytest.raises(TypeError):
@@ -139,6 +170,27 @@ def test_cmd_gt_file_pipe_cmd():
     expr = (foo >null) | bar
     assert type(expr) is Pipe
     assert type(expr.lhs) is Redirect
-    assert expr.lhs.lhs is foo
-    assert expr.lhs.rhs is null
-    assert expr.rhs is bar
+    lhs, rhs = expr.lhs, expr.rhs
+    assert lhs.lhs is foo
+    assert lhs.rhs is null
+    assert rhs is bar
+
+
+# application operator
+
+def test_cmd_lshift_cmd():
+    expr = foo << bar
+    assert type(expr) is Command
+    assert len(expr.args) == 1  #TODO: check it's `bar`
+
+def test_func_lshift_cmd():
+    capture = []
+    capture.append << foo
+    assert capture == [foo]
+
+def test_cmd_lshift_redirect():
+    expr = foo << bar > null
+    assert type(expr) is Redirect
+    assert type(expr.lhs) is Command
+    assert len(expr.lhs.args) == 1  #TODO: check it's `bar`
+    assert expr.rhs is null

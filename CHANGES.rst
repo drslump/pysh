@@ -1,6 +1,11 @@
 Unreleased
 ----------
 
+- Introduce the notion of *alpha*, *beta* and *deprecated* transform modules.
+- :mod:`pysh.transforms.restring` transform ``re'...'``
+- :mod:`pysh.transforms.pathstring` transform  ``_'...'``
+- :mod:`pysh.transforms.pathpow` transform to allow ``**`` in paths
+- :mod:`pysh.transforms.precedence` transform to fix operator binging
 - Rudimentary quick help about symbols with ``pysh -h <symbol>``
 - Travis CI setup
 - Documentation now published at https://drslump.github.io/pysh/

@@ -2,7 +2,7 @@ import os
 
 from .version import __version__
 
-from .path import PathWrapper
+from .path import Path
 from .env import Env
 from .command import command, ShCommand, ShSpec
 
@@ -19,7 +19,7 @@ __all__ = [
 
 
 ENV = Env()
-_ = PWD = PathWrapper()
+_ = PWD = Path()
 
 sh = ShCommand(ShSpec())
 

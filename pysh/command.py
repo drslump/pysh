@@ -21,6 +21,10 @@ Result:
   - Allows to access streams
   - Allows to query the exit status
 
+
+TODO: check http://harp.pythonanywhere.com/python_doc/library/concurrent.html
+      for launching python commands
+
 """
 
 import re
@@ -29,9 +33,9 @@ from pathlib import PurePath
 from abc import abstractmethod, ABCMeta
 from io import IOBase
 
-from pysh.path import PathWrapper
+from pysh.path import Path
 
-from typing import Optional, Union, List, Any
+from typing import Optional, Union, List, Callable, Any
 
 
 def command(command, **kwargs):
@@ -150,6 +154,7 @@ class ExternalSpec(BaseSpec):
 
         """
         result = []
+        #TODO: According to PEP468 since 3.6 keywords order is preserved
         for option in sorted(kwargs.keys()):
             value = kwargs[option]
             #TODO: We need to resolve value at this point to make repeated options reliable
@@ -172,7 +177,16 @@ class ExternalSpec(BaseSpec):
 
 
 class Expr:  #TODO: breaks?? (meta=ABCMeta):
-    """ Base class for DSL expression builders.
+    """
+    Base class for DSL expression builders.
+
+    .. automethod:: __or__
+    .. automethod:: __ror__
+    .. automethod:: __xor__
+    .. automethod:: __le__
+    .. automethod:: __ge__
+    .. automethod:: __rshift__
+    .. automethod:: __invert__
     """
     def invoke(self) -> 'Invocation':
         """ Executes the command as currently configured
@@ -183,6 +197,30 @@ class Expr:  #TODO: breaks?? (meta=ABCMeta):
         """
         return Result(self)
 
+    def to_status(self) -> int:
+        result = self.invoke()
+        assert isinstance(result, int)
+        return result.status
+
+    def to_binary(self) -> bytes:
+        result = self.invoke()
+        return result.stdout
+
+    def to_text(self) -> str:
+        result = self.invoke()
+        return result.stdout.decode('utf-8')
+
+    def pipe(self, stdout=None, *, stderr=None) -> Union['Pipe', 'Piperr']:
+        """ Explicit interface for the ``|`` and ``^`` operators.
+        """
+        result = self.__copy__()
+        if stderr is not None:
+            result = result ^ stderr
+        if stdout is not None:
+            result = result | stdout
+
+        return result
+
     def __gt__(self, other) -> 'Redirect':
         """ :ref:`Redirection: >`
         """
@@ -190,38 +228,88 @@ class Expr:  #TODO: breaks?? (meta=ABCMeta):
             return NotImplemented
 
         #TODO: support callables
-        if not isinstance(other, (IOBase, str, bytes, PurePath, PathWrapper)):
+        if not isinstance(other, (IOBase, str, bytes, PurePath, Path)):
             return NotImplemented
+
+        print('{!r} __GT__ {!r}'.format(self, other))
 
         return Redirect(self, other)
 
     def __lt__(self, other) -> 'Redirect':
-        # Not possible to redirect to a command
+        # Not possible to redirect to an expression?
         return NotImplemented
 
-    def _repr(self, value):
-        if isinstance(value, IOBase):
-            return './{}'.format(value.name)
-        return repr(value)
+    def __rshift__(self, rhs) -> 'Redirect':
+        """ :ref:`Appending Redirection: >>`
+        """
+        assert not isinstance(rhs, Command)
+        return Redirect(self, rhs, appending=True)
 
+    def __or__(self, rhs) -> 'Pipe':
+        """ :ref:`Pipe: |`
+        """
+        if not isinstance(rhs, Expr):
+            return NotImplemented
+
+        return Pipe(self, rhs)
+
+    def __ror__(self, lhs) -> 'Pipe':
+        """ Reverse for :meth:`__or__` to handle ``value | command``.
+        """
+        if not isinstance(lhs, Expr):
+            #TODO: lhs should be injected into stdin
+            return NotImplemented
+
+        return Pipe(lhs, self)
+
+    def __xor__(self, rhs) -> 'Piperr':
+        """ :ref:`Piperr: ^ 🚧`
+        """
+        # Prefer right associative if it has the reverse (precedence transform)
+        if hasattr(rhs, '__rxor__'):
+            return rhs.__rxor__(self)
+
+        return Piperr(self, rhs)
+
+    def __invert__(self) -> 'Reckless':
+        """ :ref:`Reckless: ~`
+        """
+        return Reckless(self)
+
+    def __lazybooland__(self, rhs_callable):
+        """ Lazy boolean protocol for ``and``.
+
+            .. note:: This is a non-standard protocol from the lazybools transform.
+        """
+        return self.and_then(rhs_callable)
+
+    def __lazyboolor__(self, rhs_callable):
+        """ Lazy boolean protocol for ``or``.
+
+            .. note:: This is a non-standard protocol from the lazybools transform.
+        """
+        return self.or_else(rhs_callable)
+
+    def __lazyboolnot__(self):
+        """ Lazy boolean protocol for ``not``.
+
+            Raises an error, not possible to negate a command.
+
+            .. note:: This is a non-standard protocol from the lazybools transform.
+        """
+        raise SyntaxError('a command cannot be negated')
 
 
 class Command(Expr):
     """
-    .. automethod:: __or__
-    .. automethod:: __ror__
-    .. automethod:: __xor__
-    .. automethod:: __le__
-    .. automethod:: __ge__
+    .. automethod:: __lshift__
     .. automethod:: __rshift__
-    .. automethod:: __invert__
     """
-    __slots__ = ('spec', 'args', 'no_raise', 'lazy_or', 'lazy_and')
+    __slots__ = ('spec', 'args', 'no_raise',)
 
     def __init__(self, spec: 'BaseSpec') -> None:
         self.spec = spec
         self.args = []
-        self.lazy_or = self.lazy_and = None
 
         self.no_raise = [0]
 
@@ -229,8 +317,6 @@ class Command(Expr):
         clone = type(self)(self.spec)
         clone.args = list(self.args)
         clone.no_raise = list(self.no_raise)
-        clone.lazy_and = self.lazy_and
-        clone.lazy_or = self.lazy_or
         return clone
 
     def __repr__(self):
@@ -246,6 +332,8 @@ class Command(Expr):
             raise NotImplementedError()
 
         clone = self.__copy__()
+
+        #TODO: detect paths/globs and create PathWrapper instances as args
 
         args = re.split(r'(?<!\\)\s', key)
         for arg in args:
@@ -263,31 +351,15 @@ class Command(Expr):
         )
         return clone
 
-    def pipe(self, stdout=None, *, stderr=None) -> 'Command':
-        #TODO: implement it :)
-        return self.__copy__()
-
     def io(self, encoding=None, *, stdin=None, stdout=None, stderr=None):
         # encoding: applies to all
+        # TODO: Shall it apply to commands only? or belongs to Expr?
         # TODO: buffering stuff to be defined, too many variables, no need
         #       to expose everything, we need sensible defaults with a clear
         #       explanation. Probably the best approach would be to allow to
         #       define them as part of the CommandSpec since buffering is
         #       usually command specific.
         pass
-
-    def to_status(self) -> int:
-        result = self.invoke()
-        assert isinstance(result, int)
-        return result.status
-
-    def to_binary(self) -> bytes:
-        result = self.invoke()
-        return result.stdout
-
-    def to_text(self) -> str:
-        result = self.invoke()
-        return result.stdout.decode('utf-8')
 
     def catch(self, *statuses, **kwargs) -> 'Command':
         """ Avoids raising upon given status codes. If no statuses are provided
@@ -320,96 +392,26 @@ class Command(Expr):
             #TODO: maybe a method called .trap() like bash?
         """
 
+        # TODO: Shall it apply to commands only? or belongs to Expr?
+
         clone = self.__copy__()
         if not statuses:
             statuses = tuple(range(256))
         clone.no_raise = statuses
         return clone
 
-    #TODO: Use __lazyboolX__
-    def and_then(self, callable):
-        clone = self.__copy__()
-        clone.lazy_and = callable
-        return clone
-
-    def or_else(self, callable):
-        clone = self.__copy__()
-        clone.lazy_or = callable
-        return clone
-
-    def __invert__(self) -> 'Command':
-        """ :ref:`Reckless: ~`
-        """
-        return self.pipe(stderr=null).catch()
-
-    def __or__(self, rhs) -> 'Pipe':
-        """ :ref:`Pipe: |`
-        """
-        if not isinstance(rhs, Expr):
-            return NotImplemented
-
-        return Pipe(self, rhs)
-
-    def __ror__(self, lhs) -> 'Pipe':
-        """ Reverse for :meth:`__or__` to handle ``value | command``.
-        """
-        if not isinstance(lhs, Expr):
-            #TODO: lhs should be injected into stdin
-            return NotImplemented
-
-        return Pipe(lhs, self)
-
-    def __xor__(self, rhs) -> 'Piperr':
-        """ :ref:`Piperr: ^ 🚧`
-
-            TODO: This doesn't compose well with redirection `>` which has
-            a lower precendence than ^. So `cmd > fname ^ null` would be
-            evaled as `cmd > (fname ^ null)`.
-            If we the error reported on path/string ^ something is not too
-            bad then it's just a matter of training the user to redirect
-            always first the stderr.
-        """
-        return Piperr(self, rhs)
-
-
-    def __le__(self, other) -> 'Command':
-        """ :ref:`Lazy application: <= 🚧`
+    def  __lshift__(self, other) -> 'Command':
+        """ :ref:`Application: << 🚧`
         """
         return self(other)
 
-    def __ge__(self, other) -> 'Command':
-        """ Reverse for :meth:`__le__` to handle ``func <= command``
+    def __rlshift__(self, other) -> 'Command':
+        """ Reverse for :meth:`__lshift__` to handle ``func << command``
         """
+        if not callable(other):
+            return NotImplemented
+
         return other(self)
-
-    def __rshift__(self, rhs) -> 'Redirect':
-        """ :ref:`Appending Redirection: >>`
-        """
-        assert not isinstance(rhs, Command)
-        return Redirect(self, rhs, appending=True)
-
-    def __lazybooland__(self, rhs_callable):
-        """ Lazy boolean protocol for ``and``.
-
-            .. note:: This is a non-standard protocol from the lazybools transform.
-        """
-        return self.and_then(rhs_callable)
-
-    def __lazyboolor__(self, rhs_callable):
-        """ Lazy boolean protocol for ``or``.
-
-            .. note:: This is a non-standard protocol from the lazybools transform.
-        """
-        return self.or_else(rhs_callable)
-
-    def __lazyboolnot__(self):
-        """ Lazy boolean protocol for ``not``.
-
-            Raises an error, not possible to negate a command.
-
-            .. note:: This is a non-standard protocol from the lazybools transform.
-        """
-        raise SyntaxError('a command cannot be negated')
 
     def __int__(self):
         return self.to_status()
@@ -422,9 +424,10 @@ class Command(Expr):
 
 
 class Pipe(Expr):
-    """ Represents a pipe ``|`` operation.
     """
-    def __init__(self, lhs, rhs):
+    Represents a pipe ``|`` operation.
+    """
+    def __init__(self, lhs: Expr, rhs: Expr) -> None:
         self.lhs = lhs
         self.rhs = rhs
 
@@ -433,7 +436,8 @@ class Pipe(Expr):
 
 
 class Piperr(Pipe):
-    """ Represents a piperr `^` operation.
+    """
+    Represents a piperr ``^`` operation.
     """
     def __repr__(self):
         rhs = self.rhs.name if isinstance(self.rhs, IOBase) else repr(self.rhs)
@@ -441,9 +445,10 @@ class Piperr(Pipe):
 
 
 class Redirect(Expr):
-    """ Represents a redirection ``>`` or ``>>`` operation.
     """
-    def __init__(self, lhs, rhs, *, appending=False):
+    Represents a redirection ``>`` or ``>>`` operation.
+    """
+    def __init__(self, lhs: Expr, rhs: Union[Path], *, appending=False) -> None:
         self.lhs = lhs
         self.rhs = rhs
         self.appending = appending
@@ -453,6 +458,100 @@ class Redirect(Expr):
         rhs = self.rhs.name if isinstance(self.rhs, IOBase) else repr(self.rhs)
         return '({!r} {} {})'.format(
             self.lhs, op, rhs)
+
+
+class Reckless(Expr):
+    """
+    Represents the reckless operator ``~``
+    """
+    def __init__(self, expr: Expr) -> None:
+        self.expr = expr
+
+    def __repr__(self):
+        return '~{!r}'.format(self.expr)
+
+
+class Application(Expr):
+    """
+    TODO: Not needed?
+
+    Represents the application operator ``<<``
+
+    .. TODO:: ``foo <= bar > null`` is evaled as ``foo(bar) > null``
+
+    Maybe it's best to use a ``<<`` as application operator, that
+    allows to have an eager one:
+
+        sh << ' ... ' > null  # sh('...') > null
+
+    and also a lazy one that should work for most use cases:
+
+        fork <<= grep['foo'] > null  # fork(grep['foo'] > null)
+
+    the drawback is that the following is not valid syntax:
+
+        fork(n=8) <<= cmd > null  # cannot assign to a call expression
+
+    that might be solved with a lexer transform but it feels dirty:
+
+        __1 = fork(n=8); __1 <<= cmd > null
+
+    or by forcing the user to change the expression to:
+
+        fork(n=8).fn <<= cmd > null
+
+    but then operator are also NOT allows:
+
+        cat | xargs(n=1) <<= cmd > null
+
+    so the only ergonomic solution seems to be the lexer transformation:
+
+        cat | xargs(n=1) << (cmd > null)
+
+    although for the time being, experiment with the explicit version:
+
+        runner = cat | xargs(n=1)
+        runner <<= cmd > null
+
+    TODO !!IMPORTANT:
+        Perhaps the simpler way is to forget about this lazy application
+        altogether and bring it more to Python for this advanced use cases.
+
+        >>> cat | xargs(foo | bar, n=1) > null
+        >>> cat | xargs(  # my favorite I think
+        >>>     n=1,
+        >>>     expr= foo | bar
+        >>> ) > null
+        >>> cat | xargs(n=1)[
+        >>>    foo | bar
+        >>> ] > null
+        >>> cat | xargs(n=1) << (foo | bar) > null
+
+        In practice any flow-control command will probably need to have a
+        custom implementation and if so it can use existing mechanisms to
+        provide a convenient syntax.
+
+        If anything, the ``<<=`` seems like the best fit, since it should
+        allow something like:
+
+        >>> results.txt < xargs(-n) <<= foo | bar
+
+        which looks quite bad to be honest, it might be useful for a ``time``
+        style command, that doesn't need to handle the output:
+
+        >>> time <<= foo | bar
+
+        but even then, it's not so common as to justify having such a complex
+        operator. If we get rid of lazy application we can just simplify the
+        precedence transform so it only operates over ``>`` and ``<``.
+
+    """
+    def __init__(self, lhs: Command, rhs: Any) -> None:
+        self.lhs = lhs
+        self.rhs = rhs
+
+    def __repr__(self):
+        return '({!r} << {!r})'.format(self.lhs, self.rhs)
 
 
 class Result:
@@ -469,25 +568,26 @@ class Result:
         """
 
     def __repr__(self):
-        return '{!r}()'.format(self.command)
+        return 'Result{{{!r}}}'.format(self.expr)
 
 
 class ShSpec(BaseSpec):
-    """ Runs a command via a shell.
+    """
+    Runs a command via a shell.
 
-        The first argument is the command to run, it'll be extended with
-        the arguments expansion, so the shell can forward any extra arguments
-        to it.
+    The first argument is the command to run, it'll be extended with
+    the arguments expansion, so the shell can forward any extra arguments
+    to it.
 
-            sh['ls']
-            # /bin/sh -e -c 'ls "$@"'
+    >>> sh['ls']
+    /bin/sh -e -c 'ls "$@"'
 
-            jq['-c', foo]
-            # /bin/sh -e -c 'jq "$@"' -- -c '.field | @csv'
+    >>> sh.jq['-c', foo]
+    /bin/sh -e -c 'jq "$@"' -- -c '.field | @csv'
 
-        Additionally, the first argument is scanned for `$variables` so
-        they can be matched against the current locals/globals and exposed
-        on the environment when running it.
+    Additionally, the first argument is scanned for `$variables` so
+    they can be matched against the current locals/globals and exposed
+    on the environment when running it.
     """
     def __init__(self):
         pass

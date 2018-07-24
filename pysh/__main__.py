@@ -8,7 +8,7 @@ Usage:
   %program% --version
 
 Options:
-  --transform MODULE      Enables a source code transform.
+  -t --transform MODULE   Enables a transformation (disable with -MODULE).
   -e --eval CODE          Eval the given code with auto imports.
   -h --help               Show this screen or help for a symbol.
   -v --verbose            Enables verbose mode.
@@ -40,8 +40,11 @@ import pysh
 
 
 SCRIPT_TRANSFORMS = [
-    'pysh.transforms.autoexpr',
+    'pysh.transforms.pathstring',
+    'pysh.transforms.restring',
+    'pysh.transforms.precedence',
     'pysh.transforms.protectnames',
+    'pysh.transforms.autoexpr',
 ]
 
 EVAL_TRANSFORMS = [
@@ -124,6 +127,28 @@ def main(argv=None):
 
     if args['--eval'] is not None:
         eval_and_exit(args['--eval'])
+
+    if not args['FILE']:
+        args['FILE'] = '/dev/stdin'
+
+    with open(args['FILE']) as fd:
+
+        transforms = list(SCRIPT_TRANSFORMS)
+        for t in args['--transform']:
+            #TODO: implement properly :)
+            if t.startswith('-'):
+                transforms = [x for x in transforms if not x.endswith(t[1:])]
+            else:
+                transforms.append(t)
+
+        from pysh.transforms import Compiler
+        compiler = Compiler(transforms)
+        fn = compiler.compile(fd, args['FILE'])
+
+        result = fn()
+        if result:  # in case autoexpr is used
+            print(result)
+
 
 
 # needed for `python -m pysh` to work
