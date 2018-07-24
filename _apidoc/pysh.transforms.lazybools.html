@@ -27,9 +27,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="pysh.transforms.protectnames module" href="pysh.transforms.protectnames.html" />
-    <link rel="prev" title="pysh.transforms.bangexpr module" href="pysh.transforms.bangexpr.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -89,18 +87,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../dsl/index.html">Domain Specific Language</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="pysh.html">pysh package</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="pysh.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="pysh.transforms.html">pysh.transforms package</a><ul class="current">
-<li class="toctree-l4 current"><a class="reference internal" href="pysh.transforms.html#submodules">Submodules</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="pysh.html#submodules">Submodules</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pysh.html">pysh package</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Changelog:</span></p>
 <ul>
@@ -152,10 +140,6 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="pysh.html">pysh package</a> &raquo;</li>
-        
-          <li><a href="pysh.transforms.html">pysh.transforms package</a> &raquo;</li>
-        
       <li>pysh.transforms.lazybools module</li>
     
     
@@ -175,40 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pysh.transforms.lazybools">
-<span id="pysh-transforms-lazybools-module"></span><h1>pysh.transforms.lazybools module<a class="headerlink" href="#module-pysh.transforms.lazybools" title="Permalink to this headline">¶</a></h1>
-<p>In Python it’s not possible to overload the boolean operators (<code class="docutils literal notranslate"><span class="pre">not</span></code>,
-<code class="docutils literal notranslate"><span class="pre">and</span></code>, <code class="docutils literal notranslate"><span class="pre">or</span></code>) since they have short-circuiting semantics (PEP-532 is
-deferred right now).</p>
-<p>The problem manifests when trying to use a <code class="docutils literal notranslate"><span class="pre">cmd</span> <span class="pre">and</span> <span class="pre">ok</span> <span class="pre">or</span> <span class="pre">fail</span></code>
-or similar constructs, which are quite common in shell scripts. We would
-like to keep that expression lazily evaluated but is not possible since
-the Python interpreter will try to resolve it immediately, trigering the
-evaluation of <code class="docutils literal notranslate"><span class="pre">cmd</span></code> to know if it should go with the <code class="docutils literal notranslate"><span class="pre">and</span></code> or the <code class="docutils literal notranslate"><span class="pre">or</span></code>
-branch.</p>
-<p>This tranformation converts the above example to:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">OR</span><span class="p">(</span><span class="n">AND</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">ok</span><span class="p">),</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">fail</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Where <code class="docutils literal notranslate"><span class="pre">OR</span></code> and <code class="docutils literal notranslate"><span class="pre">AND</span></code> are runtime helpers that will inspect the value
-and delegate to it if it has defined the proper protocol:</p>
-<blockquote>
-<div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">__lazyboolnot__(self)</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">__lazybooland__(self,</span> <span class="pre">rhs_callable)</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">__lazyboolor__(self,</span> <span class="pre">rhs_callable)</span></code></li>
-</ul>
-</div></blockquote>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">These operators do not have a reverse, the argument will always
-be the right operand.</p>
-</div>
-<div class="admonition caution">
-<p class="first admonition-title">Caution</p>
-<p class="last">Since the rhs is opaque inside the lambda, we can’t check it
-until it resolves.</p>
-</div>
+  <div class="section" id="pysh-transforms-lazybools-module">
+<h1>pysh.transforms.lazybools module<a class="headerlink" href="#pysh-transforms-lazybools-module" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
@@ -216,15 +168,6 @@ until it resolves.</p>
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="pysh.transforms.protectnames.html" class="btn btn-neutral float-right" title="pysh.transforms.protectnames module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="pysh.transforms.bangexpr.html" class="btn btn-neutral" title="pysh.transforms.bangexpr module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

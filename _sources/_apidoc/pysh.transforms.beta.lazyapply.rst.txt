@@ -1,0 +1,7 @@
+pysh.transforms.beta.lazyapply module
+=====================================
+
+.. automodule:: pysh.transforms.beta.lazyapply
+    :members:
+    :undoc-members:
+    :show-inheritance:

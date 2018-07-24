@@ -1,0 +1,15 @@
+pysh.transforms.beta package
+============================
+
+.. automodule:: pysh.transforms.beta
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+
+   pysh.transforms.beta.lazyapply
+

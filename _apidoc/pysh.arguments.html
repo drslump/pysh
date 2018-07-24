@@ -27,9 +27,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="pysh.cli module" href="pysh.cli.html" />
-    <link rel="prev" title="pysh.transforms.protectnames module" href="pysh.transforms.protectnames.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -89,21 +87,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../dsl/index.html">Domain Specific Language</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="pysh.html">pysh package</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="pysh.html#subpackages">Subpackages</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="pysh.html#submodules">Submodules</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">pysh.arguments module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysh.cli.html">pysh.cli module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysh.command.html">pysh.command module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysh.env.html">pysh.env module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysh.path.html">pysh.path module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysh.stream.html">pysh.stream module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysh.version.html">pysh.version module</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pysh.html">pysh package</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Changelog:</span></p>
 <ul>
@@ -155,8 +140,6 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="pysh.html">pysh package</a> &raquo;</li>
-        
       <li>pysh.arguments module</li>
     
     
@@ -176,189 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pysh.arguments">
-<span id="pysh-arguments-module"></span><h1>pysh.arguments module<a class="headerlink" href="#module-pysh.arguments" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
-<dt id="pysh.arguments.Arguments">
-<em class="property">class </em><code class="descclassname">pysh.arguments.</code><code class="descname">Arguments</code><span class="sig-paren">(</span><em>args: Dict[str, Union[NoneType, str, bool, typing.List[typing.Union[str, bool]]]], *, raise_missing=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/arguments.html#Arguments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Wraps an arguments dict to expose helper methods for common operations.</p>
-<p>Most operations have a <em>plural</em> version that returns an iterable of
-the values, regardless of it being originally multiple or not.</p>
-<p>It’s also possible to provide a default value with the <code class="docutils literal notranslate"><span class="pre">default</span></code>
-keyword. Take into account that his default value is not necesarily
-what should be returned if the option does not exists, it’s the value
-that will be processed in that case.</p>
-<p>When <code class="docutils literal notranslate"><span class="pre">raise_missing</span></code> keyword is set to <code class="docutils literal notranslate"><span class="pre">False</span></code> then accessing a
-non-existent argument won’t raise an error, returning <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
-<p>TODO: support –no-xxxxx arguments to unset flags.</p>
-<dl class="attribute">
-<dt id="pysh.arguments.Arguments.DEFAULT">
-<code class="descname">DEFAULT</code><em class="property"> = {}</em><a class="headerlink" href="#pysh.arguments.Arguments.DEFAULT" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.arguments.Arguments.HYPHEN">
-<code class="descname">HYPHEN</code><em class="property"> = '/dev/stdin'</em><a class="headerlink" href="#pysh.arguments.Arguments.HYPHEN" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_bool">
-<code class="descname">as_bool</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; Union[bool, NoneType]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_bool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_bool" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_bools">
-<code class="descname">as_bools</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; List[bool]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_bools"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_bools" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_file">
-<code class="descname">as_file</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>mode=None</em>, <em>writeable=False</em>, <em>binary=False</em>, <em>encoding=None</em>, <em>buffering=-1</em>, <em>hyphen='/dev/stdin'</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; Union[_io.FileIO, NoneType]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_file" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a file object or raises error if it can’t be opened.</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">-</span></code> will be interpreted as stdin, override with the <code class="docutils literal notranslate"><span class="pre">hyphen</span></code> keyword.</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_files">
-<code class="descname">as_files</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>mode=None</em>, <em>writeable=False</em>, <em>binary=False</em>, <em>encoding=None</em>, <em>buffering=-1</em>, <em>hyphen='/dev/stdin'</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; List[_io.FileIO]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_files" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns file objects or raises error if it can’t be opened.</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">-</span></code> will be interpreted as stdin, override with the <code class="docutils literal notranslate"><span class="pre">hyphen</span></code> keyword.</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_float">
-<code class="descname">as_float</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; Union[float, NoneType]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_float"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_float" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_floats">
-<code class="descname">as_floats</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; List[float]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_floats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_floats" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_int">
-<code class="descname">as_int</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; Union[int, NoneType]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_int"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_int" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_ints">
-<code class="descname">as_ints</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; List[int]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_ints"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_ints" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_path">
-<code class="descname">as_path</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; Union[pysh.path.PathWrapper, NoneType]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get argument as a Path</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_paths">
-<code class="descname">as_paths</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; List[pysh.path.PathWrapper]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_paths"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_paths" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get arguments as a Path</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_str">
-<code class="descname">as_str</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>atload=False</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; Union[str, NoneType]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_str"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_str" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a string argument.</p>
-<ul class="simple">
-<li>When <code class="docutils literal notranslate"><span class="pre">atload</span></code> is True and the argument starts with <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> then it
-checks for a matching file and if found it’s read and returned.</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_strs">
-<code class="descname">as_strs</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>at=False</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; List[str]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_strs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_strs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get string arguments.</p>
-<ul class="simple">
-<li>When <code class="docutils literal notranslate"><span class="pre">atload</span></code> is True and the argument starts with <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> then it
-checks for a matching file and if found it’s read and returned.</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_text">
-<code class="descname">as_text</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>encoding=None</em>, <em>hyphen='/dev/stdin'</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; Union[str, NoneType]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_text" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read the referenced file as text.</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">-</span></code> will be interpreted as stdin, override with the <code class="docutils literal notranslate"><span class="pre">hyphen</span></code> keyword.</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.as_texts">
-<code class="descname">as_texts</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>encoding=None</em>, <em>hyphen='/dev/stdin'</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; List[str]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.as_texts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.as_texts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Read the referenced files as text.</p>
-<ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">-</span></code> will be interpreted as stdin, override with the <code class="docutils literal notranslate"><span class="pre">hyphen</span></code> keyword.</li>
-</ul>
-</dd></dl>
-
-<dl class="classmethod">
-<dt id="pysh.arguments.Arguments.from_argv">
-<em class="property">classmethod </em><code class="descname">from_argv</code><span class="sig-paren">(</span><em>argv: List[str]</em><span class="sig-paren">)</span> &#x2192; pysh.arguments.Arguments<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.from_argv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.from_argv" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simple system to parse arguments into a dictionary.</p>
-<ul class="simple">
-<li>short options can be grouped <code class="docutils literal notranslate"><span class="pre">-abc</span></code></li>
-<li>options have their value after <code class="docutils literal notranslate"><span class="pre">=</span></code></li>
-<li><code class="docutils literal notranslate"><span class="pre">--</span></code> stops interpreting options</li>
-<li>anything else is an argument under <code class="docutils literal notranslate"><span class="pre">_</span></code></li>
-</ul>
-</dd></dl>
-
-<dl class="classmethod">
-<dt id="pysh.arguments.Arguments.from_docopt">
-<em class="property">classmethod </em><code class="descname">from_docopt</code><span class="sig-paren">(</span><em>args: Dict[str, Union[NoneType, str, bool, typing.List[typing.Union[str, bool]]]]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.from_docopt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.from_docopt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wraps the result of docopt parser.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.get">
-<code class="descname">get</code><span class="sig-paren">(</span><em>name: str</em>, <em>default: Any = None</em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.get" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the value associated to an argument or a default</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.gets">
-<code class="descname">gets</code><span class="sig-paren">(</span><em>name: str</em>, <em>default: Any = {}</em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.gets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.gets" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the values associated to an argument or a default.</p>
-<ul class="simple">
-<li>If the value is not a list it’ll be wrapped in one.</li>
-<li>If it’s None an empty list is returned.</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.len">
-<code class="descname">len</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.len"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.len" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.many">
-<code class="descname">many</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; List[Union[str, bool]]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.many"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.many" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get all values for an argument.</p>
-<ul class="simple">
-<li>Errors if the argument is unknown!</li>
-</ul>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysh.arguments.Arguments.one">
-<code class="descname">one</code><span class="sig-paren">(</span><em>name: str</em>, <em>*</em>, <em>default={}</em><span class="sig-paren">)</span> &#x2192; Union[str, bool, NoneType]<a class="reference internal" href="../_modules/pysh/arguments.html#Arguments.one"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.arguments.Arguments.one" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets a single value for an argument.</p>
-<ul class="simple">
-<li>Errors if the argument is unknown!</li>
-</ul>
-</dd></dl>
-
-</dd></dl>
-
+  <div class="section" id="pysh-arguments-module">
+<h1>pysh.arguments module<a class="headerlink" href="#pysh-arguments-module" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
@@ -366,15 +168,6 @@ checks for a matching file and if found it’s read and returned.</li>
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="pysh.cli.html" class="btn btn-neutral float-right" title="pysh.cli module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="pysh.transforms.protectnames.html" class="btn btn-neutral" title="pysh.transforms.protectnames module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

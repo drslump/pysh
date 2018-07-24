@@ -1,0 +1,7 @@
+pysh.transforms.alpha.bangexpr module
+=====================================
+
+.. automodule:: pysh.transforms.alpha.bangexpr
+    :members:
+    :undoc-members:
+    :show-inheritance:

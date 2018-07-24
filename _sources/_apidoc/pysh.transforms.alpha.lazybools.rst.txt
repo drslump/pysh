@@ -1,0 +1,7 @@
+pysh.transforms.alpha.lazybools module
+======================================
+
+.. automodule:: pysh.transforms.alpha.lazybools
+    :members:
+    :undoc-members:
+    :show-inheritance:

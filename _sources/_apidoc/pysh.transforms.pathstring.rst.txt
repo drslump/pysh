@@ -1,0 +1,7 @@
+pysh.transforms.pathstring module
+=================================
+
+.. automodule:: pysh.transforms.pathstring
+    :members:
+    :undoc-members:
+    :show-inheritance:

@@ -166,110 +166,242 @@
 <span class="sd">    pathlib internally and expose a custom interface that resolves on str and</span>
 <span class="sd">    iter. That would allow to do this:</span>
 
-<span class="sd">    &gt;&gt;&gt; imgs = _ // &#39;*.jpg&#39; + &#39;*.gif&#39; + &#39;*.png&#39;</span>
+<span class="sd">    &gt;&gt;&gt; imgs = _ // &#39;*.jpg&#39;</span>
 <span class="sd">    &gt;&gt;&gt; if len(imgs) &gt; 5:  # globbing is computed</span>
-<span class="sd">    &gt;&gt;&gt;   zip(imgs)      # globbing is computed again</span>
+<span class="sd">    &gt;&gt;&gt;   zip(imgs)        # globbing is computed again</span>
 
-<span class="sd">Internally a PathWrapper is always a collection with 0 or more elements.</span>
-<span class="sd">The rules are:</span>
 
-<span class="sd">    &gt;&gt;&gt; str(*.py)  -&gt;  &#39;foo.py bar.py&#39;  # space separated</span>
-<span class="sd">    &gt;&gt;&gt; int(path) -&gt; len(path) -&gt; number of matching files  # globs can yield 0</span>
-<span class="sd">    &gt;&gt;&gt; list(path) -&gt; get a snapshot of the current paths</span>
-<span class="sd">    &gt;&gt;&gt; bool(gpath) -&gt; gpath.exists()  -&gt; at least one match</span>
+<span class="sd">&gt;&gt;&gt; _[&#39;*.jpg&#39;]  # slice supports globbing</span>
 
-<span class="sd">    &gt;&gt;&gt; glob1 + glob2 -&gt; adds glob2 to glob1</span>
-<span class="sd">    &gt;&gt;&gt; glob1 - glob2 -&gt; substracts glob2 from glob1</span>
-<span class="sd">    &gt;&gt;&gt; _ ** &#39;tmp-?.py&#39; -&gt; recursive glob -&gt; _ // &#39;**/tmp-?.py&#39;</span>
 
-<span class="sd">One problem of handling paths as collections is that we lose some of the</span>
-<span class="sd">functionality of pathlib (i.e `.is_file`). Even if the collection yields</span>
-<span class="sd">Path objects, the ergonomics do not seem to be great:</span>
+<span class="sd">TODO: Implement brace expansion? https://pypi.org/project/braceexpand/</span>
+<span class="sd">      Note though that in sh it&#39;s not part of globbing, it just executes</span>
+<span class="sd">      first and can generate multiple variants of a glob.</span>
 
-<span class="sd">    &gt;&gt;&gt; p = _ / &#39;foo.txt&#39;</span>
-<span class="sd">    &gt;&gt;&gt; p.is_file()  # error</span>
-<span class="sd">    &gt;&gt;&gt; p[0].is_file()   # works</span>
 
-<span class="sd">One solution would be to proxy those methods to the whole collection like:</span>
+<span class="sd">globbing applies only to a path segment, be it a shell style glob or a</span>
+<span class="sd">regex. For shell style though there is automatic segment extraction, so</span>
+<span class="sd">``foo-*/*.jpg`` is converted to ``foo-*`` * ``*.jpg``. In the case of</span>
+<span class="sd">regex this is not possible so only a single segment is allowed. This</span>
+<span class="sd">solves one of the main issues with using regexes that was having to</span>
+<span class="sd">traverse the whole directory structure to match, now it just applies to</span>
+<span class="sd">the current level.</span>
 
-<span class="sd">    &gt;&gt;&gt; p.is_file()  -&gt; all(x.is_file for x in p)</span>
+<span class="sd">    _* &#39;*.jpg&#39;</span>
+<span class="sd">    _** &#39;{foo,bar}-*.jpg&#39;</span>
+<span class="sd">    _// r&#39;\.jpg$&#39;</span>
 
-<span class="sd">But it can perhaps be very confusing if the path matches different items,</span>
-<span class="sd">for instance if there is a directory on it. Although for normal use this</span>
-<span class="sd">probably makes sense. However things like `.rename` or `.open` wouldn&#39;t</span>
-<span class="sd">work.</span>
+<span class="sd">also functions can be given to ``//``, which also operate on a single level:</span>
 
-<span class="sd">A least surprising option may be to internally control if the path is</span>
-<span class="sd">concrete or a glob, if it&#39;s a glob those proxied options would raise an</span>
-<span class="sd">error. __len__ for a non glob would return the path length, on glob the</span>
-<span class="sd">number of matches.</span>
+<span class="sd">    _// lambda path: path.isFile()</span>
 
-<span class="sd">&gt;&gt;&gt; _[&#39;*.jpg&#39;]  # slice supports globing</span>
+<span class="sd">returning True means that the match should be kept. They are left associative,</span>
+<span class="sd">so:</span>
+
+<span class="sd">    _// Path.isFile / &#39;.*&#39; // lambda p: p.name.startswith(&#39;foo&#39;)</span>
+
+<span class="sd">Problem is that there is no clean way to apply a regex recursively, so perhaps</span>
+<span class="sd">regexes should always traverse? and try to optimize by look for ``^`` in it.</span>
+
+<span class="sd">    _ // &#39;\.jpg$&#39;  # traverses</span>
+<span class="sd">    _ // &#39;^(foo|bar|baz).*\.jpg$   # anchored to a single level</span>
+<span class="sd">    _ // &#39;(foo|bar|baz)/.*\.jpg$   # detect directories? won&#39;t work :(</span>
+
+<span class="sd">A mitigation might be to allow regex to expand multiple segments but use</span>
+<span class="sd">.match semantics, so it&#39;s always anchored and requires the user to opt out</span>
+<span class="sd">by using ``.*`` at the start. WARNING: even if we start anchored, the common</span>
+<span class="sd">``.*`` will traverse directories, unless we modify the regex so the `.`</span>
+<span class="sd">doesn&#39;t match ``/`` it&#39;s very dangerous and it&#39;s best to keep it at the</span>
+<span class="sd">segment level. For traversal we can always do:</span>
+
+<span class="sd">    paths = _ // &#39;**&#39;</span>
+<span class="sd">    matching = [ x for x in paths if rex.search(str(x)) ]</span>
+
+
+<span class="sd">TODO: Having * for globbing is a bit ugly, ideally we should have 4 ops:</span>
+
+<span class="sd">    - ``/``: path segment</span>
+<span class="sd">    - ``//``: glob or filter-function</span>
+<span class="sd">    - ``**``: recursive glob or filter-function</span>
+<span class="sd">    - ``^``: anchored regex glob</span>
+
+<span class="sd">    Will binding precedence be an issue here?</span>
+
+<span class="sd">    _ / &#39;foo&#39; // &#39;*.jpg&#39;</span>
+<span class="sd">    ( _ / &#39;foo&#39; ) // &#39;*.jpg&#39;</span>
+
+<span class="sd">    _ / &#39;foo&#39; ** &#39;*.jpg&#39;</span>
+<span class="sd">    (_ / (&#39;foo&#39; ** &#39;*.jpg&#39;))  # WRONG!!!!!</span>
+
+<span class="sd">    _ / &#39;foo&#39; ^ &#39;.*\.jpg$&#39;</span>
+<span class="sd">    (_ / &#39;foo&#39;) ^ &#39;.*\.jpg$&#39;</span>
+
+<span class="sd">    _ / &#39;foo&#39; ^ &#39;(foo|bar).*&#39; / &#39;baz&#39;</span>
+<span class="sd">    (_ / &#39;foo&#39;) ^ (&#39;(foo|bar)&#39; / &#39;baz&#39;)  # WRONG!</span>
+
+<span class="sd">    So ** is out, unless we can solve it easily and without caveats in precedence</span>
+<span class="sd">    transform, for recursive we can always do:</span>
+
+<span class="sd">        _ // &#39;**/*.jpg&#39;</span>
+<span class="sd">        _ // &#39;**&#39; // filter_fn   # better, because it can be very expensive! :)</span>
+<span class="sd">        _ // &#39;**&#39; ^ &#39;(foo|bar).*\.jpg&#39; /</span>
+
+<span class="sd">    The ``^`` case is more complicated because we can&#39;t mess with it in precedence</span>
+<span class="sd">    or we would break piperr surely. We could use a different symbol for regex,</span>
+<span class="sd">    for instance ``@``:</span>
+
+<span class="sd">        _ / &#39;foo&#39; @ &#39;(foo|bar).*&#39; / &#39;bar.txt&#39;</span>
+
+<span class="sd">    Or just don&#39;t have an operator for regex, we can always provide a pattern and</span>
+<span class="sd">    do as with filter functions:</span>
+
+<span class="sd">        _ / &#39;foo&#39; / _.re(&#39;(foo|bar).*&#39;) / &#39;bar.txt&#39;</span>
+
+<span class="sd">    And we can make more ergonomic by having a transform for &quot;regex strings&quot;,</span>
+<span class="sd">    which is probably useful for other use cases:</span>
+
+<span class="sd">        re&#39;(foo|bar).*&#39;  -&gt;  re.compile(r&#39;(foo|bar)&#39;, re.X)</span>
+
+<span class="sd">        _&#39;foo&#39; // re&#39;(foo|bar).*&#39; / &#39;bar.txt&#39;</span>
+
+<span class="sd">    So to sumarize:</span>
+
+<span class="sd">        ``/``: path segment(s) verbatim</span>
+<span class="sd">        ``//``: glob + brace-expansion segment(s)</span>
+<span class="sd">        ``//``: segment with anchored regex pattern or function</span>
+<span class="sd">        ``**``: same as // but recursive (ONLY if possible with transform)</span>
+
+
+<span class="sd">TODO: how to handle in command when a glob expansion produces 0 results?</span>
+<span class="sd">      in Sh and Bash it just provides as argument the actual glob (i.e *.jpg),</span>
+<span class="sd">      (unless globfail is set), but with support for regexes/funcs this is not</span>
+<span class="sd">      an option. Csh/Fish raise an error.</span>
+
+<span class="sd">TODO: Sort matches (joining digits so 4&lt;11) ??</span>
+
+
 <span class="sd">&quot;&quot;&quot;</span>
 
 
-<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">PurePath</span><span class="p">,</span> <span class="n">PosixPath</span><span class="p">,</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">cast</span>
-<span class="n">TPathLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">PurePath</span><span class="p">]</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span>
 
 
-<div class="viewcode-block" id="PathWrapper"><a class="viewcode-back" href="../../_apidoc/pysh.path.html#pysh.path.PathWrapper">[docs]</a><span class="k">class</span> <span class="nc">PathWrapper</span><span class="p">(</span><span class="n">PosixPath</span><span class="p">):</span>
+<span class="c1">#TODO: Can we inherit from .Path so it supports posix/windows flavours?</span>
+<div class="viewcode-block" id="Path"><a class="viewcode-back" href="../../_apidoc/pysh.path.html#pysh.path.Path">[docs]</a><span class="k">class</span> <span class="nc">Path</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">PosixPath</span><span class="p">):</span>
 
-    <span class="k">def</span> <span class="nf">__floordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot; regexp is anchored to the start. This avoids expensive traversals</span>
-<span class="sd">            for simple use cases. User can always start with `*` (we convert to .*)</span>
-<span class="sd">            if anchored is not ok for the use case.</span>
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">segments</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Path&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Expected at least one segment&#39;</span><span class="p">)</span>
 
-<span class="sd">            - starts with `*` -&gt; [^/]*?  (no recursive)</span>
-<span class="sd">            - starts with `**` -&gt; .*?  (recursive)</span>
+        <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span> <span class="o">/</span> <span class="n">segment</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;Path&#39;</span><span class="p">,</span> <span class="s1">&#39;GlobPath&#39;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot; Supports globbing!</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="c1"># TODO: check for globbing syntax</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">/</span> <span class="n">item</span>
 
-    <span class="k">def</span> <span class="nf">__rfloordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Glob&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Globbing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Glob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Glob&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Recursive globbing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Prefer right-associativity to support the pathpow transform</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="s1">&#39;__rpow__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">rhs</span><span class="o">.</span><span class="fm">__rpow__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">GlobRecursive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Path&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Glob</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">rhs</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__truediv__</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__floordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Glob&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">GlobRegex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot; Overload equality so we can support comparison against plain strings</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1">#TODO: try to resolve before comparing equality?</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">PathWrapper</span><span class="p">):</span>
-            <span class="n">other</span> <span class="o">=</span> <span class="n">PathWrapper</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">TPathLike</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Path</span><span class="p">):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">slice</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;~&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">PathWrapper</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">spec</span><span class="p">))</span>
-
-        <span class="c1">#TODO: check slice</span>
-
-        <span class="c1"># if spec in (&#39;.&#39;, &#39;/&#39;, &#39;~&#39;, r&#39;\\&#39;):</span>
-        <span class="c1">#     return Path(spec=spec)</span>
-        <span class="c1"># elif spec == r&#39;\&#39;:</span>
-        <span class="c1">#     return Path(spec=&#39;/&#39;)</span>
-        <span class="c1"># elif spec == &#39;//&#39;:</span>
-        <span class="c1">#     return Path(spec=r&#39;\\&#39;)</span>
-        <span class="c1"># elif spec.is_letter():</span>
-        <span class="c1">#     return Path(spec=spec.lower())</span>
-        <span class="c1"># elif all(ch == &#39;.&#39; for ch in spec):</span>
-        <span class="c1">#     return Path(spec=spec)</span>
-        <span class="c1"># else:</span>
-
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unsupported path spec </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">spec</span><span class="p">))</span>
-
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">TPathLike</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; use: _(&#39;path/to/file&#39;)</span>
+    <span class="k">def</span> <span class="nf">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Checks if the path exists</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PathWrapper</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="PathWrapper.as_path"><a class="viewcode-back" href="../../_apidoc/pysh.path.html#pysh.path.PathWrapper.as_path">[docs]</a>    <span class="k">def</span> <span class="nf">as_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">glob</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Path</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot; Returns a path object if no globbing is setup. If glob is set</span>
-<span class="sd">            it returns an Iterator of path objects, otherwise raises ValueError.</span>
 
-<span class="sd">            It&#39;ll return a Path/Posix/Windows path object according to the</span>
-<span class="sd">            current configuration.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div></div>
+<div class="viewcode-block" id="Segment"><a class="viewcode-back" href="../../_apidoc/pysh.path.html#pysh.path.Segment">[docs]</a><span class="k">class</span> <span class="nc">Segment</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Helper to wrap a value to signal it&#39;s part of a path</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;Segment(</span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__rpow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">GlobRecursive</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="Glob"><a class="viewcode-back" href="../../_apidoc/pysh.path.html#pysh.path.Glob">[docs]</a><span class="k">class</span> <span class="nc">Glob</span><span class="p">:</span>
+
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span><span class="s1">&#39;Glob&#39;</span><span class="p">],</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span>
+
+    <span class="k">def</span> <span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Glob&#39;</span><span class="p">:</span>
+        <span class="n">clone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__new__</span><span class="p">()</span>
+        <span class="n">clone</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+        <span class="n">clone</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span>
+        <span class="k">return</span> <span class="n">clone</span>
+
+<div class="viewcode-block" id="Glob.map"><a class="viewcode-back" href="../../_apidoc/pysh.path.html#pysh.path.Glob.map">[docs]</a>    <span class="k">def</span> <span class="nf">map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Glob.filter"><a class="viewcode-back" href="../../_apidoc/pysh.path.html#pysh.path.Glob.filter">[docs]</a>    <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">filter</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Glob.reduce"><a class="viewcode-back" href="../../_apidoc/pysh.path.html#pysh.path.Glob.reduce">[docs]</a>    <span class="k">def</span> <span class="nf">reduce</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">reduce</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">initial</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_paths</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Optimized to shorcut on the first pattern found</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="GlobRecursive"><a class="viewcode-back" href="../../_apidoc/pysh.path.html#pysh.path.GlobRecursive">[docs]</a><span class="k">class</span> <span class="nc">GlobRecursive</span><span class="p">(</span><span class="n">Glob</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="GlobRegex"><a class="viewcode-back" href="../../_apidoc/pysh.path.html#pysh.path.GlobRegex">[docs]</a><span class="k">class</span> <span class="nc">GlobRegex</span><span class="p">(</span><span class="n">Glob</span><span class="p">):</span>
+    <span class="k">pass</span></div>
 </pre></div>
 
            </div>

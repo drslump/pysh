@@ -1,0 +1,16 @@
+pysh.transforms.alpha package
+=============================
+
+.. automodule:: pysh.transforms.alpha
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+
+   pysh.transforms.alpha.bangexpr
+   pysh.transforms.alpha.lazybools
+

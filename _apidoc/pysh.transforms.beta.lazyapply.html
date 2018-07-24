@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pysh.transforms.autoreturn module &mdash; pysh 0.0.3 documentation</title>
+  <title>pysh.transforms.beta.lazyapply module &mdash; pysh 0.0.3 documentation</title>
   
 
   
@@ -28,8 +28,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="pysh.transforms.pathpow module" href="pysh.transforms.pathpow.html" />
-    <link rel="prev" title="pysh.transforms.autoimport module" href="pysh.transforms.autoimport.html" /> 
+    <link rel="next" title="pysh.transforms.deprecated package" href="pysh.transforms.deprecated.html" />
+    <link rel="prev" title="pysh.transforms.beta package" href="pysh.transforms.beta.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -93,8 +93,8 @@
 <li class="toctree-l1 current"><a class="reference internal" href="pysh.html">pysh package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="pysh.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="pysh.transforms.html">pysh.transforms package</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="pysh.transforms.html#subpackages">Subpackages</a></li>
-<li class="toctree-l4 current"><a class="reference internal" href="pysh.transforms.html#submodules">Submodules</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="pysh.transforms.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysh.transforms.html#submodules">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -157,13 +157,15 @@
         
           <li><a href="pysh.transforms.html">pysh.transforms package</a> &raquo;</li>
         
-      <li>pysh.transforms.autoreturn module</li>
+          <li><a href="pysh.transforms.beta.html">pysh.transforms.beta package</a> &raquo;</li>
+        
+      <li>pysh.transforms.beta.lazyapply module</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/_apidoc/pysh.transforms.autoreturn.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/_apidoc/pysh.transforms.beta.lazyapply.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -176,45 +178,33 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pysh.transforms.autoreturn">
-<span id="pysh-transforms-autoreturn-module"></span><h1>pysh.transforms.autoreturn module<a class="headerlink" href="#module-pysh.transforms.autoreturn" title="Permalink to this headline">¶</a></h1>
-<p>Returns the last expression in a block, similarly to lambdas.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">bar</span><span class="p">():</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="mi">10</span>
-<span class="go">        return 10</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bar</span><span class="p">()</span>
-<span class="go">    return bar()</span>
+  <div class="section" id="module-pysh.transforms.beta.lazyapply">
+<span id="pysh-transforms-beta-lazyapply-module"></span><h1>pysh.transforms.beta.lazyapply module<a class="headerlink" href="#module-pysh.transforms.beta.lazyapply" title="Permalink to this headline">¶</a></h1>
+<p>Converts expressions like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">func</span> <span class="o">&lt;&lt;=</span> <span class="n">cat</span> <span class="o">|</span> <span class="n">head</span> <span class="o">&gt;</span> <span class="n">null</span>
+<span class="go">    func &lt;&lt; (cat | head &gt; null)</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">it won’t transform statements like <em>if</em>, <em>for</em> or <em>while</em> into
-expressions that can be returned.</p>
+<p>The whole expression at the right of the operator is grouped. This allows for
+callables to receive an argument without using parenthesis.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This transformation <strong>breaks</strong> the standard <a href="#id1"><span class="problematic" id="id2">``</span></a>&lt;&lt;=` operator in normal
+Python code. There is <strong>no assignament</strong> to the operand on the left.</p>
 </div>
-<dl class="class">
-<dt id="pysh.transforms.autoreturn.AutoReturnTransformer">
-<em class="property">class </em><code class="descclassname">pysh.transforms.autoreturn.</code><code class="descname">AutoReturnTransformer</code><a class="reference internal" href="../_modules/pysh/transforms/autoreturn.html#AutoReturnTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.autoreturn.AutoReturnTransformer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ast.NodeTransformer</span></code></p>
-<dl class="method">
-<dt id="pysh.transforms.autoreturn.AutoReturnTransformer.visit_AsyncFunctionDef">
-<code class="descname">visit_AsyncFunctionDef</code><span class="sig-paren">(</span><em>node: _ast.AsyncFunctionDef</em><span class="sig-paren">)</span> &#x2192; _ast.AsyncFunctionDef<a class="reference internal" href="../_modules/pysh/transforms/autoreturn.html#AutoReturnTransformer.visit_AsyncFunctionDef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.autoreturn.AutoReturnTransformer.visit_AsyncFunctionDef" title="Permalink to this definition">¶</a></dt>
+<dl class="function">
+<dt id="pysh.transforms.beta.lazyapply.is_lazy">
+<code class="descclassname">pysh.transforms.beta.lazyapply.</code><code class="descname">is_lazy</code><span class="sig-paren">(</span><em>tkn</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/beta/lazyapply.html#is_lazy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.beta.lazyapply.is_lazy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.transforms.autoreturn.AutoReturnTransformer.visit_FunctionDef">
-<code class="descname">visit_FunctionDef</code><span class="sig-paren">(</span><em>node: _ast.FunctionDef</em><span class="sig-paren">)</span> &#x2192; _ast.FunctionDef<a class="reference internal" href="../_modules/pysh/transforms/autoreturn.html#AutoReturnTransformer.visit_FunctionDef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.autoreturn.AutoReturnTransformer.visit_FunctionDef" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.transforms.autoreturn.AutoReturnTransformer.visit_Module">
-<code class="descname">visit_Module</code><span class="sig-paren">(</span><em>node: _ast.Module</em><span class="sig-paren">)</span> &#x2192; _ast.Module<a class="reference internal" href="../_modules/pysh/transforms/autoreturn.html#AutoReturnTransformer.visit_Module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.autoreturn.AutoReturnTransformer.visit_Module" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
 
 <dl class="function">
-<dt id="pysh.transforms.autoreturn.parser">
-<code class="descclassname">pysh.transforms.autoreturn.</code><code class="descname">parser</code><span class="sig-paren">(</span><em>node: _ast.AST</em><span class="sig-paren">)</span> &#x2192; _ast.AST<a class="reference internal" href="../_modules/pysh/transforms/autoreturn.html#parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.autoreturn.parser" title="Permalink to this definition">¶</a></dt>
+<dt id="pysh.transforms.beta.lazyapply.is_term">
+<code class="descclassname">pysh.transforms.beta.lazyapply.</code><code class="descname">is_term</code><span class="sig-paren">(</span><em>tkn</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/beta/lazyapply.html#is_term"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.beta.lazyapply.is_term" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pysh.transforms.beta.lazyapply.lexer">
+<code class="descclassname">pysh.transforms.beta.lazyapply.</code><code class="descname">lexer</code><span class="sig-paren">(</span><em>code: _io.StringIO</em><span class="sig-paren">)</span> &#x2192; _io.StringIO<a class="reference internal" href="../_modules/pysh/transforms/beta/lazyapply.html#lexer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.beta.lazyapply.lexer" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>
@@ -227,10 +217,10 @@ expressions that can be returned.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="pysh.transforms.pathpow.html" class="btn btn-neutral float-right" title="pysh.transforms.pathpow module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="pysh.transforms.deprecated.html" class="btn btn-neutral float-right" title="pysh.transforms.deprecated package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="pysh.transforms.autoimport.html" class="btn btn-neutral" title="pysh.transforms.autoimport module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="pysh.transforms.beta.html" class="btn btn-neutral" title="pysh.transforms.beta package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

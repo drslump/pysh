@@ -1,0 +1,7 @@
+pysh.transforms.precedence module
+=================================
+
+.. automodule:: pysh.transforms.precedence
+    :members:
+    :undoc-members:
+    :show-inheritance:

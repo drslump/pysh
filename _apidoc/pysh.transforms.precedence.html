@@ -1,0 +1,372 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysh.transforms.precedence module &mdash; pysh 0.0.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pysh.transforms.protectnames module" href="pysh.transforms.protectnames.html" />
+    <link rel="prev" title="pysh.transforms.pathstring module" href="pysh.transforms.pathstring.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dsl/index.html">Domain Specific Language</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pysh.html">pysh package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pysh.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="pysh.transforms.html">pysh.transforms package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pysh.transforms.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="pysh.transforms.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysh.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Changelog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Unreleased</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html#version-0-0-3">Version 0.0.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html#version-0-0-1">Version 0.0.1</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="pysh.html">pysh package</a> &raquo;</li>
+        
+          <li><a href="pysh.transforms.html">pysh.transforms package</a> &raquo;</li>
+        
+      <li>pysh.transforms.precedence module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/_apidoc/pysh.transforms.precedence.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pysh.transforms.precedence">
+<span id="pysh-transforms-precedence-module"></span><h1>pysh.transforms.precedence module<a class="headerlink" href="#module-pysh.transforms.precedence" title="Permalink to this headline">¶</a></h1>
+<p>Modifies operator binding precedence for <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> to match those from
+in a <em>sh</em> based shell.</p>
+<div class="admonition danger">
+<p class="first admonition-title">Danger</p>
+<p class="last">The transformation not only applies to <em>pysh</em> expressions but to
+<strong>all the expressions</strong> using those operators in the script. For
+most uses it should be transparent though but it might introduce
+unexpected behaviour in what would be totally valid Python code.</p>
+</div>
+<p>Here is a table listing the binding precedence for the operators used in the
+DSL, from lower to higher, comparing that of Python with the one in a shell:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="40%" />
+<col width="60%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Python</th>
+<th class="head">Sh</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">&lt;</span></code> <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">|</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">|</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">^</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">^</span></code></td>
+<td>&#160;</td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code></td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+<p>They are too different, in a shell all <em>redirections</em> share the same precedence
+so they are naturaly evaluated (left associative), however in Python different
+<em>redirection</em> operators have different binding precedece and more importantly,
+the pipe operator has a higher precedence than the normal redirections.</p>
+<p>For simple expressions it doesn’t really matter, the DSL can be designed to
+dissambiguate common use cases, however once the expression is a bit more complex
+having the correct binding precedence is crucial, otherwise the programmer is
+forced to use parenthesis to enforce the correct meaning.</p>
+<p>Take for instance the following example where we want to ignore the stdout from
+a command and do a pipeline from its stderr:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cmd</span> <span class="o">&gt;</span><span class="n">null</span> <span class="o">^</span><span class="n">stdout</span> <span class="o">|</span> <span class="n">bar</span> <span class="o">&gt;</span><span class="n">null</span>
+<span class="go">python: ( cmd &gt; ( ( null ^ stdout ) | bar ) ) &gt; null</span>
+<span class="go"> shell: ( ( cmd &gt; null ) ^ stdout ) | ( bar  &gt; null )</span>
+</pre></div>
+</div>
+<p>With standard Python operator precedence the expression would fail, or even worse,
+in some scenarios it might have worked but not doing what the programmer intended.
+A possible solution would be for the programmer to use parenthesis or reorder some
+operators to make sure it does what she wants:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">cmd</span> <span class="o">^</span><span class="n">stdout</span> <span class="o">&gt;</span><span class="n">null</span><span class="p">)</span> <span class="o">|</span> <span class="n">bar</span> <span class="o">&gt;</span><span class="n">null</span>
+</pre></div>
+</div>
+<p>This transformation offers another solution, it changes the binding precedence of
+the <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> operators when parsing a script. Note that this means that
+<strong>it’s changed for commands but also for any other value in the code</strong>, the
+assumption here is that since the precedence problem only happens when chaining
+operators and given that most of the operators used are not commonly chained in
+plain Python code, it’s best for the script to use shell-like precedences for the
+whole script. The final binding precedence table is as follows (lower to higher):</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="48%" />
+<col width="52%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Python</th>
+<th class="head">pysh</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">&lt;</span></code> <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">|</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">|</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">^</span></code> <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;</span></code></td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">^</span></code></td>
+<td><code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code></td>
+</tr>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code></td>
+<td>&#160;</td>
+</tr>
+</tbody>
+</table>
+<p>The implementation is quite a hack though, in order to keep it simple we want to
+leverage the Python parsing infrastructure as much as possible instead of creating
+our own parser with different binding precedences. We abuse the fact that only two
+the intended precedence is the same as the bitwise operator <code class="docutils literal notranslate"><span class="pre">^</span></code>, mapping the
+redirections to it so we can keep the of the operators unchanged. While that mapping
+ensures the correct parsing we need to <em>annotate</em> somehow the original operator,
+for that we rely on some runtime helpers and the use of <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, which has higher
+binding precedence than <code class="docutils literal notranslate"><span class="pre">^</span></code>, this is merely a trick to avoid having to detect
+whole expressions boundaries at the lexer level as to wrap them in a call to the
+runtime helper, instead the parser will do that for us automatically and then it
+uses the <code class="docutils literal notranslate"><span class="pre">__and__</span></code> overload.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">&lt;</span> <span class="n">cmd</span> <span class="o">^</span> <span class="n">stdout</span> <span class="o">|</span> <span class="n">head</span> <span class="o">&gt;</span> <span class="s1">&#39;errors.txt&#39;</span>
+<span class="go">    fname ^LT&amp; cmd ^ stdout | head ^GT&amp; &#39;errors.txt&#39;</span>
+<span class="go">    ( (fname ^ (LT &amp; cmd)) ^ stdout ) | ( head ^ (GT &amp; &#39;errors.txt&#39;) )</span>
+</pre></div>
+</div>
+<p>The approach has the benefit that the common pipe operator is unchanged, so it has
+no runtime cost. For the redirections first the helper’s bitwise <code class="docutils literal notranslate"><span class="pre">__and__</span></code> will
+be called so it can obtain the right-hand operand, then it returns an instance
+with a <code class="docutils literal notranslate"><span class="pre">__rxor__</span></code> overload suitable to perform the original operation when Python
+evaluates the injected <code class="docutils literal notranslate"><span class="pre">^</span></code> operator.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cmd</span> <span class="o">&gt;</span> <span class="n">null</span>
+<span class="go">    cmd ^ (GT &amp; null)</span>
+<span class="go">    GT.__and__(null).__rxor__(cmd) =&gt; cmd &gt; null</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p>If the code being transformed uses numerical bitwise operators or classes
+that overload them the results might be unexpected. The whole system relies
+on working with standard types and the <em>pysh</em> DSL types.</p>
+<p class="last">The same applies to <em>chained comparisons</em>, althought that case is detected
+and a syntax warning is issued pointing out the problematic use.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pysh.transforms.protectnames.html" class="btn btn-neutral float-right" title="pysh.transforms.protectnames module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pysh.transforms.pathstring.html" class="btn btn-neutral" title="pysh.transforms.pathstring module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.0.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

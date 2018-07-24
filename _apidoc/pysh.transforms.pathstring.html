@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pysh.transforms.bangexpr module &mdash; pysh 0.0.3 documentation</title>
+  <title>pysh.transforms.pathstring module &mdash; pysh 0.0.3 documentation</title>
   
 
   
@@ -27,7 +27,9 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pysh.transforms.precedence module" href="pysh.transforms.precedence.html" />
+    <link rel="prev" title="pysh.transforms.pathpow module" href="pysh.transforms.pathpow.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -87,8 +89,19 @@
 <li class="toctree-l1"><a class="reference internal" href="../dsl/index.html">Domain Specific Language</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="pysh.html">pysh package</a></li>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pysh.html">pysh package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pysh.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="pysh.transforms.html">pysh.transforms package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="pysh.transforms.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="pysh.transforms.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysh.html#submodules">Submodules</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption"><span class="caption-text">Changelog:</span></p>
 <ul>
@@ -140,13 +153,17 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-      <li>pysh.transforms.bangexpr module</li>
+          <li><a href="pysh.html">pysh package</a> &raquo;</li>
+        
+          <li><a href="pysh.transforms.html">pysh.transforms package</a> &raquo;</li>
+        
+      <li>pysh.transforms.pathstring module</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/_apidoc/pysh.transforms.bangexpr.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/_apidoc/pysh.transforms.pathstring.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -159,8 +176,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="pysh-transforms-bangexpr-module">
-<h1>pysh.transforms.bangexpr module<a class="headerlink" href="#pysh-transforms-bangexpr-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-pysh.transforms.pathstring">
+<span id="pysh-transforms-pathstring-module"></span><h1>pysh.transforms.pathstring module<a class="headerlink" href="#module-pysh.transforms.pathstring" title="Permalink to this headline">¶</a></h1>
+<p>Simple lexer transform to support <em>path string literals</em>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="s1">&#39;*.jpg&#39;</span>
+<span class="go">    _[r&#39;*.jpg&#39;]</span>
+</pre></div>
+</div>
+<dl class="function">
+<dt id="pysh.transforms.pathstring.lexer">
+<code class="descclassname">pysh.transforms.pathstring.</code><code class="descname">lexer</code><span class="sig-paren">(</span><em>code: _io.StringIO</em><span class="sig-paren">)</span> &#x2192; _io.StringIO<a class="reference internal" href="../_modules/pysh/transforms/pathstring.html#lexer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.pathstring.lexer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </div>
 
 
@@ -168,6 +195,15 @@
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pysh.transforms.precedence.html" class="btn btn-neutral float-right" title="pysh.transforms.precedence module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pysh.transforms.pathpow.html" class="btn btn-neutral" title="pysh.transforms.pathpow module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

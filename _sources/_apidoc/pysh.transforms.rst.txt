@@ -6,6 +6,15 @@ pysh.transforms package
     :undoc-members:
     :show-inheritance:
 
+Subpackages
+-----------
+
+.. toctree::
+
+    pysh.transforms.alpha
+    pysh.transforms.beta
+    pysh.transforms.deprecated
+
 Submodules
 ----------
 
@@ -14,7 +23,9 @@ Submodules
    pysh.transforms.autoexpr
    pysh.transforms.autoimport
    pysh.transforms.autoreturn
-   pysh.transforms.bangexpr
-   pysh.transforms.lazybools
+   pysh.transforms.pathpow
+   pysh.transforms.pathstring
+   pysh.transforms.precedence
    pysh.transforms.protectnames
+   pysh.transforms.restring
 

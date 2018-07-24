@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pysh.transforms.autoreturn module &mdash; pysh 0.0.3 documentation</title>
+  <title>pysh.transforms.alpha.lazybools module &mdash; pysh 0.0.3 documentation</title>
   
 
   
@@ -28,8 +28,8 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="pysh.transforms.pathpow module" href="pysh.transforms.pathpow.html" />
-    <link rel="prev" title="pysh.transforms.autoimport module" href="pysh.transforms.autoimport.html" /> 
+    <link rel="next" title="pysh.transforms.beta package" href="pysh.transforms.beta.html" />
+    <link rel="prev" title="pysh.transforms.alpha.bangexpr module" href="pysh.transforms.alpha.bangexpr.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -93,8 +93,8 @@
 <li class="toctree-l1 current"><a class="reference internal" href="pysh.html">pysh package</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="pysh.html#subpackages">Subpackages</a><ul class="current">
 <li class="toctree-l3 current"><a class="reference internal" href="pysh.transforms.html">pysh.transforms package</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="pysh.transforms.html#subpackages">Subpackages</a></li>
-<li class="toctree-l4 current"><a class="reference internal" href="pysh.transforms.html#submodules">Submodules</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="pysh.transforms.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysh.transforms.html#submodules">Submodules</a></li>
 </ul>
 </li>
 </ul>
@@ -157,13 +157,15 @@
         
           <li><a href="pysh.transforms.html">pysh.transforms package</a> &raquo;</li>
         
-      <li>pysh.transforms.autoreturn module</li>
+          <li><a href="pysh.transforms.alpha.html">pysh.transforms.alpha package</a> &raquo;</li>
+        
+      <li>pysh.transforms.alpha.lazybools module</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="../_sources/_apidoc/pysh.transforms.autoreturn.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/_apidoc/pysh.transforms.alpha.lazybools.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -176,47 +178,40 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pysh.transforms.autoreturn">
-<span id="pysh-transforms-autoreturn-module"></span><h1>pysh.transforms.autoreturn module<a class="headerlink" href="#module-pysh.transforms.autoreturn" title="Permalink to this headline">¶</a></h1>
-<p>Returns the last expression in a block, similarly to lambdas.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">bar</span><span class="p">():</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="mi">10</span>
-<span class="go">        return 10</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bar</span><span class="p">()</span>
-<span class="go">    return bar()</span>
+  <div class="section" id="module-pysh.transforms.alpha.lazybools">
+<span id="pysh-transforms-alpha-lazybools-module"></span><h1>pysh.transforms.alpha.lazybools module<a class="headerlink" href="#module-pysh.transforms.alpha.lazybools" title="Permalink to this headline">¶</a></h1>
+<p>In Python it’s not possible to overload the boolean operators (<code class="docutils literal notranslate"><span class="pre">not</span></code>,
+<code class="docutils literal notranslate"><span class="pre">and</span></code>, <code class="docutils literal notranslate"><span class="pre">or</span></code>) since they have short-circuiting semantics (PEP-532 is
+deferred right now).</p>
+<p>The problem manifests when trying to use a <code class="docutils literal notranslate"><span class="pre">cmd</span> <span class="pre">and</span> <span class="pre">ok</span> <span class="pre">or</span> <span class="pre">fail</span></code>
+or similar constructs, which are quite common in shell scripts. We would
+like to keep that expression lazily evaluated but is not possible since
+the Python interpreter will try to resolve it immediately, trigering the
+evaluation of <code class="docutils literal notranslate"><span class="pre">cmd</span></code> to know if it should go with the <code class="docutils literal notranslate"><span class="pre">and</span></code> or the <code class="docutils literal notranslate"><span class="pre">or</span></code>
+branch.</p>
+<p>This tranformation converts the above example to:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">OR</span><span class="p">(</span><span class="n">AND</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">ok</span><span class="p">),</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">fail</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">OR</span></code> and <code class="docutils literal notranslate"><span class="pre">AND</span></code> are runtime helpers that will inspect the value
+and delegate to it if it has defined the proper protocol:</p>
+<blockquote>
+<div><ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">__lazyboolnot__(self)</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">__lazybooland__(self,</span> <span class="pre">rhs_callable)</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">__lazyboolor__(self,</span> <span class="pre">rhs_callable)</span></code></li>
+</ul>
+</div></blockquote>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">it won’t transform statements like <em>if</em>, <em>for</em> or <em>while</em> into
-expressions that can be returned.</p>
+<p class="last">These operators do not have a reverse, the argument will always
+be the right operand.</p>
 </div>
-<dl class="class">
-<dt id="pysh.transforms.autoreturn.AutoReturnTransformer">
-<em class="property">class </em><code class="descclassname">pysh.transforms.autoreturn.</code><code class="descname">AutoReturnTransformer</code><a class="reference internal" href="../_modules/pysh/transforms/autoreturn.html#AutoReturnTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.autoreturn.AutoReturnTransformer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ast.NodeTransformer</span></code></p>
-<dl class="method">
-<dt id="pysh.transforms.autoreturn.AutoReturnTransformer.visit_AsyncFunctionDef">
-<code class="descname">visit_AsyncFunctionDef</code><span class="sig-paren">(</span><em>node: _ast.AsyncFunctionDef</em><span class="sig-paren">)</span> &#x2192; _ast.AsyncFunctionDef<a class="reference internal" href="../_modules/pysh/transforms/autoreturn.html#AutoReturnTransformer.visit_AsyncFunctionDef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.autoreturn.AutoReturnTransformer.visit_AsyncFunctionDef" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.transforms.autoreturn.AutoReturnTransformer.visit_FunctionDef">
-<code class="descname">visit_FunctionDef</code><span class="sig-paren">(</span><em>node: _ast.FunctionDef</em><span class="sig-paren">)</span> &#x2192; _ast.FunctionDef<a class="reference internal" href="../_modules/pysh/transforms/autoreturn.html#AutoReturnTransformer.visit_FunctionDef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.autoreturn.AutoReturnTransformer.visit_FunctionDef" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.transforms.autoreturn.AutoReturnTransformer.visit_Module">
-<code class="descname">visit_Module</code><span class="sig-paren">(</span><em>node: _ast.Module</em><span class="sig-paren">)</span> &#x2192; _ast.Module<a class="reference internal" href="../_modules/pysh/transforms/autoreturn.html#AutoReturnTransformer.visit_Module"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.autoreturn.AutoReturnTransformer.visit_Module" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="pysh.transforms.autoreturn.parser">
-<code class="descclassname">pysh.transforms.autoreturn.</code><code class="descname">parser</code><span class="sig-paren">(</span><em>node: _ast.AST</em><span class="sig-paren">)</span> &#x2192; _ast.AST<a class="reference internal" href="../_modules/pysh/transforms/autoreturn.html#parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.autoreturn.parser" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">Since the rhs is opaque inside the lambda, we can’t check it
+until it resolves.</p>
+</div>
 </div>
 
 
@@ -227,10 +222,10 @@ expressions that can be returned.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="pysh.transforms.pathpow.html" class="btn btn-neutral float-right" title="pysh.transforms.pathpow module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="pysh.transforms.beta.html" class="btn btn-neutral float-right" title="pysh.transforms.beta package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="pysh.transforms.autoimport.html" class="btn btn-neutral" title="pysh.transforms.autoimport module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="pysh.transforms.alpha.bangexpr.html" class="btn btn-neutral" title="pysh.transforms.alpha.bangexpr module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -1,0 +1,8 @@
+pysh.transforms.deprecated package
+==================================
+
+.. automodule:: pysh.transforms.deprecated
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
