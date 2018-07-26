@@ -5,10 +5,35 @@ A transformation module defines at least one of:
 
   - ``lexer(code: StringIO, fname: str) -> StringIO``
   - ``parser(root: AST, fname: str) -> AST``
+  - ``patch(types: Dict[str, type]) -> None``
 
 Additionally the module symbols referenced on its ``__all__`` will
 be made available as globals for the script. This allows to define
 *runtime* functions on the generated code.
+
+Transform modules might want to patch the DSL types in order to provide
+additionaly features or modify somehow the standard behaviour. Before
+compiling some script code the transform will have a chance for doing
+so via the ``patch`` hook. It's very important that module transforms
+don't try to monkey patch the types by importing them, instead it should
+use the types provided to the ``patch`` function.
+
+TODO: Implement patching support for the DSL:
+
+    - Create a lazy-dict with the types in the DSL
+    - When a type is required it returns a new subtype
+    - Pass the dict to the patch function
+    - Get as result a dict with the types to override
+    - add a global __PYSH_DSL_OVERRIDES__ with that override
+    - DSL types implement a __new__ that looks into
+      __PYSH_DSL_OVERRIDES__, if found return an instance of that
+      type, otherwise act as normal.
+    - compiled scripts should get the modified type, a
+      descendant of the standard one. Other scripts will
+      not be affected, unless the user interacts with the
+      DSL directly in some of its code that gets imported
+      as a module.
+
 
 .. note:: The code AST is wrapped in a ``FunctionDef`` before calling
           a transformer parser. Transforms should expect a top level
@@ -27,7 +52,7 @@ from types import FunctionType, CodeType
 
 import pysh
 
-from typing import Union, Callable, Dict, List, Any
+from typing import Union, Callable, Dict, List, Tuple, Iterator, Any, TypeVar
 
 
 STARTMARKER = tokenize.TokenInfo(type=-1, string='', start=(0,0), end=(0,0), line='')
@@ -36,7 +61,8 @@ STARTMARKER = tokenize.TokenInfo(type=-1, string='', start=(0,0), end=(0,0), lin
 logger = logging.getLogger(__name__)
 
 
-def zip_prev(generator, initial=None):
+T = TypeVar('T')
+def zip_prev(generator: Iterator[T], initial=None) -> Iterator[Tuple[T,T]]:
     """ Helper wrapper for tokens generators that will provide a tuple with
         the previous item and the current one. The initial previous item can
         be provided.
@@ -147,6 +173,7 @@ class Compiler:
         self.lexers = []
         self.parsers = []
         self.symbols = {}
+        self.patchers = []
 
         for transform in transforms:
             self.add_transform(transform)
@@ -195,6 +222,10 @@ class Compiler:
         if hasattr(module, 'parser'):
             logger.debug('Registering parser from %s', transform)
             self.parsers.append(getattr(module, 'parser'))
+
+        if hasattr(module, 'patch'):
+            logger.debug('Registering patch from %s', transform)
+            self.patchers.append(getattr(module, 'patch'))
 
         if hasattr(module, '__all__'):
             for symbol in getattr(module, '__all__'):

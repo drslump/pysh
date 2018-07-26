@@ -1,12 +1,12 @@
 """
-Detects shadowings of the ``_`` variable (used for *paths*), producing a
-syntax error when detected.
+Detects shadowings of the ``_`` variable (aka "the path factory"), producing a
+syntax warning when detected.
 
 Some programing styles use ``_`` as a way to ignore a result, which would
-break the DSL.
+break the DSL in most cases.
 
-.. note:: At some point this transformation should not report an error but
-          rename the references to the protected name.
+.. note:: At some point this transformation should not report the issue but
+          actually rename the references to the protected name if possible.
 """
 
 from ast import NodeTransformer, AST, \
@@ -22,8 +22,9 @@ PROTECTED = ['_',]
 class ProtectNamesTransformer(NodeTransformer):
     """ Shadowing of the given names is forbidden.
     """
-    def __init__(self, names: Iterable[str]) -> None:
+    def __init__(self, names: Iterable[str], fname: str) -> None:
         self.names = set(names)
+        self.fname = fname
 
     def _check_target(self, target: AST, id: str = None) -> None:
         if not id:
@@ -35,8 +36,14 @@ class ProtectNamesTransformer(NodeTransformer):
                 return
 
         if id in self.names:
-            #TODO: report position
-            raise SyntaxError("Forbidden overwriting of name `{}`".format(id))
+            from warnings import warn_explicit
+            message = (
+                'Detected shadowing of variable name `{}`, please consider using '
+                'a different name for the new variable. '
+                '(from pysh.transform.shadowing)'
+            ).format(id)
+
+            warn_explicit(message, SyntaxWarning, self.fname, target.lineno)
 
     def visit_Assign(self, node: Assign) -> Assign:
         for target in node.targets:
@@ -79,5 +86,5 @@ class ProtectNamesTransformer(NodeTransformer):
         return node
 
 
-def parser(node: AST) -> AST:
-    return ProtectNamesTransformer(PROTECTED).visit(node)
+def parser(node: AST, fname: str) -> AST:
+    return ProtectNamesTransformer(PROTECTED, fname).visit(node)

@@ -66,7 +66,8 @@ setup(
     packages=find_packages(exclude=['docs', 'tests']),
 
     install_requires=[
-        "docopt",
+        "docopt>=0.6.2<0.7",
+        "braceexpand>=0.1.2<0.2",
     ],
     extras_require={
         "dev": [

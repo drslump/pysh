@@ -1,7 +1,8 @@
 import pytest
 
-from pysh.command import command, Command, Pipe, Piperr, Redirect, Reckless, Application
-from pysh.path import Path
+from pysh.dsl.command import command
+from pysh.dsl.pipeline import Command, Pipe, Piperr, Redirect, Application
+from pysh.dsl.path import Path
 
 foo = command('foo')
 bar = command('bar')
@@ -117,29 +118,34 @@ def test_str_lt_cmd():
 
 def test_tilde_cmd():
     expr = ~foo
-    assert type(expr) is Reckless
-    assert expr.expr is foo
+    assert expr.reckless is True
+    assert type(expr) is Command
+
+def test_tilde_tilde_cmd():
+    expr = ~~foo
+    assert expr.reckless is False
+    assert type(expr) is Command
 
 def test_tilde_cmd_arg():
     expr = ~foo('fname')
-    assert type(expr) is Reckless
-    assert type(expr.expr) is Command
-    assert expr.expr.args == ['fname']
+    assert expr.reckless is True
+    assert type(expr) is Command
 
     expr = ~foo['fname']
-    assert type(expr) is Reckless
-    assert type(expr.expr) is Command
-    assert expr.expr.args == ['fname']
+    assert expr.reckless is True
+    assert type(expr) is Command
 
 def test_tilde_pipe():
     expr = ~(foo | bar)
-    assert type(expr) is Reckless
-    assert type(expr.expr) is Pipe
+    assert expr.reckless is True
+    assert type(expr) is Pipe
 
 def test_tilde_redirect():
     expr = ~foo > 'out.txt'
     assert type(expr) is Redirect
-    assert type(expr.lhs) is Reckless
+    assert expr.reckless is False
+    assert type(expr.lhs) is Command
+    assert expr.lhs.reckless is True
 
 
 # compound

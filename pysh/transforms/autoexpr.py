@@ -16,8 +16,6 @@ semantics closer to a command oriented language.
 from ast import NodeTransformer, fix_missing_locations, AST, \
     FunctionDef, AsyncFunctionDef, ClassDef, Expr, Call, Name, Load
 
-from pysh.command import Expr
-
 from typing import Any
 
 
@@ -46,8 +44,8 @@ def __autoexpr__(value: Any) -> Any:
     """ Every Expr node will be passed as an argument to this function.
         It should inspect the value and act upon it.
     """
-    if isinstance(value, Expr):
-        return value.invoke()
+    if hasattr(value, '__autoexpr__'):
+        return value.__autoexpr__()
 
     return value
 

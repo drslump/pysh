@@ -1,6 +1,7 @@
 Unreleased
 ----------
 
+- First stab at path matching with brace expansion, globs, regex and callables.
 - Introduce the notion of *alpha*, *beta* and *deprecated* transform modules.
 - :mod:`pysh.transforms.restring` transform ``re'...'``
 - :mod:`pysh.transforms.pathstring` transform  ``_'...'``

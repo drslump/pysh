@@ -1,41 +1,58 @@
-from pysh.command import command
+
+import pytest
+
+from pysh.dsl.command import ExternalSpec
+from pysh.dsl.pipeline import Command
 
 
 def test_args_short():
-    c = command('cmd')
-    r = c(a=True, b=True, c=False, d=10)
-    assert r.args == ['-a', '-b', '-d', '10']
+    spec = ExternalSpec('cmd')
+    c = Command(spec)(a=True, b=True, c=False, d=10)
+    args = spec.get_args_for(c)
+    assert args == ['-a', '-b', '-d', '10']
 
 def test_args_hyphenate():
-    c = command('cmd')
-    r = c('bar', opt_bool=True, opt_str='str', opt_multi=[1,2])
-    assert  ' '.join(r.args) \
-        == '--opt-bool --opt-multi 1 --opt-multi 2 --opt-str str bar'
+    spec = ExternalSpec('cmd')
+    c = Command(spec)('bar', opt_bool=True, opt_str='str', opt_multi=[1,2])
+    args = spec.get_args_for(c)
+    assert  ' '.join(args) \
+        == '--opt-bool --opt-str str --opt-multi 1 --opt-multi 2 bar'
 
 def test_args_valuepre():
-    c = command('cmd', valuepre='=')
-    r = c(opt=1)
-    assert ' '.join(r.args) == '--opt=1'
-    r = c(opt=[1,2])
-    assert ' '.join(r.args) == '--opt=1 --opt=2'
+    spec = ExternalSpec('cmd', valuepre='=')
+    c = Command(spec)
+    args = spec.get_args_for(c(opt=1))
+    assert ' '.join(args) == '--opt=1'
+    args = spec.get_args_for(c(opt=[1,2]))
+    assert ' '.join(args) == '--opt=1 --opt=2'
 
 def test_args_argspre():
-    c = command('cmd', argspre='--')
-    r = c('bar', 'baz', opt=True)
-    assert ' '.join(r.args) == '--opt -- bar baz'
-    r = c('foo', 'bar')
-    assert r.args == ['--', 'foo', 'bar']
+    spec = ExternalSpec('cmd', argspre='--')
+    c = Command(spec)
+    assert spec.get_args_for( c('bar', 'baz', opt=True) ) == ['--opt', '--', 'bar', 'baz']
+    assert spec.get_args_for( c('foo', 'bar') ) == ['--', 'foo', 'bar']
 
 def test_args_slice():
-    c = command('cmd')
-    assert c['foo'].args == ['foo']
-    assert c['foo bar'].args == ['foo', 'bar']
-    assert c[r'foo\ bar'].args == ['foo bar']
-    assert c[r'foo\ \ bar'].args == ['foo  bar']
-    assert c['foo\\\tbar'].args == ['foo\tbar']
+    spec = ExternalSpec('cmd')
+    c = Command(spec)
+    assert spec.get_args_for(c['foo']) == ['foo']
+    assert spec.get_args_for(c['foo bar']) == ['foo', 'bar']
+    assert spec.get_args_for(c[r'foo\ bar']) == ['foo bar']
+    assert spec.get_args_for(c[r'foo\ \ bar']) == ['foo  bar']
+    assert spec.get_args_for(c['foo\\\tbar']) == ['foo\tbar']
 
 def test_args_repeat():
-    c = command('cmd', repeat=',')
-    assert c(opt=[1,2,3]).args == ['--opt', '1,2,3']
-    c = command('cmd', repeat=',', valuepre='=')
-    assert c(opt=[1,2,3]).args == ['--opt=1,2,3']
+    spec = ExternalSpec('cmd', repeat=',')
+    c = Command(spec)
+    assert spec.get_args_for(c(opt=[1,2,3])) == ['--opt', '1,2,3']
+
+    spec = ExternalSpec('cmd', repeat=',', valuepre='=')
+    c = Command(spec)
+    assert spec.get_args_for(c(opt=[1,2,3])) == ['--opt=1,2,3']
+
+def test_args_underscore_positional():
+    spec = ExternalSpec('cmd')
+    c = Command(spec)
+    assert spec.get_args_for(c(opt=True, _='foo')) == ['--opt', 'foo']
+    assert spec.get_args_for(c('bar', opt=True, _='foo')) == ['--opt', 'bar', 'foo']
+    assert spec.get_args_for(c(opt=True, _=['foo', 'bar'])) == ['--opt', 'foo', 'bar']

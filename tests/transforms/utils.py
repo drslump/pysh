@@ -15,7 +15,7 @@ def parse(modules, code):
 
 def comp(modules, code):
     comp = Compiler(modules)
-    return comp.compile(dedent(code))
+    return comp.compile(StringIO(dedent(code)))
 
 def auto(modules, code):
     comp = Compiler(list(modules) + ['autoreturn'])

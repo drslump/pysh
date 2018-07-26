@@ -2,9 +2,10 @@ import os
 
 from .version import __version__
 
-from .path import Path
+from .dsl.path import Path
 from .env import Env
-from .command import command, ShCommand, ShSpec
+from .dsl.command import command
+from .dsl.sh import ShCommand, ShSpec
 
 
 # Prelude for scripts

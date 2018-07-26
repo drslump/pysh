@@ -1,182 +1,18 @@
 """
-command:
-  - A factory for a Command with a concrete BaseSpec
 
-BaseSpec (and concrete classes):
-  - Defines how a command must be called
-  - Understands external commands and also pure python functions
-
-Expr:
-  - Base class for all builders.
-  - Each operation returns a cloned copy so stored references are immutable
-
-Command:
-  - DSL interface for command construction
-
-Pipe, Redirect:
-  - Expression represent an operation
-
-Result:
-  - When a Expr is executed this object tracks it
-  - Allows to access streams
-  - Allows to query the exit status
-
-
-TODO: check http://harp.pythonanywhere.com/python_doc/library/concurrent.html
-      for launching python commands
-
+#TODO: Check http://www.pixelbeat.org/programming/sigpipe_handling.html
 """
 
 import re
-from collections import Iterable
-from pathlib import PurePath
-from abc import abstractmethod, ABCMeta
 from io import IOBase
+from pathlib import PurePath
 
-from pysh.path import Path
+from pysh.dsl.path import Path
 
 from typing import Optional, Union, List, Callable, Any
 
 
-def command(command, **kwargs):
-    """
-    Command factory. Returns a :class:`Command` configured with concreate
-    implementation of :class:`BaseSpec` suitable for the given command.
-
-    Any additional keyword arguments will be provided to the implementation
-    of :class:`Spec`.
-
-    .. note:: Currently *command* can only be a path-like reference which
-              refers to an external command, check :class:`ExternalSpec` for
-              additional details.
-    """
-    if isinstance(command, (str, PurePath)):
-        spec = ExternalSpec(command, **kwargs)
-    else:
-        #TODO: Support functions!
-        raise RuntimeError('Only external commands are currently supported!')
-
-    return Command(spec)
-
-
-class BaseSpec:  #TODO: (meta=ABCMeta) breaks?
-    """
-    Base abstract class for representing how a command should execute.
-
-    Check :class:`ExternalSpec` for a concrete implementation of the
-    interface that allows to run external commands.
-    """
-
-    @abstractmethod
-    def run(self, builder: 'Command'):
-        """
-        This is a somewhat internal method to execute a builder according to
-        the spec. It's intended to be used by :meth:`CommandBuilder.invoke`.
-        """
-
-    @abstractmethod
-    def parse_args(self, *args, **kwargs) -> List[Any]:
-        """
-        Used by :meth:`CommandBuilder` call and slicing protocols to convert
-        their received values into arguments according to the spec.
-
-        .. TODO:: Does it belong in the interface? shouldn't it be part of External?
-        """
-
-    def __repr__(self):
-        return '{}({})'.format(self.__class__.name, self.command)
-
-
-class ExternalSpec(BaseSpec):
-    """
-    Implementation for external commands.
-
-    Handles arguments according to the following rules:
-
-    - keywords are always sorted to be reproducible
-    - keywords always go before *positional* arguments
-    - single char keywords get a ``-`` prefix (*shortpre* setting)
-    - multi char keywords get a ``--`` prefix (*longpre* setting)
-    - keywords starting with ``_`` are not prefixed (with *hyphenate* setting)
-    - ``an_option`` -> ``an-option`` (*hyphenate* setting)
-    - *False* and *None* values for keywords don't produce an option
-    - when *argspre* is set it's used before the positional arguments
-    - keyword values produce an additional argument (*valuepre* setting)
-    - iterables get expanded, repeating keyword if *repeat* is *True* or
-      joining them with the value of *repeat* if it's a string. When *repeat*
-      is *False* additional arguments are placed after the option.
-
-    """
-    __slots__ = ('command', 'ok_status', 'hyphenate', 'repeat', 'shortpre', 'longpre', 'valuepre', 'falsepre', 'argspre')
-
-    def __init__(self, command: str, *,
-                 ok_status=(0,), hyphenate=True, repeat: Union[bool,str] = True,
-                 shortpre='-', longpre='--',
-                 valuepre: Optional[str] = None, argspre: Optional[str] = None):
-        self.command = command
-        self.ok_status = tuple([ok_status]) if isinstance(ok_status, int) else ok_status
-        self.hyphenate = hyphenate
-        self.shortpre = shortpre
-        self.longpre = longpre
-        self.valuepre = valuepre
-        self.argspre = argspre
-        self.repeat = repeat
-
-    def _parse_option(self, option, value) -> List[str]:
-        if self.hyphenate:
-            option = option.replace('_', '-')
-
-        is_short = 1 == len(option)
-        if not option.startswith('-'):
-            option = (self.shortpre if is_short else self.longpre) + option
-
-        if value is True:
-            return [option]
-        elif value in (False, None):
-            return []
-
-        if isinstance(value, str) or not isinstance(value, Iterable):
-            value = [value]
-
-        if self.repeat is False:
-            return [option] + [str(v) for v in value]  #XXX ignores valuepre in this case
-        else:
-            if self.repeat is not True:
-                value = [self.repeat.join(str(v) for v in value)]  #XXX custom repeat separator
-
-            if self.valuepre:
-                return [option + self.valuepre + str(v) for v in value]
-            else:
-                return sum([[option, str(v)] for v in value], [])  #XXX flattens the list
-
-    def parse_args(self, *args, **kwargs) -> List[Any]:
-        """
-
-        """
-        result = []
-        #TODO: According to PEP468 since 3.6 keywords order is preserved
-        for option in sorted(kwargs.keys()):
-            value = kwargs[option]
-            #TODO: We need to resolve value at this point to make repeated options reliable
-            result.extend(self._parse_option(option, value))
-
-        if self.argspre:
-            result.append(self.argspre)
-
-        #TODO: We need to resolve arg at this point
-        for arg in args:
-            if isinstance(arg, str) or not isinstance(arg, Iterable):
-                arg = [arg]
-
-            result.extend(str(x) for x in arg)
-
-        return result
-
-    def run(self, builder: 'Command'):
-        raise NotImplementedError('sorry!')
-
-
-class Expr:  #TODO: breaks?? (meta=ABCMeta):
+class Pipeline:  #TODO: breaks?? (meta=ABCMeta):
     """
     Base class for DSL expression builders.
 
@@ -187,15 +23,33 @@ class Expr:  #TODO: breaks?? (meta=ABCMeta):
     .. automethod:: __ge__
     .. automethod:: __rshift__
     .. automethod:: __invert__
+    .. automethod:: __autoexpr__
     """
-    def invoke(self) -> 'Invocation':
-        """ Executes the command as currently configured
+    __slots__ = ('reckless',)
 
-            XXX .invoke launch the process and returns immediatly the invocation object.
-                Autoexpr calls it with .wait() so its syncronous. exec is the explicit
-                equivalent to autoexpr
+    def __init__(self):
+        self.reckless = False
+
+    def __copy__(self):
+        cls = self.__class__
+        clone = cls.__new__(cls)
+        clone.reckless = self.reckless
+        return clone
+
+    def invoke(self) -> 'Result':
         """
+        Executes the command as currently configured and return a :class:`Result`
+        instance to track its execution.
+        """
+        #TODO: launch the command
         return Result(self)
+
+    def __autoexpr__(self) -> None:
+        """
+        Hook for the :mod:`transforms.autoexpr`
+        """
+        proc = self.invoke()
+        proc.wait()
 
     def to_status(self) -> int:
         result = self.invoke()
@@ -209,6 +63,15 @@ class Expr:  #TODO: breaks?? (meta=ABCMeta):
     def to_text(self) -> str:
         result = self.invoke()
         return result.stdout.decode('utf-8')
+
+    def __int__(self):
+        return self.to_status()
+
+    def __bytes__(self):
+        return self.to_binary()
+
+    def __str__(self):
+        return self.to_text()
 
     def pipe(self, stdout=None, *, stderr=None) -> Union['Pipe', 'Piperr']:
         """ Explicit interface for the ``|`` and ``^`` operators.
@@ -224,14 +87,14 @@ class Expr:  #TODO: breaks?? (meta=ABCMeta):
     def __gt__(self, other) -> 'Redirect':
         """ :ref:`Redirection: >`
         """
-        if isinstance(other, Expr):
+        if isinstance(other, Pipeline):
             return NotImplemented
 
         #TODO: support callables
         if not isinstance(other, (IOBase, str, bytes, PurePath, Path)):
             return NotImplemented
 
-        print('{!r} __GT__ {!r}'.format(self, other))
+        # print('{!r} __GT__ {!r}'.format(self, other))
 
         return Redirect(self, other)
 
@@ -248,7 +111,7 @@ class Expr:  #TODO: breaks?? (meta=ABCMeta):
     def __or__(self, rhs) -> 'Pipe':
         """ :ref:`Pipe: |`
         """
-        if not isinstance(rhs, Expr):
+        if not isinstance(rhs, Pipeline):
             return NotImplemented
 
         return Pipe(self, rhs)
@@ -256,7 +119,7 @@ class Expr:  #TODO: breaks?? (meta=ABCMeta):
     def __ror__(self, lhs) -> 'Pipe':
         """ Reverse for :meth:`__or__` to handle ``value | command``.
         """
-        if not isinstance(lhs, Expr):
+        if not isinstance(lhs, Pipeline):
             #TODO: lhs should be injected into stdin
             return NotImplemented
 
@@ -271,10 +134,12 @@ class Expr:  #TODO: breaks?? (meta=ABCMeta):
 
         return Piperr(self, rhs)
 
-    def __invert__(self) -> 'Reckless':
-        """ :ref:`Reckless: ~`
+    def __invert__(self) -> 'Pipeline':
+        """ ``~``
         """
-        return Reckless(self)
+        clone = self.__copy__()
+        clone.reckless = not clone.reckless
+        return clone
 
     def __lazybooland__(self, rhs_callable):
         """ Lazy boolean protocol for ``and``.
@@ -300,7 +165,7 @@ class Expr:  #TODO: breaks?? (meta=ABCMeta):
         raise SyntaxError('a command cannot be negated')
 
 
-class Command(Expr):
+class Command(Pipeline):
     """
     .. automethod:: __lshift__
     .. automethod:: __rshift__
@@ -308,19 +173,33 @@ class Command(Expr):
     __slots__ = ('spec', 'args', 'no_raise',)
 
     def __init__(self, spec: 'BaseSpec') -> None:
+        super().__init__()
         self.spec = spec
         self.args = []
 
         self.no_raise = [0]
 
     def __copy__(self) -> 'Command':
-        clone = type(self)(self.spec)
+        clone = super().__copy__()
+        clone.spec = self.spec
         clone.args = list(self.args)
         clone.no_raise = list(self.no_raise)
         return clone
 
     def __repr__(self):
-        cmd = '{} {}'.format(self.spec.command, ' '.join(self.args))
+        args = []
+        for arg in self.args:
+            if type(arg) == str:
+                parsed = self.spec.parse_args(arg)
+            elif type(arg) == tuple:
+                parsed = self.spec.parse_args(*arg[0], **arg[1])
+            else:
+                args.append(repr(arg))
+                continue
+
+            args.extend(parsed)
+
+        cmd = '{} {}'.format(self.spec.command, ' '.join(args))
         return '`{}`'.format(cmd.strip())
 
     def __getitem__(self, key) -> 'Command':
@@ -333,27 +212,29 @@ class Command(Expr):
 
         clone = self.__copy__()
 
-        #TODO: detect paths/globs and create PathWrapper instances as args
+        #TODO: detect paths/globs and create Path instances as args
+
+        if type(key) != str:
+            clone.args.append(key)
+            return clone
 
         args = re.split(r'(?<!\\)\s', key)
         for arg in args:
             if arg == '' or arg.isspace():
                 continue
             arg = re.sub(r'\\(\s)', r'\1', arg)  # unescape white space
-            clone.args.extend(self.spec.parse_args(arg))
+            clone.args.append(arg)
 
         return clone
 
     def __call__(self, *args, **kwargs) -> 'Command':
         clone = self.__copy__()
-        clone.args.extend(
-            self.spec.parse_args(*args, **kwargs)
-        )
+        clone.args.append( (args, kwargs) )
         return clone
 
     def io(self, encoding=None, *, stdin=None, stdout=None, stderr=None):
         # encoding: applies to all
-        # TODO: Shall it apply to commands only? or belongs to Expr?
+        # TODO: Shall it apply to commands only? or belongs to Pipeline?
         # TODO: buffering stuff to be defined, too many variables, no need
         #       to expose everything, we need sensible defaults with a clear
         #       explanation. Probably the best approach would be to allow to
@@ -392,7 +273,7 @@ class Command(Expr):
             #TODO: maybe a method called .trap() like bash?
         """
 
-        # TODO: Shall it apply to commands only? or belongs to Expr?
+        # TODO: Shall it apply to commands only? or belongs to Pipeline?
 
         clone = self.__copy__()
         if not statuses:
@@ -413,21 +294,15 @@ class Command(Expr):
 
         return other(self)
 
-    def __int__(self):
-        return self.to_status()
-
-    def __bytes__(self):
-        return self.to_binary()
-
-    def __str__(self):
-        return self.to_text()
 
 
-class Pipe(Expr):
+
+class Pipe(Pipeline):
     """
     Represents a pipe ``|`` operation.
     """
-    def __init__(self, lhs: Expr, rhs: Expr) -> None:
+    def __init__(self, lhs: Pipeline, rhs: Pipeline) -> None:
+        super().__init__()
         self.lhs = lhs
         self.rhs = rhs
 
@@ -444,11 +319,12 @@ class Piperr(Pipe):
         return '({!r} ^ {})'.format(self.lhs, rhs)
 
 
-class Redirect(Expr):
+class Redirect(Pipeline):
     """
     Represents a redirection ``>`` or ``>>`` operation.
     """
-    def __init__(self, lhs: Expr, rhs: Union[Path], *, appending=False) -> None:
+    def __init__(self, lhs: Pipeline, rhs: Path, *, appending=False) -> None:
+        super().__init__()
         self.lhs = lhs
         self.rhs = rhs
         self.appending = appending
@@ -460,18 +336,7 @@ class Redirect(Expr):
             self.lhs, op, rhs)
 
 
-class Reckless(Expr):
-    """
-    Represents the reckless operator ``~``
-    """
-    def __init__(self, expr: Expr) -> None:
-        self.expr = expr
-
-    def __repr__(self):
-        return '~{!r}'.format(self.expr)
-
-
-class Application(Expr):
+class Application(Pipeline):
     """
     TODO: Not needed?
 
@@ -547,98 +412,9 @@ class Application(Expr):
 
     """
     def __init__(self, lhs: Command, rhs: Any) -> None:
+        super().__init__()
         self.lhs = lhs
         self.rhs = rhs
 
     def __repr__(self):
         return '({!r} << {!r})'.format(self.lhs, self.rhs)
-
-
-class Result:
-    __slots__ = ('expr', 'status', 'stdin', 'stdout', 'stderr')
-
-    def __init__(self, expr: Expr) -> None:
-        self.expr = expr
-        self.status: Optional[int] = None
-        self.stdout = b''
-        self.stderr = b''
-
-    def wait(self):
-        """ Block until the command terminates.
-        """
-
-    def __repr__(self):
-        return 'Result{{{!r}}}'.format(self.expr)
-
-
-class ShSpec(BaseSpec):
-    """
-    Runs a command via a shell.
-
-    The first argument is the command to run, it'll be extended with
-    the arguments expansion, so the shell can forward any extra arguments
-    to it.
-
-    >>> sh['ls']
-    /bin/sh -e -c 'ls "$@"'
-
-    >>> sh.jq['-c', foo]
-    /bin/sh -e -c 'jq "$@"' -- -c '.field | @csv'
-
-    Additionally, the first argument is scanned for `$variables` so
-    they can be matched against the current locals/globals and exposed
-    on the environment when running it.
-    """
-    def __init__(self):
-        pass
-
-
-class ShCommand(Command):
-
-    def __getattribute__(self, name):
-        """ Allows for ``sh.cat`` style shortcuts """
-        # Once the first argument was given just forward to Command
-        if self.args:
-            return super().__getattribute__(name)
-
-        clone = self.__copy__()
-        clone.args.append(name)
-        return clone
-
-
-
-### ----------
-
-class LazyEnvInterpolator:
-
-    @staticmethod
-    def get_frame_vars(back_cnt=2):
-        """ Helper to obtain the variables from the scope of a calling frame
-        """
-        import inspect
-        from collections import ChainMap
-
-        frame = inspect.currentframe()
-        try:
-            while back_cnt:
-                back_cnt -= 1
-                frame = frame.f_back
-
-            return ChainMap(frame.f_locals, frame.f_globals)
-        finally:
-            del frame  # make sure we avoid circular references with the stack
-
-
-    def __init__(self, tpl, vars):
-        self.tpl = tpl
-        self.vars = vars
-
-    def get_variable_names(self):
-        pattern = r'\$\{?([A-Za-z][A-Za-z0-9_]*)'
-        return [
-            m.group(1)
-            for m in re.finditer(pattern, self.tpl)
-            ]
-
-
-

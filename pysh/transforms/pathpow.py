@@ -14,7 +14,7 @@ Since ``**`` has a higher binding precedence than ``/`` or ``//``, it won't
 evaluate as expected when we have something like:
 
 >>> _ / 'subdir' ** '*.jpg'
-    _ / ('subdir' ** '*.jpg')  # TypeError: pow not defined for str
+  # _ / ('subdir' ** '*.jpg')  # TypeError: pow not defined for str
 
 With this transform all the ``**`` operators in the script are modified as to
 generate a *GlobRecursive* instance when the left hand side operand is a *str*,
@@ -32,9 +32,10 @@ a *regex* or a *callable*.
 
 from io import StringIO
 from tokenize import OP
+from pathlib import PurePath
 
 from pysh.transforms import TokenIO
-from pysh.path import GlobRecursive
+from pysh.dsl.path import Path, RecursiveMatcher
 
 
 __all__ = ['__PYSH_POW__']
@@ -47,8 +48,8 @@ class PowResolver:
         return self
 
     def __rpow__(self, lhs):
-        if isinstance(lhs, str) or callable(getattr(lhs, 'match', lhs)):
-            return GlobRecursive(lhs, self.rhs)
+        if isinstance(lhs, (str, PurePath)):
+            return RecursiveMatcher(Path(lhs), self.rhs)
 
         return lhs ** self.rhs
 

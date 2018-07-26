@@ -1,17 +1,18 @@
 """
-Modifies operator binding precedence for ``<`` and ``>`` to match those from
+Modifies operator binding precedence for ``<`` and ``>`` to emulate those found
 in a *sh* based shell.
 
 
 .. Danger::
     The transformation not only applies to *pysh* expressions but to
     **all the expressions** using those operators in the script. For
-    most uses it should be transparent though but it might introduce
-    unexpected behaviour in what would be totally valid Python code.
+    most uses it should be transparent but there is always the risk
+    of introduce unexpected behaviour in what would be totally valid
+    Python code.
 
 
 Here is a table listing the binding precedence for the operators used in the
-DSL, from lower to higher, comparing that of Python with the one in a shell:
+DSL, from lower to higher, comparing those of Python with the ones in a shell:
 
 ======================  =================================
         Python                        Sh
@@ -22,18 +23,18 @@ DSL, from lower to higher, comparing that of Python with the one in a shell:
     ``<<`` ``>>``
 ======================  =================================
 
-They are too different, in a shell all *redirections* share the same precedence
-so they are naturaly evaluated (left associative), however in Python different
-*redirection* operators have different binding precedece and more importantly,
-the pipe operator has a higher precedence than the normal redirections.
+In a shell all *redirections* share the same precedence so they are naturaly
+evaluated (left associative), however in Python different *redirection* operators
+have different binding precedece and more importantly, the pipe operator ``|``
+has a higher precedence than the normal redirections.
 
 For simple expressions it doesn't really matter, the DSL can be designed to
 dissambiguate common use cases, however once the expression is a bit more complex
-having the correct binding precedence is crucial, otherwise the programmer is
+having the correct binding precedence is critical, otherwise the programmer is
 forced to use parenthesis to enforce the correct meaning.
 
-Take for instance the following example where we want to ignore the stdout from
-a command and do a pipeline from its stderr:
+Take for instance the following example where we want to ignore the *stdout* from
+a command and do a pipeline from its *stderr*:
 
 >>> cmd >null ^stdout | bar >null
 python: ( cmd > ( ( null ^ stdout ) | bar ) ) > null
@@ -64,27 +65,27 @@ whole script. The final binding precedence table is as follows (lower to higher)
 ======================  ========================
 
 
-The implementation is quite a hack though, in order to keep it simple we want to
-leverage the Python parsing infrastructure as much as possible instead of creating
-our own parser with different binding precedences. We abuse the fact that only two
-the intended precedence is the same as the bitwise operator ``^``, mapping the
-redirections to it so we can keep the of the operators unchanged. While that mapping
-ensures the correct parsing we need to *annotate* somehow the original operator,
-for that we rely on some runtime helpers and the use of ``&``, which has higher
-binding precedence than ``^``, this is merely a trick to avoid having to detect
-whole expressions boundaries at the lexer level as to wrap them in a call to the
-runtime helper, instead the parser will do that for us automatically and then it
-uses the ``__and__`` overload.
+The implementation is quite a hack though, in order to keep it simple we want
+to leverage the Python parsing infrastructure as much as possible instead of
+creating our own parser with different binding precedences. We abuse the fact
+that the two operators we want to change should have the same one as the bitwise
+operator ``^``, mapping the redirections to it so we can keep the rest of operators
+unchanged. While that mapping ensures the correct parsing we need to *annotate*
+somehow the original operator, for that we rely on some runtime helpers and the
+use of ``&``, which has slightly higher binding precedence than ``^``, this is
+merely a trick to avoid having to detect whole expressions boundaries at the lexer
+level as to wrap them in a call to the runtime helper, instead the parser will do
+that for us automatically and then it uses the ``__and__`` overload.
 
 >>> fname < cmd ^ stdout | head > 'errors.txt'
     fname ^LT& cmd ^ stdout | head ^GT& 'errors.txt'
     ( (fname ^ (LT & cmd)) ^ stdout ) | ( head ^ (GT & 'errors.txt') )
 
 The approach has the benefit that the common pipe operator is unchanged, so it has
-no runtime cost. For the redirections first the helper's bitwise ``__and__`` will
-be called so it can obtain the right-hand operand, then it returns an instance
-with a ``__rxor__`` overload suitable to perform the original operation when Python
-evaluates the injected ``^`` operator.
+no runtime cost. For the ``<`` and ``>`` operators first the helper's bitwise
+``__and__`` will be called so it can obtain the right-hand operand, then it returns
+an instance with a ``__rxor__`` overload suitable to perform the original operation
+when Python evaluates the injected ``^`` operator.
 
 >>> cmd > null
     cmd ^ (GT & null)
@@ -92,12 +93,12 @@ evaluates the injected ``^`` operator.
 
 
 .. Warning::
-    If the code being transformed uses numerical bitwise operators or classes
+    if the code being transformed uses numerical bitwise operators or classes
     that overload them the results might be unexpected. The whole system relies
     on working with standard types and the *pysh* DSL types.
 
-    The same applies to *chained comparisons*, althought that case is detected
-    and a syntax warning is issued pointing out the problematic use.
+    The same applies to *chained comparisons*, althought some of those cases are
+    detected and a syntax warning is issued pointing out the problematic use.
 
 """
 
@@ -108,7 +109,7 @@ from ast import walk, AST, Compare
 from pysh.transforms import TokenIO
 
 
-__all__ = ['__PYSH_LT__', '__PYSH_GT__', '__PYSH_POW__']
+__all__ = ['__PYSH_LT__', '__PYSH_GT__']
 
 
 class AndCapturer:
@@ -117,7 +118,7 @@ class AndCapturer:
 
     Note that this abuses the fact that ``__and__`` and ``__rxor__`` will be
     called in quick succession for the same operation. This assumption allows
-    to reuse the same instance for each type of operator in the script, which
+    to reuse the same instance for each modified operator in the script, which
     saves memory and time.
     """
     __slots__ = ('rhs',)
@@ -145,38 +146,14 @@ class GreaterThanResolver(AndCapturer):
         return '>{!r}'.format(self.rhs)
 
 
-class PowResolver():
-    __slots__ = ('rhs',)
-
-    def __pow__(self, rhs):
-        self.rhs = rhs
-        return self
-
-    def __floordiv__(self, rhs):
-        print('__floordiv__')
-        if hasattr(rhs, '__rfloordiv__'):
-            return rhs.__rfloordiv__(self.rhs)
-        return self.rhs ** rhs
-
-    def __rfloordiv__(self, lhs):
-        print('__rfloordiv__')
-        return lhs ** self.rhs
-
-    def __repr__(self):
-        return '**{!r}'.format(self.rhs)
-
-
 # Create the runtime helpers
 __PYSH_LT__ = LessThanResolver()
 __PYSH_GT__ = GreaterThanResolver()
-
-__PYSH_POW__ = PowResolver()
 
 
 OPS_HACK = {
     '<': '^__PYSH_LT__&',
     '>': '^__PYSH_GT__&',
-    '**': '//__PYSH_POW__**',
 }
 
 
@@ -195,8 +172,12 @@ def parser(node: AST, *, fname: str) -> AST:
     """ TODO: right now only comparisons like ``10 <= 20 <= 30`` are detected,
               since the lexer converts ``< >`` to ``^`` the parser AST does not
               reflect a potential chaining. So the usefulness of this check is
-              not great. If not solution is found to detect the use of ``<`` in
+              not great. If no solution is found to detect the use of ``<`` in
               chained comparisons then this check should probably be removed.
+
+              Probably the best solution would be for the AndCapturer to be moved
+              into a parser transform instead of working at the runtime. That way
+              it'll be simpler to detect those cases.
     """
     for n in walk(node):
         if not isinstance(n, Compare) or len(n.ops) == 1:

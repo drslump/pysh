@@ -69,6 +69,8 @@ there is a setup step that is later used as many times as required.
 Path factory: _
 ~~~~~~~~~~~~~~~
 
+.. TODO:: move to operators path section??
+
 Allows to easily define paths in a concise style. The symbol by itself refers
 to the *current working directory* (the ``$PWD`` variable in *Bash*).
 
@@ -211,6 +213,8 @@ primitive value:
 AutoExpr transformation
 ~~~~~~~~~~~~~~~~~~~~~~~
 
+.. TODO:: move to operators??
+
 A key ergonomics feature is a transformation applied to scripts by *pysh*
 where it will detect expressions that form a statement on their own,
 usually meaning that they are not part of an assignment or a flow control
@@ -228,6 +232,8 @@ to overcome the requirement of casting it to force its evaluation.
 
 Shell command: sh
 ~~~~~~~~~~~~~~~~~
+
+.. TODO:: move out to a section about utilities.
 
 There are many good reasons to use an *sh compatible shell* to run a command,
 sometimes it's just easier to express something with its syntax, maybe we're
@@ -281,6 +287,25 @@ to use the :ref:`Lazy: <= 🚧` operator with a raw multiline literal:
     *dash* in *posix mode*. However restricting to *posix syntax* is recommended
     if you want to keep the script portable.
 
+
+Pipeline
+--------
+
+A pipeline groups *one or more commands* with their redirection configurations.
+It's a helpful abstraction to handle arbitrarily complex chains of commands as
+a simple entity.
+
+>>> pipeline = cat | wc['-l']
+  # the above generates a pipeline composed of two commands
+>>> pipeline > 'results.txt'
+  # redirects the output of the pipeline to a file
+>>> echo("foo") | pipeline
+  # feed some content to the first command in the pipeline
+
+
+.. Note::
+    *Command* and *Pipeline* are used interchangeably in the documentation since
+    almost all operations available for a command are also exposed in a pipeline.
 
 
 

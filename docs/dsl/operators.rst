@@ -8,27 +8,29 @@ precedence changed to behave more closely to a shell language, which is crucial
 when chaining commands in a pipeline. Here is a table with the operator binding
 precedence from **lower to higher**:
 
-=========================   ======================================
+=========================   =====================================================
         operator                         notes
-=========================   ======================================
+=========================   =====================================================
                     ``|``
 
-        ``^`` ``<`` ``>``   ``<`` ``>`` modified to match Python's ``^``
+        ``^`` ``<`` ``>``   ``<`` and ``>`` modified to match Python's ``^``
                             (see :mod:`pysh.transforms.precedence`)
             ``>>`` ``<<``
 
-``/`` ``//`` ``*`` ``**``   ``**`` modified to match Python's ``//``
+      ``/`` ``//`` ``**``   ``**`` modified to match Python's ``//``
                             (see :mod:`pysh.transforms.pathpow`)
-=========================   ======================================
+
+                    ``~``
+=========================   =====================================================
 
 
 Pipe: |
 -------
 
-**command** ``|`` **command**
+**pipeline** ``|`` **command**
 
-    The typical shell piping operation where the output of the program
-    on the left is feed as input for the program on the right.
+    The typical shell piping operation where the output of the last command
+    on the left is feed as input for the command on the right.
 
     >>> head['-10'] | grep('foo')
     head['-10'].pipe( stdout = grep('foo') )
@@ -37,18 +39,19 @@ Pipe: |
 
         just as above sans the braces: ``head -10 | grep foo``
 
-**command** ``|`` **function**
+**pipeline** ``|`` **callable**
 
-    When the right operand is a function then it acts as a *reverse application
-    operator*, where the right operand receives the left one as argument.
+    When the right operand is a callable then it acts as a *reverse application
+    operator*, where the right operand receives the *stdout stream* of the last
+    command on the pipeline as argument.
 
     >>> head['-10'] | ','.join
     ','.join( line for line in head['-10'] )
 
-**value** ``|`` **command**
+**value** ``|`` **pipeline**
 
     An arbitrary value as left operand is automatically wrapped in an iterator
-    so it can be feed to the *command* on the right.
+    so it can be feed to the *stdin* of the *first command* on the pipeline.
 
     >>> __doc__ | wc['-l']
     echo(__doc__).pipe( stdout = wc['-l'] )
@@ -63,11 +66,10 @@ Pipe: |
 Piperr: ^ 🚧
 ------------
 
-.. Warning:: 🚧 Validate that it'll work as documented
+🚧 **pipeline** ``^`` (**stream** | **path** | **str**) 🚧
 
-🚧 **command** ``^`` (**stream** | **path** | **str**) 🚧
-
-    Redirect *stderr* to a stream or a file.
+    Redirect *stderr* from the *last command* in the pipeline to a stream or
+    a file.
 
     >>> gcc ^ null
     discard stderr output
@@ -82,10 +84,10 @@ Piperr: ^ 🚧
 
         quite similar, the ``^`` is ``2>``. An example: ``gcc 2>errors.txt | wc -l``
 
-🚧 **command** ``^`` **command** 🚧
+🚧 **pipeline** ``^`` **pipeline** 🚧
 
-    Pipe *stderr* from the command on the left to *stdin* from the command on
-    the right.
+    Pipe *stderr* from the *last command* in the pipeline on the left to *stdin*
+    of the *first command* from the pipeline on the right.
 
     >>> gcc ^ wc['-l']
     count lines on stderr (stdout is unused)
@@ -123,10 +125,11 @@ Redirection: > and >>
     for more details.
 
 
-**command** ``>`` (**stream** | **path** | **str**)
+**pipeline** ``>`` (**stream** | **path** | **str**)
 
-    Like in a standard shell the redirection places the output from the *command*
-    on the left in the file referenced on the right, creating the file if necessary.
+    Like in a standard shell the redirection places the output from the last
+    *command* in the pipeline on the left to a file referenced on the right,
+    creating the file if necessary.
 
     >>> cat > stderr
     # the output of cat gets redirected to stderr
@@ -155,25 +158,25 @@ Redirection: > and >>
         exactly the same... ``cat | head > 'first-lines.txt'``
 
 
-(**stream** | **path** | **str**) ``>`` **command**
+(**stream** | **path** | **str**) ``>`` **pipeline**
 
-    When the target is a *comand* then file referenced on the left operand is read
-    and provided to the *command's stdin*.
+    When the target is a *pipeline* then the file referenced on the left operand
+    is read and provided to the *stdin* of the pipeline's *first command*.
 
     >>> fname > head
     # get first lines from the file referenced in fname
 
 
-**command** ``>`` **callable**
+**pipeline** ``>`` **callable**
 
-    An interesting use case for the redirection operator is to set a *callable* as
-    its target. In this scenario the whole output of the command will be buffered
-    and then passed as an argument to the target function.
+    An interesting use case for the redirection operator is to set a *callable*
+    as its target. In this scenario the whole output of the pipeline will be
+    *buffered* and then passed as an argument to the target function.
 
     >>> echo("hello") > len
     6  # len(b"hello\n")
 
-**command** ``>>`` (**path** | **str**)
+**pipeline** ``>>`` (**path** | **str**)
 
     Works exactly like the redirection operator ``>`` but if the target file
     exists it will append the contents at the end of it instead of replacing
@@ -192,7 +195,7 @@ Redirection: > and >>
 
 **command** ``<<`` **any**
 
-**callable** ``<<`` **command** 🚧
+**callable** ``<<`` **pipeline** 🚧
 
     Acts as an *application operator*, the operand on the left will be called
     with the one on the right as argument. It results in the same operation as
@@ -213,11 +216,11 @@ Redirection: > and >>
 Reckless: ~
 -----------
 
-``~`` **command**
+``~`` **pipeline**
 
-    Ignores the *exit status* and *stderr* of the command. Normally a non 0
-    exit status would raise an exception that needs to be handled by the
-    script, however some times we expect a command to fail under some conditions.
+    Ignores the *exit status* and *stderr* of the pipeline. Normally a non 0
+    exit status would raise an exception that needs to be handled by the script,
+    however some times we expect a command to fail under some conditions.
 
     This is particulary useful since, unlike *sh*, we do raise errors if they
     happen on a pipeline. For instance, ``grep`` exits with 1 if it couldn't
@@ -268,10 +271,10 @@ Context Manager: with 🚧
 
 .. Warning:: 🚧 Validate this will work as intended
 
-``with`` **command** ``as`` **name**: 🚧
+``with`` **pipeline** ``as`` **name**: 🚧
 
-    Commands implement the `Context Manager`_ protocol, upon entering one the
-    command is invoked and a :class:`pysh.command.Result` instance is provided.
+    Pipelines implement the `Context Manager`_ protocol, upon entering one the
+    pipeline is invoked and a :class:`pysh.command.Result` instance is provided.
     Unlike normal invocation the standard streams are not wired to the script
     ones, allowing to consume them imperatively inside the block.
 
@@ -289,7 +292,7 @@ Context Manager: with 🚧
     >>> # wait for proc to terminate
 
 
-.. TODO:: Move this section to types, not really an operator?
+.. TODO:: Move this section out, not really an operator?
 
 
 Path operators
@@ -300,8 +303,9 @@ Path concatenation: /
 
 **path** ``/`` **str**
 
-    Append the path segment on the right to the path on the left. The path segment
-    can itself contain directories.
+    Append the path referenced on the right to the path on the left. The
+    referenced path can itself contain directories, if so all of its segments
+    will be appended.
 
     >>> _ / 'docs'
     ./docs
@@ -323,13 +327,25 @@ Path matching: //
     ./part-?.dat
 
     Additionally to *globbing* it also supports *brace expansion*, for each
-    expansion a globbing operation will be executed and their results merged.
+    expansion a globbing operation will be executed and their results merged
+    without duplicates.
 
     >>> _ // '{foo,bar}-*.jpg'
         set(foo-*.jpg) + set(bar-*.jpg)
 
+    Escaping for globbing or brace expansion special characters ``*?[{,`` is done
+    performed with a backslash ``\``. Escapes for non special characters are
+    handled too.
 
-    .. note::
+    >>> _ // r'foo-\*?.jpg'
+      # matches jpg files named as "foo-*" followed by any char
+    >>> _ // r'\f\o\o\*\.\j\p\g'
+      # matches the file "foo*.jpg"
+    >>> _ // 'foo-[*].jpg'
+      # uses glob syntax to perform a escape, it'll match "foo-*.jpg"
+
+
+    .. Note::
         unless a *glob* starts with a ``.`` prefix, those files are considered
         hidden and won't be matched by the expression. Also *globs* can include
         ``/`` characters to signal directories. It's perfectly valid to have
@@ -339,14 +355,16 @@ Path matching: //
         for the `glob module`_, for details about *brace expansion* check this
         `article from Linux Journal`_.
 
-    .. TODO:: comment about escaping rules
+    .. Caution::
+        unlike globbing in an *sh* shell the output is not sorted alphabetically.
+
 
 .. _`glob module`: https://docs.python.org/3/library/glob.html
 .. _`article from Linux Journal`: https://www.linuxjournal.com/content/bash-brace-expansion
 
 **path** ``//`` **pattern**
 
-    Tries to match the given *regex pattern* against entries from the *path*.
+    Tries to match the given *regex pattern* against entries from *path*.
     The **matching is anchored**, meaning that a *pattern* only succeeds if it
     can match the whole entry name.
 
@@ -432,7 +450,7 @@ by *pysh* which are enabled by default when running scripts.
 .. Note::
     while these custom *string literals* might be useful when writing a quick
     script, there is no guarantee on how they'll behave on different code editors.
-    If the script is to be distributed or maintained by other people, a good
+    If the script is to be distributed or maintained by other people a good
     etiquette would be to avoid its use.
 
 .. Hint::

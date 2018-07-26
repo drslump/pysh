@@ -43,7 +43,7 @@ SCRIPT_TRANSFORMS = [
     'pysh.transforms.pathstring',
     'pysh.transforms.restring',
     'pysh.transforms.precedence',
-    'pysh.transforms.protectnames',
+    'pysh.transforms.shadowing',
     'pysh.transforms.autoexpr',
 ]
 
