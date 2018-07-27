@@ -32,6 +32,11 @@ version-%:
 	@ echo "Last commits for the release notes"
 	@ git log -15 --pretty=format:"- %s"
 
+docker-build:
+	@ DOCKER_ID_USER=drslump80 docker login
+	@ docker build -t drslump80/pysh:latest .
+	@ docker push drslump80/pysh
+
 dev:
 	pip install -e .[dev]
 
