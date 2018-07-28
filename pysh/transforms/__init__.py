@@ -3,7 +3,7 @@ This package holds official code transformation modules.
 
 A transformation module defines at least one of:
 
-  - ``lexer(code: StringIO, fname: str) -> StringIO``
+  - ``lexer(code: TextIOBase, fname: str) -> TextIOBase``
   - ``parser(root: AST, fname: str) -> AST``
   - ``patch(types: Dict[str, type]) -> None``
 
@@ -46,13 +46,13 @@ import logging
 import re
 import tokenize
 from collections import ChainMap
-from io import IOBase, StringIO
+from io import IOBase, TextIOBase, StringIO
 from importlib import import_module
 from types import FunctionType, CodeType
 
 import pysh
 
-from typing import Union, Callable, Dict, List, Tuple, Iterator, Any, TypeVar
+from typing import Union, Callable, Dict, List, Tuple, Iterator, Optional, Any, TypeVar
 
 
 STARTMARKER = tokenize.TokenInfo(type=-1, string='', start=(0,0), end=(0,0), line='')
@@ -62,7 +62,7 @@ logger = logging.getLogger(__name__)
 
 
 T = TypeVar('T')
-def zip_prev(generator: Iterator[T], initial=None) -> Iterator[Tuple[T,T]]:
+def zip_prev(generator: Iterator[T], initial: T = None) -> Iterator[Tuple[Optional[T],T]]:
     """ Helper wrapper for tokens generators that will provide a tuple with
         the previous item and the current one. The initial previous item can
         be provided.
@@ -85,18 +85,20 @@ class TokenIO(StringIO):
     It also wraps ``tokenize.tokenize`` so tokens, instead of lines, will be
     obtained when iterating.
     """
-    def __init__(self, code: Union[str, StringIO] = None):
+    def __init__(self, code: Union[str, StringIO] = None) -> None:
         if isinstance(code, StringIO):
-            code = code.getvalue()
-        elif isinstance(code, IOBase):
-            code = code.read()
+            code_str = code.getvalue()
+        elif code:
+            code_str = code
+        else:
+            code_str = ''
 
-        super().__init__(code)
+        super().__init__(code_str)
 
         self.line = 1
         self.column = 0
 
-    def __iter__(self):
+    def iter_tokens(self) -> Iterator[tokenize.TokenInfo]:
         #XXX .generate_tokens is deprecated but .tokenize requires a bytes stream
         yield from tokenize.generate_tokens(self.readline)
 
@@ -169,11 +171,11 @@ class Compiler:
         'pysh.transforms.',     # internal
     ]
 
-    def __init__(self, transforms: List[str] = []):
-        self.lexers = []
-        self.parsers = []
-        self.symbols = {}
-        self.patchers = []
+    def __init__(self, transforms: List[str] = []) -> None:
+        self.lexers: List[Callable] = []
+        self.parsers: List[Callable] = []
+        self.symbols: Dict[str, Any] = {}
+        self.patchers: List[Callable] = []
 
         for transform in transforms:
             self.add_transform(transform)
@@ -232,20 +234,20 @@ class Compiler:
                 logger.debug('Registering symbol %s from %s', symbol, transform)
                 self.symbols[symbol] = getattr(module, symbol)
 
-    def lex(self, code: IOBase, fname='<string>') -> IOBase:
+    def lex(self, code: TextIOBase, fname='<string>') -> TextIOBase:
         for lexer in self.lexers:
             code = _apply_transform(lexer, code, fname=fname)
             code.seek(0)  # make sure its cursor is reset
 
         return code
 
-    def parse(self, code: IOBase, fname='<string>', name='_pysh_func') -> ast.AST:
+    def parse(self, code: TextIOBase, fname='<string>', name='_pysh_func') -> ast.AST:
         # Get an AST from the input code
-        node = ast.parse(code.read())
+        node = ast.parse(code.read())  #type: ignore
 
         # Now wrap the script in a function so we can get a reference to it.
         wrapper = ast.parse('def {}(): pass'.format(name))
-        wrapper.body[0].body = node.body
+        wrapper.body[0].body = node.body  #type: ignore
 
         for parser in self.parsers:
             wrapper = _apply_transform(parser, wrapper, fname=fname)
@@ -255,7 +257,7 @@ class Compiler:
 
         return wrapper
 
-    def compile(self, code: StringIO, fname='<string>') -> Callable[[], Any]:
+    def compile(self, code: TextIOBase, fname='<string>') -> Callable[[], Any]:
         """
         Given some script code it'll perform any configured transformation
         and return a function containing the compiled code. That function can

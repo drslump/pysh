@@ -35,7 +35,7 @@ def is_lazy(tkn):
 def lexer(code: StringIO) -> StringIO:
     out = TokenIO()
     lazy = 0
-    for tkn in TokenIO(code):
+    for tkn in TokenIO(code).iter_tokens():
         if is_lazy(tkn):
             lazy += 1
             out.write_token(tkn, override='<<(')

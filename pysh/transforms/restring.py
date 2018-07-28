@@ -14,7 +14,7 @@ import re
 from io import StringIO
 
 from pysh.transforms import TokenIO, zip_prev, STARTMARKER
-from tokenize import NAME, STRING
+from tokenize import TokenInfo, NAME, STRING
 
 from typing import Pattern
 
@@ -28,7 +28,10 @@ def is_prefix(tkn):
 
 def lexer(code: StringIO) -> StringIO:
     out = TokenIO()
-    for ptkn, ctkn in zip_prev(TokenIO(code), STARTMARKER):
+    tokens = TokenIO(code).iter_tokens()
+    for ptkn, ctkn in zip_prev(tokens, STARTMARKER):
+        assert isinstance(ptkn, TokenInfo)  #XXX Mypy stuff
+
         if is_prefix(ctkn):
             continue  # defer until next token
 

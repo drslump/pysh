@@ -1,6 +1,8 @@
 from functools import partial
 import pytest
 
+from pathlib import PurePath
+
 from pysh.transforms import precedence
 from pysh.dsl import Pipeline, Redirect, Command, Pipe, Piperr
 
@@ -48,10 +50,10 @@ def test_pipeline_bind_redirects():
     lhs, rhs = expr.lhs, expr.rhs
     assert type(lhs) is Piperr
     assert type(lhs.lhs) is Redirect
-    assert lhs.lhs.rhs == '/dev/null'
-    assert lhs.rhs == 'errors.txt'
+    assert lhs.lhs.rhs == PurePath('/dev/null')
+    assert lhs.rhs == PurePath('errors.txt')
     assert type(rhs) is Redirect
-    assert rhs.rhs == 'output.txt'
+    assert rhs.rhs == PurePath('output.txt')
 
 
 def test_multiline():

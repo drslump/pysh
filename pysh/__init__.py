@@ -2,9 +2,9 @@ import os
 
 from .version import __version__
 
-from .dsl import Path
+from .dsl import Path, Command
 from .env import Env
-from .command import command, ShCommand, ShSpec
+from .command import command, ShSpec
 
 
 # Prelude for scripts
@@ -21,7 +21,7 @@ __all__ = [
 ENV = Env()
 _ = PWD = Path()
 
-sh = ShCommand(ShSpec())
+sh = Command(ShSpec())
 
 
 # TODO: Perhaps the ABC module can be used to replace the __new__ code

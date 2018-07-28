@@ -159,7 +159,7 @@ OPS_HACK = {
 
 def lexer(code: StringIO, *, fname=None) -> StringIO:
     out = TokenIO()
-    for tkn in TokenIO(code):
+    for tkn in TokenIO(code).iter_tokens():
         if tkn.type == OP and tkn.string in OPS_HACK:
             out.write_token(tkn, override=OPS_HACK[tkn.string])
         else:

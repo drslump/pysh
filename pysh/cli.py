@@ -151,7 +151,7 @@ class Arguments:
     def __len__(self):
         return len(self._args)
 
-    def as_path(self, name: str, *, default=DEFAULT) -> Optional[PathWrapper]:
+    def as_path(self, name: str, *, default=DEFAULT) -> Optional[Path]:
         """ Get argument as a Path
         """
         value = self.one(name, default=default)
@@ -161,16 +161,16 @@ class Arguments:
         if isinstance(value, bool):
             raise RuntimeError('Unable to create path from bool')
 
-        return PathWrapper(value)
+        return Path(value)
 
-    def as_paths(self, name: str, *, default=DEFAULT) -> List[PathWrapper]:
+    def as_paths(self, name: str, *, default=DEFAULT) -> List[Path]:
         """ Get arguments as a Path
         """
         paths = []
         for v in self.many(name, default=default):
             if isinstance(v, bool):
                 raise RuntimeError('Unable to create path from bool')
-            paths.append(PathWrapper(v))
+            paths.append(Path(v))
 
         return paths
 

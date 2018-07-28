@@ -9,13 +9,14 @@ import os
 import re
 import pathlib
 import glob
+from abc import abstractmethod, ABCMeta
 from collections import namedtuple
 from io import IOBase
 
 #TODO: Migrate to a custom implementation?
 from braceexpand import braceexpand
 
-from typing import Optional, Union, Iterator, List, Pattern, Callable, Any, cast
+from typing import Optional, Union, Iterator, List, Set, Pattern, Callable, Any, cast
 
 
 def is_glob(value):
@@ -133,6 +134,7 @@ class Path(pathlib.PosixPath):
             else:
                 return GlobMatcher(self, unescape_glob(expansions[0]))
         elif hasattr(value, 'fullmatch'):
+            value = cast(Pattern, value)  #XXX help mypy
             return RegexMatcher(self, value)
         elif callable(value):
             return FilterMatcher(self, value)
@@ -155,7 +157,8 @@ class Path(pathlib.PosixPath):
         # Prefer right-associativity to support the pathpow transform
         #TODO: Move this to a patch on pathpow when possible
         if hasattr(rhs, '__rpow__'):
-            return rhs.__rpow__(self)
+            casted = cast(Any, rhs)  #XXX help mypy
+            return casted.__rpow__(self)
 
         return RecursiveMatcher(self, self._get_matcher_for(rhs))
 
@@ -164,7 +167,7 @@ class Path(pathlib.PosixPath):
         Overload equality so we can support comparison against plain strings
         """
         #TODO: try to resolve before comparing equality?
-        if not isinstance(other, Path):
+        if isinstance(other, str):
             other = Path(other)
 
         return super().__eq__(other)
@@ -201,11 +204,6 @@ class PathMatcher:
     """
     Base class for path matcher types.
     """
-    __slots__ = ('path', 'pattern',)
-
-    def __init__(self, path: Path, pattern: str = None):
-        self.path = path
-        self.pattern = pattern
 
     def iter_posix(self) -> Iterator[str]:
         """
@@ -213,7 +211,10 @@ class PathMatcher:
         objects if not needed. The iterator interface feeds from this one
         to yield Path objects.
         """
-        raise NotImplemented()
+        raise NotImplementedError('Descendant types should implement it')
+
+    def for_path(self, path: pathlib.PurePath) -> 'PathMatcher':
+        raise NotImplementedError('Descendant types should implement it')
 
     def __iter__(self) -> Iterator[Path]:
         for p in self.iter_posix():
@@ -226,7 +227,7 @@ class PathMatcher:
         list() first.
         """
         cnt = 0
-        for x in self.iter_posix():
+        for _ in self.iter_posix():
             cnt += 1
         return cnt
 
@@ -240,7 +241,7 @@ class PathMatcher:
             return NotImplemented
 
         cnt = 0
-        for p in self.iter_posix():
+        for _ in self.iter_posix():
             if cnt == other:
                 return True
             cnt += 1
@@ -251,7 +252,7 @@ class PathMatcher:
             return NotImplemented
 
         cnt = 0
-        for p in self.iter_posix():
+        for _ in self.iter_posix():
             if cnt >= other:
                 return False
             cnt += 1
@@ -262,7 +263,7 @@ class PathMatcher:
             return NotImplemented
 
         cnt = 0
-        for p in self.iter_posix():
+        for _ in self.iter_posix():
             if cnt > other:
                 return True
             cnt += 1
@@ -285,6 +286,14 @@ class GlobMatcher(PathMatcher):
     """
     Matcher based on glob expressions.
     """
+    __slots__ = ('path', 'pattern',)
+
+    def __init__(self, path: pathlib.PurePath, pattern: str) -> None:
+        self.path = path
+        self.pattern = pattern
+
+    def for_path(self, path: pathlib.PurePath) -> 'GlobMatcher':
+        return GlobMatcher(path, self.pattern)
 
     def iter_posix(self) -> Iterator[str]:
         """
@@ -302,9 +311,12 @@ class RegexMatcher(PathMatcher):
     """
     __slots__ = ('path', 'pattern')
 
-    def __init__(self, path: Path, pattern: Pattern):
+    def __init__(self, path: pathlib.PurePath, pattern: Pattern) -> None:
         self.path = path
         self.pattern = pattern
+
+    def for_path(self, path: pathlib.PurePath) -> 'RegexMatcher':
+        return RegexMatcher(path, self.pattern)
 
     def iter_posix(self) -> Iterator[str]:
         match = self.pattern.fullmatch
@@ -321,14 +333,17 @@ class FilterMatcher(PathMatcher):
     """
     __slots__ = ('path', 'func')
 
-    def __init__(self, path: Path, func: Callable):
+    def __init__(self, path: pathlib.PurePath, func: Callable) -> None:
         self.path = path
         self.func = func
+
+    def for_path(self, path: pathlib.PurePath) -> 'FilterMatcher':
+        return FilterMatcher(path, self.func)
 
     def iter_posix(self) -> Iterator[str]:
         func = self.func
         path = self.path.as_posix()
-        for p in self.path.iterdir():
+        for p in Path(self.path).iterdir():
             if func(p):
                 # try to have the same format as other matchers
                 yield os.path.join(path, p.name)
@@ -341,26 +356,26 @@ class RecursiveMatcher(PathMatcher):
     """
     __slots__ = ('path', 'matcher')
 
-    def __init__(self, path: Path, matcher: PathMatcher):
+    def __init__(self, path: pathlib.PurePath, matcher: PathMatcher) -> None:
         self.path = path
         self.matcher = matcher
 
+    def for_path(self, path: pathlib.PurePath) -> 'RecursiveMatcher':
+        return RecursiveMatcher(path, self.matcher)
+
     def iter_posix(self) -> Iterator[str]:
         matcher = self.matcher
-        saved = matcher.path  #TODO: fix this hack (not thread safe!)
-        try:
-            # TODO: use itertools to keep it dry
-            matcher.path = self.path
-            for pp in matcher.iter_posix():
-                yield pp
 
-            for p in self.path.rglob('*'):
-                if p.is_dir():
-                    matcher.path = p
-                    for pp in matcher.iter_posix():
-                        yield pp
-        finally:
-            matcher.path = saved
+        # TODO: use itertools to keep it dry
+        m = matcher.for_path(self.path)
+        for pp in m.iter_posix():
+            yield pp
+
+        for p in Path(self.path).rglob('*'):
+            if p.is_dir():
+                m = matcher.for_path(p)
+                for pp in m.iter_posix():
+                    yield pp
 
 
 class ExpansionMatcher(PathMatcher):
@@ -370,16 +385,20 @@ class ExpansionMatcher(PathMatcher):
     """
     __slots__ = ('expansions',)
 
-    def __init__(self, expansions: List[Union[Path, PathMatcher]]):
+    def __init__(self, expansions: List[Union[Path, PathMatcher]]) -> None:
         self.expansions = expansions
 
+    def for_path(self, path: pathlib.PurePath) -> 'ExpansionMatcher':
+        raise TypeError('ExpansionMatcher does not support for_path')
+
     def iter_posix(self) -> Iterator[str]:
-        seen = set()
+        seen: Set[str] = set()
         for expansion in self.expansions:
             if not isinstance(expansion, PathMatcher):
-                if expansion not in seen:
-                    seen.add(p)
-                    yield expansion
+                path = str(expansion)
+                if path not in seen:
+                    seen.add(path)
+                    yield path
                 continue
 
             for p in expansion.iter_posix():
@@ -391,6 +410,32 @@ class ExpansionMatcher(PathMatcher):
 # Internal type to hold arguments when constructing commands
 Arg = namedtuple('Arg', ('positional', 'keywords'))
 
+
+
+
+class BaseSpec:  #TODO: (meta=ABCMeta) breaks?
+    """
+    Base abstract class for representing how a command should execute.
+
+    Check :class:`ExternalSpec` for a concrete implementation of the
+    interface that allows to run external commands.
+    """
+
+    @abstractmethod
+    def run(self, builder: 'Command'):
+        """
+        This is a somewhat internal method to execute a builder according to
+        the spec. It's intended to be used by :meth:`CommandBuilder.invoke`.
+        """
+
+    @abstractmethod
+    def parse_args(self, positional, keyword) -> List[Any]:
+        """
+        Used by :meth:`CommandBuilder` call and slicing protocols to convert
+        their received values into arguments according to the spec.
+
+        .. TODO:: Does it belong in the interface? shouldn't it be part of External?
+        """
 
 class Pipeline:  #TODO: breaks?? (meta=ABCMeta):
     """
@@ -465,13 +510,16 @@ class Pipeline:  #TODO: breaks?? (meta=ABCMeta):
         """ :ref:`Redirection: >`
         """
         if isinstance(other, Pipeline):
+            #TODO: issue warning log
             return NotImplemented
 
         #TODO: support callables
-        if not isinstance(other, (IOBase, str, bytes, pathlib.PurePath, Path)):
+        if isinstance(other, str):
+            return Redirect(self, pathlib.PurePath(other))
+        elif isinstance(other, (pathlib.PurePath, IOBase)):
+            return Redirect(self, other)
+        else:
             return NotImplemented
-
-        return Redirect(self, other)
 
     def __lt__(self, other) -> 'Redirect':
         # Not possible to redirect to an expression?
@@ -507,6 +555,9 @@ class Pipeline:  #TODO: breaks?? (meta=ABCMeta):
         if hasattr(rhs, '__rxor__'):
             return rhs.__rxor__(self)
 
+        if isinstance(rhs, str):
+            rhs = pathlib.PurePath(rhs)
+
         return Piperr(self, rhs)
 
     def __invert__(self) -> 'Reckless':
@@ -522,12 +573,11 @@ class Command(Pipeline):
     """
     __slots__ = ('_spec', '_args', '_no_raise',)
 
-    def __init__(self, spec: 'BaseSpec') -> None:
+    def __init__(self, spec: BaseSpec) -> None:
         super().__init__()
         self._spec = spec
-        self._args = []
-
-        self._no_raise = [0]
+        self._args: List[Arg] = []
+        self._no_raise: List[int] = [0]
 
     def __copy__(self) -> 'Command':
         clone = super().__copy__()
@@ -540,7 +590,7 @@ class Command(Pipeline):
         args = []
         for arg in self._args:
             args.extend('{!r}'.format(v) for v in arg.positional)
-            args.extend('{}={!r}'.format(k,v) for k,v in args.keyword.items())
+            args.extend('{}={!r}'.format(k,v) for k,v in arg.keyword.items())
 
         cmd = '{} {}'.format(self._spec.command, ' '.join(args))
         return '`{}`'.format(cmd.strip())
@@ -556,7 +606,7 @@ class Command(Pipeline):
         if isinstance(key, slice):
             raise NotImplementedError()
 
-        clone = self.__copy__()
+        clone: Command = self.__copy__()
 
         #TODO: detect paths/globs and create Path instances as args
 
@@ -637,8 +687,9 @@ class Command(Pipeline):
 
         clone = self.__copy__()
         if not statuses:
-            statuses = tuple(range(256))
-        clone._no_raise = statuses
+            clone._no_raise = list(range(256))
+        else:
+            clone._no_raise = list(statuses)
         return clone
 
     def  __lshift__(self, other) -> 'Command':
@@ -681,7 +732,7 @@ class Redirect(Pipeline):
     """
     Represents a redirection ``>`` or ``>>`` operation.
     """
-    def __init__(self, lhs: Pipeline, rhs: Path, *, appending=False) -> None:
+    def __init__(self, lhs: Pipeline, rhs: Union[pathlib.PurePath, IOBase], *, appending=False) -> None:
         super().__init__()
         self.lhs = lhs
         self.rhs = rhs
@@ -788,3 +839,20 @@ class Application(Pipeline):
 
     def __repr__(self):
         return '({!r} << {!r})'.format(self.lhs, self.rhs)
+
+
+class Result:
+    __slots__ = ('pipeline', 'status', 'stdin', 'stdout', 'stderr')
+
+    def __init__(self, pipeline: Pipeline) -> None:
+        self.pipeline = pipeline
+        self.status: Optional[int] = None
+        self.stdout = b''
+        self.stderr = b''
+
+    def wait(self):
+        """ Block until the command terminates.
+        """
+
+    def __repr__(self):
+        return 'Result{{{!r}}}'.format(self.pipeline)

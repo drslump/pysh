@@ -65,7 +65,8 @@ def is_pow(ptkn, ctkn):
 
 def lexer(code: StringIO, *, fname:str=None) -> StringIO:
     out = TokenIO()
-    for ptkn, ctkn in zip_prev(TokenIO(code), STARTMARKER):
+    tokens = TokenIO(code).iter_tokens()
+    for ptkn, ctkn in zip_prev(tokens, STARTMARKER):
         if is_pow(ptkn, ctkn):
             out.write_token(ctkn, override='**__PYSH_POW__**')
         else:

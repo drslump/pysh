@@ -8,15 +8,14 @@ TODO: Check http://www.pixelbeat.org/programming/sigpipe_handling.html
 import re
 from collections import Iterable
 from pathlib import PurePath
-from abc import abstractmethod, ABCMeta
 from io import IOBase
 
-from pysh.dsl import Path, Command, Pipeline
+from pysh.dsl import Path, Command, Pipeline, BaseSpec
 
-from typing import Optional, Union, List, Tuple, Dict, Callable, Any
+from typing import Optional, Union, List, Tuple, Dict, Callable, Any, cast
 
 
-def command(*commands: Tuple[str], **kwargs: Dict[str,Any]) -> Union[Command, Tuple[Command]]:
+def command(*commands: str, **kwargs: Any) -> Union[Command, List[Command]]:
     """
     Command factory. Returns a :class:`pysh.dsl.Command` configured with
     a concrete implementation of :class:`BaseSpec` suitable for the given command.
@@ -33,7 +32,7 @@ def command(*commands: Tuple[str], **kwargs: Dict[str,Any]) -> Union[Command, Tu
     """
     assert len(commands) >= 1, 'Expected at least one command'
 
-    results = []
+    results: List[Command] = []
     for command in commands:
         if isinstance(command, (str, PurePath)):
             spec = ExternalSpec(command, **kwargs)
@@ -46,32 +45,8 @@ def command(*commands: Tuple[str], **kwargs: Dict[str,Any]) -> Union[Command, Tu
     if len(results) == 1:
         return results[0]
     else:
-        return tuple(results)
+        return results
 
-
-class BaseSpec:  #TODO: (meta=ABCMeta) breaks?
-    """
-    Base abstract class for representing how a command should execute.
-
-    Check :class:`ExternalSpec` for a concrete implementation of the
-    interface that allows to run external commands.
-    """
-
-    @abstractmethod
-    def run(self, builder: 'Command'):
-        """
-        This is a somewhat internal method to execute a builder according to
-        the spec. It's intended to be used by :meth:`CommandBuilder.invoke`.
-        """
-
-    @abstractmethod
-    def parse_args(self, positional, keyword) -> List[Any]:
-        """
-        Used by :meth:`CommandBuilder` call and slicing protocols to convert
-        their received values into arguments according to the spec.
-
-        .. TODO:: Does it belong in the interface? shouldn't it be part of External?
-        """
 
 
 class ExternalSpec(BaseSpec):
@@ -98,7 +73,7 @@ class ExternalSpec(BaseSpec):
     def __init__(self, command: str, *,
                  ok_status=(0,), hyphenate=True, repeat: Union[bool,str] = True,
                  shortpre='-', longpre='--',
-                 valuepre: Optional[str] = None, argspre: Optional[str] = None):
+                 valuepre: Optional[str] = None, argspre: Optional[str] = None) -> None:
         self.command = command
         self.ok_status = tuple([ok_status]) if isinstance(ok_status, int) else ok_status
         self.hyphenate = hyphenate
@@ -128,7 +103,8 @@ class ExternalSpec(BaseSpec):
             return [option] + [str(v) for v in value]  #XXX ignores valuepre in this case
         else:
             if self.repeat is not True:
-                value = [self.repeat.join(str(v) for v in value)]  #XXX custom repeat separator
+                repeat = cast(str, self.repeat)  #XXX help mypy
+                value = [repeat.join(str(v) for v in value)]  #XXX custom repeat separator
 
             if self.valuepre:
                 return [option + self.valuepre + str(v) for v in value]
@@ -176,21 +152,6 @@ class ExternalSpec(BaseSpec):
         return '{}{{{}}})'.format(self.__class__.__name__, self.command)
 
 
-class Result:
-    __slots__ = ('pipeline', 'status', 'stdin', 'stdout', 'stderr')
-
-    def __init__(self, pipeline: Pipeline) -> None:
-        self.pipeline = pipeline
-        self.status: Optional[int] = None
-        self.stdout = b''
-        self.stderr = b''
-
-    def wait(self):
-        """ Block until the command terminates.
-        """
-
-    def __repr__(self):
-        return 'Result{{{!r}}}'.format(self.pipeline)
 
 
 
@@ -229,7 +190,7 @@ class LazyEnvInterpolator:
 
 
 
-class ShSpec(BaseSpec):
+class ShSpec(ExternalSpec):
     """
     Runs a command via a shell.
 
@@ -249,16 +210,3 @@ class ShSpec(BaseSpec):
     """
     def __init__(self):
         pass
-
-
-class ShCommand(Command):
-
-    def __getattribute__(self, name):
-        """ Allows for ``sh.cat`` style shortcuts """
-        # Once the first argument was given just forward to Command
-        if self.args:
-            return super().__getattribute__(name)
-
-        clone = self.__copy__()
-        clone.args.append(name)
-        return clone

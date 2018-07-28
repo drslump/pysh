@@ -1,5 +1,7 @@
 import pytest
 
+from pathlib import PurePath
+
 from pysh.command import command, ExternalSpec
 from pysh.dsl import Path, Command, Pipe, Piperr, Redirect, Reckless, Application
 
@@ -82,7 +84,7 @@ def test_cmd_piperr_path():
 def test_cmd_piperr_str():
     expr = foo ^ 'errors.log'
     assert type(expr) is Piperr
-    assert type(expr.rhs) is str   #XXX should be Path
+    assert isinstance(expr.rhs, PurePath)
 
 
 # redirect
@@ -105,7 +107,7 @@ def test_cmd_gt_path():
 def test_cmd_gt_str():
     expr = foo > 'out.txt'
     assert type(expr) is Redirect
-    assert type(expr.rhs) is str  #XXX should be Path
+    assert isinstance(expr.rhs, PurePath)
 
 def test_cmd_gt_int():
     with pytest.raises(TypeError):
@@ -125,7 +127,7 @@ def test_file_lt_cmd():
 def test_str_lt_cmd():
     expr = 'out.txt' < foo
     assert type(expr) is Redirect
-    assert type(expr.rhs) is str  #XXX should be Path
+    assert isinstance(expr.rhs, PurePath)
 
 
 # reckless

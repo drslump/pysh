@@ -67,7 +67,8 @@ def eval_and_exit(code: str):
 
     compiler = Compiler(EVAL_TRANSFORMS)
 
-    fn = compiler.compile(StringIO(code), 'pysh-eval')
+    code_io = StringIO(code)
+    fn = compiler.compile(code_io, 'pysh-eval')  #type: ignore
 
     try:
         result = fn()
