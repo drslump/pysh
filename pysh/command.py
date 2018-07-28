@@ -1,30 +1,8 @@
 """
-command:
-  - A factory for a Command with a concrete BaseSpec
-
-BaseSpec (and concrete classes):
-  - Defines how a command must be called
-  - Understands external commands and also pure python functions
-
-Pipeline:
-  - Base class for all builders.
-  - Each operation returns a cloned copy so stored references are immutable
-
-Command:
-  - DSL interface for command construction
-
-Pipe, Redirect:
-  - Expression represent an operation
-
-Result:
-  - When a Expr is executed this object tracks it
-  - Allows to access streams
-  - Allows to query the exit status
-
-
 TODO: check http://harp.pythonanywhere.com/python_doc/library/concurrent.html
       for launching python commands
 
+TODO: Check http://www.pixelbeat.org/programming/sigpipe_handling.html
 """
 
 import re
@@ -33,32 +11,42 @@ from pathlib import PurePath
 from abc import abstractmethod, ABCMeta
 from io import IOBase
 
-from pysh.dsl.path import Path
-from pysh.dsl.pipeline import Command, Pipeline
+from pysh.dsl import Path, Command, Pipeline
 
-from typing import Optional, Union, List, Callable, Any
+from typing import Optional, Union, List, Tuple, Dict, Callable, Any
 
 
-def command(command, **kwargs):
+def command(*commands: Tuple[str], **kwargs: Dict[str,Any]) -> Union[Command, Tuple[Command]]:
     """
-    Command factory. Returns a :class:`Command` configured with concreate
-    implementation of :class:`BaseSpec` suitable for the given command.
+    Command factory. Returns a :class:`pysh.dsl.Command` configured with
+    a concrete implementation of :class:`BaseSpec` suitable for the given command.
 
-    Any additional keyword arguments will be provided to the implementation
-    of :class:`Spec`.
+    Any additional keyword arguments will be provided to the implementation of
+    :class:`Spec`.
 
-    .. note:: Currently *command* can only be a path-like reference which
-              refers to an external command, check :class:`ExternalSpec` for
-              additional details.
+    When multiple commands are given they are all created and returned in a tuple
+    respecting the given order. This allows to easy bootstrap a bunch of them with
+    unpacking.
+
+    .. note:: Currently *command* can only be a path-like reference which refers to
+              an external command, check :class:`ExternalSpec` for additional details.
     """
-    if isinstance(command, (str, PurePath)):
-        spec = ExternalSpec(command, **kwargs)
+    assert len(commands) >= 1, 'Expected at least one command'
+
+    results = []
+    for command in commands:
+        if isinstance(command, (str, PurePath)):
+            spec = ExternalSpec(command, **kwargs)
+        else:
+            #TODO: Support functions!
+            raise RuntimeError('Only external commands are currently supported!')
+
+        results.append(Command(spec))
+
+    if len(results) == 1:
+        return results[0]
     else:
-        #TODO: Support functions!
-        raise RuntimeError('Only external commands are currently supported!')
-
-    return Command(spec)
-
+        return tuple(results)
 
 
 class BaseSpec:  #TODO: (meta=ABCMeta) breaks?
@@ -77,16 +65,13 @@ class BaseSpec:  #TODO: (meta=ABCMeta) breaks?
         """
 
     @abstractmethod
-    def parse_args(self, *args, **kwargs) -> List[Any]:
+    def parse_args(self, positional, keyword) -> List[Any]:
         """
         Used by :meth:`CommandBuilder` call and slicing protocols to convert
         their received values into arguments according to the spec.
 
         .. TODO:: Does it belong in the interface? shouldn't it be part of External?
         """
-
-    def __repr__(self):
-        return '{}({})'.format(self.__class__.name, self.command)
 
 
 class ExternalSpec(BaseSpec):
@@ -150,18 +135,16 @@ class ExternalSpec(BaseSpec):
             else:
                 return sum([[option, str(v)] for v in value], [])  #XXX flattens the list
 
-    def parse_args(self, *args, **kwargs) -> List[Any]:
+    def parse_args(self, positional, keyword) -> List[Any]:
         """
 
         """
         result = []
-        # since Python 3.6 keywords order is preserved
-        for option in kwargs.keys():
-            value = kwargs[option]
-
+        # since Python 3.6 keyword order is preserved
+        for option, value in keyword.items():
             if option == '_':
-                args = list(args)
-                args.append(value)
+                positional = list(positional)
+                positional.append(value)
                 continue
 
             #TODO: We need to resolve value at this point to make repeated options reliable
@@ -172,7 +155,7 @@ class ExternalSpec(BaseSpec):
             result.append(self.argspre)
 
         #TODO: We need to resolve arg at this point
-        for arg in args:
+        for arg in positional:
             if isinstance(arg, str) or not isinstance(arg, Iterable):
                 arg = [arg]
 
@@ -182,22 +165,19 @@ class ExternalSpec(BaseSpec):
 
     def get_args_for(self, builder: 'Command'):
         args = []
-        for arg in builder.args:
-            if type(arg) == tuple:
-                positional, keywords = arg
-                args.extend(self.parse_args(*positional, **keywords))
-            else:
-                args.extend(self.parse_args(arg))
+        for arg in builder._args:
+            args.extend(self.parse_args(arg.positional, arg.keywords))
         return args
 
     def run(self, builder: 'Command'):
         raise NotImplementedError('sorry!')
 
-
+    def __repr__(self):
+        return '{}{{{}}})'.format(self.__class__.__name__, self.command)
 
 
 class Result:
-    __slots__ = ('expr', 'status', 'stdin', 'stdout', 'stderr')
+    __slots__ = ('pipeline', 'status', 'stdin', 'stdout', 'stderr')
 
     def __init__(self, pipeline: Pipeline) -> None:
         self.pipeline = pipeline
@@ -211,7 +191,6 @@ class Result:
 
     def __repr__(self):
         return 'Result{{{!r}}}'.format(self.pipeline)
-
 
 
 
@@ -247,3 +226,39 @@ class LazyEnvInterpolator:
             m.group(1)
             for m in re.finditer(pattern, self.tpl)
             ]
+
+
+
+class ShSpec(BaseSpec):
+    """
+    Runs a command via a shell.
+
+    The first argument is the command to run, it'll be extended with
+    the arguments expansion, so the shell can forward any extra arguments
+    to it.
+
+    >>> sh['ls']
+    /bin/sh -e -c 'ls "$@"'
+
+    >>> sh.jq['-c', foo]
+    /bin/sh -e -c 'jq "$@"' -- -c '.field | @csv'
+
+    Additionally, the first argument is scanned for `$variables` so
+    they can be matched against the current locals/globals and exposed
+    on the environment when running it.
+    """
+    def __init__(self):
+        pass
+
+
+class ShCommand(Command):
+
+    def __getattribute__(self, name):
+        """ Allows for ``sh.cat`` style shortcuts """
+        # Once the first argument was given just forward to Command
+        if self.args:
+            return super().__getattribute__(name)
+
+        clone = self.__copy__()
+        clone.args.append(name)
+        return clone

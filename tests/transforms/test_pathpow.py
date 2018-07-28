@@ -2,7 +2,7 @@ from functools import partial
 import pytest
 
 from pysh.transforms import pathpow
-from pysh.dsl.path import Path, RecursiveMatcher
+from pysh.dsl import Path, RecursiveMatcher
 
 from .utils import factory
 
@@ -48,3 +48,19 @@ def test_rglob_callable():
 ])
 def test_arithmetic(expression):
     assert auto(expression) == eval(expression)
+
+
+def test_kwargs():
+    code = lex('''\
+        def foo(*args, **kwargs):
+            pass
+    ''')
+    assert '__PYSH_POW__' not in code
+
+    code = lex('''\
+        func(**obj)
+    ''')
+    assert '__PYSH_POW__' not in code
+
+    code = lex('lambda **kwargs: pass')
+    assert '__PYSH_POW__' not in code

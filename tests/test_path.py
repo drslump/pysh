@@ -2,7 +2,7 @@ import os
 import re
 import pytest
 
-from pysh.dsl.path import Path, \
+from pysh.dsl import Path, \
     PathMatcher, GlobMatcher, RegexMatcher, FilterMatcher, RecursiveMatcher
 
 

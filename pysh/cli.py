@@ -148,6 +148,9 @@ class Arguments:
     def __iter__(self):
         yield from self._args.items()
 
+    def __len__(self):
+        return len(self._args)
+
     def as_path(self, name: str, *, default=DEFAULT) -> Optional[PathWrapper]:
         """ Get argument as a Path
         """

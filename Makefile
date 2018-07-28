@@ -33,7 +33,8 @@ version-%:
 	@ git log -15 --pretty=format:"- %s"
 
 docker-build:
-	@ DOCKER_ID_USER=drslump80 docker login
+#TODO: automate in travis
+	@ docker login
 	@ docker build -t drslump80/pysh:latest .
 	@ docker push drslump80/pysh
 

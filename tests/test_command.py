@@ -1,12 +1,26 @@
 import pytest
 
-from pysh.dsl.command import command
-from pysh.dsl.pipeline import Command, Pipe, Piperr, Redirect, Application
-from pysh.dsl.path import Path
+from pysh.command import command, ExternalSpec
+from pysh.dsl import Path, Command, Pipe, Piperr, Redirect, Reckless, Application
 
 foo = command('foo')
 bar = command('bar')
 null = open('/dev/null')
+
+
+def test_command_factory():
+    cmd = command('cmd')
+    assert type(cmd) is Command
+    assert type(cmd._spec) is ExternalSpec
+    assert cmd._spec.command == 'cmd'
+
+    cmd1, cmd2 = command('cmd1', 'cmd2')
+    assert type(cmd1) is Command
+    assert type(cmd1._spec) is ExternalSpec
+    assert cmd1._spec.command == 'cmd1'
+    assert type(cmd2) is Command
+    assert type(cmd2._spec) is ExternalSpec
+    assert cmd2._spec.command == 'cmd2'
 
 
 # pipe
@@ -118,34 +132,31 @@ def test_str_lt_cmd():
 
 def test_tilde_cmd():
     expr = ~foo
-    assert expr.reckless is True
-    assert type(expr) is Command
+    assert type(expr) is Reckless
+    assert type(expr.expr) is Command
 
 def test_tilde_tilde_cmd():
     expr = ~~foo
-    assert expr.reckless is False
-    assert type(expr) is Command
+    assert type(expr) is Reckless
+    assert type(expr.expr) is Reckless
+    assert type(expr.expr.expr) is Command
 
 def test_tilde_cmd_arg():
     expr = ~foo('fname')
-    assert expr.reckless is True
-    assert type(expr) is Command
+    assert type(expr) is Reckless
 
     expr = ~foo['fname']
-    assert expr.reckless is True
-    assert type(expr) is Command
+    assert type(expr) is Reckless
 
 def test_tilde_pipe():
     expr = ~(foo | bar)
-    assert expr.reckless is True
-    assert type(expr) is Pipe
+    assert type(expr) is Reckless
+    assert type(expr.expr) is Pipe
 
 def test_tilde_redirect():
     expr = ~foo > 'out.txt'
     assert type(expr) is Redirect
-    assert expr.reckless is False
-    assert type(expr.lhs) is Command
-    assert expr.lhs.reckless is True
+    assert type(expr.lhs) is Reckless
 
 
 # compound
@@ -187,7 +198,7 @@ def test_cmd_gt_file_pipe_cmd():
 def test_cmd_lshift_cmd():
     expr = foo << bar
     assert type(expr) is Command
-    assert len(expr.args) == 1  #TODO: check it's `bar`
+    assert len(expr._args) == 1  #TODO: check it's `bar`
 
 def test_func_lshift_cmd():
     capture = []
@@ -198,5 +209,5 @@ def test_cmd_lshift_redirect():
     expr = foo << bar > null
     assert type(expr) is Redirect
     assert type(expr.lhs) is Command
-    assert len(expr.lhs.args) == 1  #TODO: check it's `bar`
+    assert len(expr.lhs._args) == 1  #TODO: check it's `bar`
     assert expr.rhs is null

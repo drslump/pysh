@@ -42,13 +42,14 @@ Variables:
 Alternative:
 
 - NAME -[A-Z0-9-]+ -> starts command mode:
-    - LPAR -> push command to stack, parse with command=False
-    - RPAR -> pop command from stack, parse with command=True
+  - LPAR -> push command to stack, parse with command=False
+  - RPAR -> pop command from stack, parse with command=True
 
->>> ls -l /
->>> ls -- *
->>> echo -- (ls -- * | grep -- 'foo') (my_file_var) fname.txt
-
+>>> ls -l /         # works because -l starts command mode and no rhs
+>>> ls *.jpg        # works because no space after *
+>>> ls -- * fname   # works because we force with --
+>>> echo (ls * | grep 'foo') (my_file_var) fname.txt
+>>> echo $local $ENVVAR   # for simple vars the $ can be used to look in order at locals/globals/env
 
 """
 

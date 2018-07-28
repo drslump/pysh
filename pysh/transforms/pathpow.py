@@ -31,11 +31,11 @@ a *regex* or a *callable*.
 """
 
 from io import StringIO
-from tokenize import OP
+from tokenize import OP, DOUBLESTAR, COMMA, LPAR, NAME
 from pathlib import PurePath
 
-from pysh.transforms import TokenIO
-from pysh.dsl.path import Path, RecursiveMatcher
+from pysh.transforms import TokenIO, zip_prev, STARTMARKER
+from pysh.dsl import Path, RecursiveMatcher
 
 
 __all__ = ['__PYSH_POW__']
@@ -57,12 +57,18 @@ class PowResolver:
 __PYSH_POW__ = PowResolver()
 
 
+def is_pow(ptkn, ctkn):
+    return ctkn.exact_type == DOUBLESTAR \
+       and ptkn.exact_type not in (COMMA, LPAR) \
+       and not (ptkn.type == NAME and ptkn.string == 'lambda')
+
+
 def lexer(code: StringIO, *, fname:str=None) -> StringIO:
     out = TokenIO()
-    for tkn in TokenIO(code):
-        if tkn.type == OP and tkn.string == '**':
-            out.write_token(tkn, override='**__PYSH_POW__**')
+    for ptkn, ctkn in zip_prev(TokenIO(code), STARTMARKER):
+        if is_pow(ptkn, ctkn):
+            out.write_token(ctkn, override='**__PYSH_POW__**')
         else:
-            out.write_token(tkn)
+            out.write_token(ctkn)
 
     return out

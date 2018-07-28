@@ -2,7 +2,7 @@ from functools import partial
 import pytest
 
 from pysh.transforms import precedence
-from pysh.dsl.pipeline import Pipeline, Redirect, Command, Pipe, Piperr
+from pysh.dsl import Pipeline, Redirect, Command, Pipe, Piperr
 
 from .utils import factory
 

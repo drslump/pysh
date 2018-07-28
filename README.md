@@ -311,6 +311,9 @@ Process substitution for instance can be implemented as:
 wc['-l'](curl("google.com") | psub)
 ```
 
+TODO: Check https://github.com/fish-shell/fish-shell/issues/1040 for nifty details
+      of the problems of implenting process substitution.
+
 Redirect shortcuts:
 
 ```

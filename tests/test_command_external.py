@@ -1,8 +1,8 @@
 
 import pytest
 
-from pysh.dsl.command import ExternalSpec
-from pysh.dsl.pipeline import Command
+from pysh.command import ExternalSpec
+from pysh.dsl import Command
 
 
 def test_args_short():
@@ -56,3 +56,17 @@ def test_args_underscore_positional():
     assert spec.get_args_for(c(opt=True, _='foo')) == ['--opt', 'foo']
     assert spec.get_args_for(c('bar', opt=True, _='foo')) == ['--opt', 'bar', 'foo']
     assert spec.get_args_for(c(opt=True, _=['foo', 'bar'])) == ['--opt', 'foo', 'bar']
+
+def test_args_attr():
+    spec = ExternalSpec('cmd')
+    c = Command(spec)
+    assert spec.get_args_for(c.a) == ['-a']
+    assert spec.get_args_for(c.a.b.c) == ['-a', '-b', '-c']
+    assert spec.get_args_for(c.a.b.c(10)) == ['-a', '-b', '-c', '10']
+    assert spec.get_args_for(c.long) == ['--long']
+    assert spec.get_args_for(c.long(10)) == ['--long', '10']
+    assert spec.get_args_for(c.a.long.b) == ['-a', '--long', '-b']
+    assert spec.get_args_for(c.hyphe_nate) == ['--hyphe-nate']
+
+    with pytest.raises(AttributeError):
+        c._foo  # underscode attributes are reserved
