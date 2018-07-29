@@ -1,12 +1,9 @@
 from functools import partial
 import pytest
 
-from pysh.transforms import shadowing
+from pysh.transforms import shadowing, testutils
 
-from .utils import factory
-
-
-lex, parse, comp, auto = factory(shadowing)
+lex, parse, comp, auto = testutils.factory(shadowing)
 
 
 def test_assignment():

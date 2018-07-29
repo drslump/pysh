@@ -1,10 +1,8 @@
 import pytest
 
-from pysh.transforms import pathstring
+from pysh.transforms import pathstring, testutils
 
-from .utils import factory
-
-lex, parse, comp, auto = factory(pathstring)
+lex, parse, comp, auto = testutils.factory(pathstring)
 
 
 def test_lexer():

@@ -1,12 +1,10 @@
 from functools import partial
 import pytest
 
-from pysh.transforms import pathpow
+from pysh.transforms import pathpow, testutils
 from pysh.dsl import Path, RecursiveMatcher
 
-from .utils import factory
-
-lex, parse, comp, auto = factory(pathpow)
+lex, parse, comp, auto = testutils.factory(pathpow)
 
 
 def test_rglob():

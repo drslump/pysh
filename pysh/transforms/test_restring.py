@@ -1,10 +1,8 @@
 import pytest
 
-from pysh.transforms import restring
+from pysh.transforms import restring, testutils
 
-from .utils import factory, lex, parse, comp
-
-lex, parse, comp, auto = factory(restring)
+lex, parse, comp, auto = testutils.factory(restring)
 
 
 def test_lexer():

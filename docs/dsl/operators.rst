@@ -333,9 +333,9 @@ Path matching: //
     >>> _ // '{foo,bar}-*.jpg'
         set(foo-*.jpg) + set(bar-*.jpg)
 
-    Escaping for globbing or brace expansion special characters ``*?[{,`` is done
-    performed with a backslash ``\``. Escapes for non special characters are
-    handled too.
+    Escaping for globbing or brace expansion special characters ``*?[{,}`` is
+    done with a backslash ``\``. Escapes for non special characters are simply
+    removed.
 
     >>> _ // r'foo-\*?.jpg'
       # matches jpg files named as "foo-*" followed by any char
@@ -377,7 +377,12 @@ Path matching: //
 
     .. Note::
         entries starting with ``.`` will be matched except for the navigation
-        ones: ``.`` and ``..``.
+        ones: ``.`` and ``..``. You can ignore them starting your pattern with
+        ``(?<![.])`` or ``[^.]`` depending on the use case.
+
+    .. Hint::
+        check the ``re'...'`` syntax on :ref:`String Literals` for a concise
+        way to define patterns in your scripts.
 
 
 **path** ``//`` **callable**
@@ -434,6 +439,8 @@ by *pysh* which are enabled by default when running scripts.
 
     >>> _'images/log.jpg'
       # _[r'images/logo.jpg']
+    >>> _'*.jpg'
+      # _[r'*.jpg']
     >>> _'c:\windows'
       # _[r'c:\windows']
 
@@ -449,9 +456,9 @@ by *pysh* which are enabled by default when running scripts.
 
 .. Note::
     while these custom *string literals* might be useful when writing a quick
-    script, there is no guarantee on how they'll behave on different code editors.
-    If the script is to be distributed or maintained by other people a good
-    etiquette would be to avoid its use.
+    script, there is no guarantee on how they'll behave on different code editor
+    setups. If the script is to be distributed or maintained by other people a
+    good etiquette would be to avoid its use.
 
 .. Hint::
     transformations can be disabled by prefixing a ``-`` to their name when running

@@ -3,13 +3,10 @@ import pytest
 
 from pathlib import PurePath
 
-from pysh.transforms import precedence
+from pysh.transforms import precedence, testutils
 from pysh.dsl import Pipeline, Redirect, Command, Pipe, Piperr
 
-from .utils import factory
-
-
-lex, parse, comp, auto = factory(precedence)
+lex, parse, comp, auto = testutils.factory(precedence)
 
 
 def test_cmd_gt_value():

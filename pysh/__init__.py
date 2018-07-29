@@ -11,6 +11,7 @@ from .command import command, ShSpec
 __all__ = [
     '_', 'PWD',
     'ENV',
+    'exec',
     #TODO: these break sphinx!
     # 'command',
     # 'sh',
@@ -22,6 +23,36 @@ ENV = Env()
 _ = PWD = Path()
 
 sh = Command(ShSpec())
+
+
+class ExecOverride:
+    def __lshift__(self, rhs):
+        """
+        Allows the ``<<`` operator to provide the pipeline to execute.
+        """
+        return self(rhs)
+
+    def __ilshift__(self, rhs):
+        """
+        To ensure we evaluate the whole pipeline we override the inplace operator
+        ``<<=`` so it doesn't replace the value of ``exec``, it simply invokes the
+        the pipeline and discards the result.
+        """
+        self(rhs)
+        return self
+
+    def __call__(self, *args, **kwargs):
+        """
+        Overrides the exec builtin so it understands pysh pipelines.
+        """
+        if len(args) and hasattr(args[0], '__autoexpr__'):
+            return expr.__autoexpr__()
+        else:
+            import builtins
+            return builtins.exec(*args, **kwargs)
+
+
+exec = ExecOverride()
 
 
 # TODO: Perhaps the ABC module can be used to replace the __new__ code

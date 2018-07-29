@@ -194,24 +194,3 @@ def parser(node: AST, *, fname: str) -> AST:
         warn_explicit(message, SyntaxWarning, fname, n.lineno)
 
     return node
-
-
-
-if __name__ == '__main__':
-    code = '''
-# cmd > null ^ stdout | bar >> fname | baz
-# if foo < 10:
-    # pass
-
-_ / 'foo' ** '*.jpg'
-
-    '''.strip()
-
-    out = lexer(StringIO(code))
-    print(out.getvalue())
-
-    from ast import parse
-    node = parse(code) #out.getvalue())
-    parser(node, fname='test.py')
-
-

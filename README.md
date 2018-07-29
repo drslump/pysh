@@ -10,8 +10,8 @@ Python for shell scripting
 
  - Syntax is standard Python (full IDE support)
  - Ergonomic (pipes, redirections, autoexpr, paths, ...)
- - Sensible defaults (i.e. docopt, env defaults, logging, ...)
- - Strong support for paralelism
+ - Sensible defaults (i.e. docopt, logging, ...)
+ - Strong support for parallelism
  - Biased towards unix scripting (barebones windows support)
  - Wrappers for common commands (cat, head, xargs, ...)
  - No support for interactive mode!
@@ -24,11 +24,8 @@ Python for shell scripting
 
 ## AutoExpr
 
-NOTE: See https://blog.elishalom.com/2015/07/25/rewrite-python-methods-body/
-      for how to use inspect/ast/compile for the transformation.
-
 In `cat('foo.txt') | head[-10]`, a normal Python interpreter would call `cat`,
-get a slice from `head` and excute the `__or__` of the resulting values. That's
+get a slice from `head` and execute the `__or__` of the resulting values. That's
 totally fine but on a shell script we want to build a composite command and
 execute it. There are a number of ways to solve it:
 
@@ -156,10 +153,10 @@ stdin | grep['foo'].catch(
     _ = exit(1, 'not found!')
 )
 
-stdin | pipe_map(str.upper)
-stdin | pipe_map(str.upper, split='16K')
-stdin | pipe_filter(...)
-stdin | pipe_reduce(...)
+stdin | pipe.map(str.upper)
+stdin | pipe.map(str.upper, split='16K')
+stdin | pipe.filter(...)
+stdin | pipe.reduce(...)
 
 stdin | pipe.words.map(str.upper).filter(str.isalpha)
 # read content and extract words, upper them and retain the alpha ones
@@ -190,40 +187,6 @@ lines = list(cat(fname))
 # functional
 cat(fname).collect(stdout=lambda s: print(len(s)))
 errors = cat(fname).collect(stderr=True)
-```
-
-To define new commands:
-
-```py
-cat = Command('cat')   # will search $PATH for a binary
-winzip = Command('c:/extra/winzip.exe', hyphenate=False)  # disables my_opt to my-opt
-```
-
-Rules for command invokation:
-
- - command is searched on the path for each invokation
- - single char params get a `-` prefix (`shortpre`): `ls(a=True) -> ls -a`
- - single char params are not grouped: `ls(a=True, l=True) -> ls -a -l`
- - False params are ignored unless `falsepre` is defined (i.e `falsepre='--no-'`)
- - multi char params get a `--` prefix unless `longpre` is defined (i.e `longpre='/'`)
- - *snake_case* params get hyphenated unless `hyphenate` is false
- - named params always go before positional ones
- - when `argspre` is set it's used before positional (i.e `argspre='--'`)
- - params get values with a space unless `valuepre=':'`
- - iterables (i.e globs) get automatically expanded, repeating named param if applies
- - slice args respect their position
- - slice args are parsed and splited if required (whitespace, escape with `\`)
- - call and slice can appear multiple times
-
-
-```py
-ls('foo', 'bar')  # ls foo bar
-grep(e=['foo','bar'])  # grep -e foo -e bar
-jq('.', compact_output=True)  # jq --compact-output=True
-git['diff']('foo', 'bar', no_index=True)  # git diff --no-index -- foo bar
-git('diff')(no_index=True)['foo', 'bar']    # git diff --no-index foo bar
-find['.'](depth=2)  # find . -depth 2
-find['/ -newer ttt -print']  # find / -newer ttt -print
 ```
 
 pysh should offer a helpful set of core utilities, some implemented
@@ -269,8 +232,8 @@ cat('file.txt') | demux( grep('foo') )
 range(4) | demux(lambda: time.sleep(5.0))
 
 for i in range(100):
-    fork <= echo(i)               # bound to the number of cores
-    fork(jobs=4) <= echo(i)       # 4 at a time
+    fork << echo(i)               # bound to the number of cores
+    fork(jobs=4) << echo(i)       # 4 at a time
 wait()
 
 # bound to number of cores
@@ -312,7 +275,7 @@ wc['-l'](curl("google.com") | psub)
 ```
 
 TODO: Check https://github.com/fish-shell/fish-shell/issues/1040 for nifty details
-      of the problems of implenting process substitution.
+      of the problems of implementing process substitution.
 
 Redirect shortcuts:
 
@@ -391,13 +354,13 @@ Subpaths:
 _('/foo/bar')[-1]  # /foo
 ```
 
-
 TODO: Should paths implement `|` defaulting to cat?
 
     _/'file.txt' | head
     cat('./file.txt') | head
 
     ls[ _ * '*.jpg' ]
+
 
 ### Arguments
 
@@ -548,7 +511,7 @@ the *autoexpr* pass like the normal DSL.
 The eval mode is useful for one liners, mainly to use on interactive shells.
 It's similar to `python -c` but with the following twists:
 
- - identifers fallback to automatically try to import a package.
+ - identifiers fallback to automatically try to import a package.
  - last expression is automatically printed to stdout unless it's `None`.
  - when last expression is a boolean True exits with 0 and False with 1.
  - perhaps: support $env interpolation

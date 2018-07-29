@@ -28,12 +28,16 @@ def lexer(code: StringIO) -> StringIO:
     return out
 
 
-if __name__ == '__main__':
-    code = r'''
-_'*.jpg'
-_"foo/bar/*"
-_'c:\windows'
-    '''.strip()
+def test_lexer():
+    code = StringIO(r'_"/usr/bin"')
+    assert lexer(code).getvalue() == r'_[r"/usr/bin"]'
 
-    out = lexer(StringIO(code))
-    print(out.getvalue())
+    code = StringIO(r'_"""c:\windows"""')
+    assert lexer(code).getvalue() == r'_[r"""c:\windows"""]'
+
+    code = StringIO(r'_"*.jpg"')
+    assert lexer(code).getvalue() == r'_[r")*.jpg"]'
+
+
+if __name__ == '__main__':
+    test_lexer()
