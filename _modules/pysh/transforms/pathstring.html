@@ -173,12 +173,15 @@
 <span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
 
 <span class="kn">from</span> <span class="nn">pysh.transforms</span> <span class="k">import</span> <span class="n">TokenIO</span><span class="p">,</span> <span class="n">zip_prev</span><span class="p">,</span> <span class="n">STARTMARKER</span>
-<span class="kn">from</span> <span class="nn">tokenize</span> <span class="k">import</span> <span class="n">NAME</span><span class="p">,</span> <span class="n">STRING</span>
+<span class="kn">from</span> <span class="nn">tokenize</span> <span class="k">import</span> <span class="n">TokenInfo</span><span class="p">,</span> <span class="n">NAME</span><span class="p">,</span> <span class="n">STRING</span>
 
 
 <div class="viewcode-block" id="lexer"><a class="viewcode-back" href="../../../_apidoc/pysh.transforms.pathstring.html#pysh.transforms.pathstring.lexer">[docs]</a><span class="k">def</span> <span class="nf">lexer</span><span class="p">(</span><span class="n">code</span><span class="p">:</span> <span class="n">StringIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StringIO</span><span class="p">:</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">TokenIO</span><span class="p">()</span>
-    <span class="k">for</span> <span class="n">ptkn</span><span class="p">,</span> <span class="n">ctkn</span> <span class="ow">in</span> <span class="n">zip_prev</span><span class="p">(</span><span class="n">TokenIO</span><span class="p">(</span><span class="n">code</span><span class="p">),</span> <span class="n">STARTMARKER</span><span class="p">):</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">TokenIO</span><span class="p">(</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">iter_tokens</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">ptkn</span><span class="p">,</span> <span class="n">ctkn</span> <span class="ow">in</span> <span class="n">zip_prev</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">STARTMARKER</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ptkn</span><span class="p">,</span> <span class="n">TokenInfo</span><span class="p">)</span>  <span class="c1">#XXX Mypy stuff</span>
+
         <span class="k">if</span> <span class="n">ctkn</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">STRING</span> <span class="ow">and</span> <span class="n">ptkn</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">NAME</span> <span class="ow">and</span> <span class="n">ptkn</span><span class="o">.</span><span class="n">string</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">ctkn</span><span class="o">.</span><span class="n">start</span> <span class="o">==</span> <span class="n">ptkn</span><span class="o">.</span><span class="n">end</span><span class="p">:</span>
                 <span class="n">out</span><span class="o">.</span><span class="n">write_token</span><span class="p">(</span><span class="n">ctkn</span><span class="p">,</span> <span class="n">override</span><span class="o">=</span><span class="s1">&#39;[r&#39;</span> <span class="o">+</span> <span class="n">ctkn</span><span class="o">.</span><span class="n">string</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">)</span>
@@ -189,15 +192,19 @@
     <span class="k">return</span> <span class="n">out</span></div>
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="n">code</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">_&#39;*.jpg&#39;</span>
-<span class="s1">_&quot;foo/bar/*&quot;</span>
-<span class="s1">_&#39;c:\windows&#39;</span>
-<span class="s1">    &#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<div class="viewcode-block" id="test_lexer"><a class="viewcode-back" href="../../../_apidoc/pysh.transforms.pathstring.html#pysh.transforms.pathstring.test_lexer">[docs]</a><span class="k">def</span> <span class="nf">test_lexer</span><span class="p">():</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;_&quot;/usr/bin&quot;&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">lexer</span><span class="p">(</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span> <span class="o">==</span> <span class="sa">r</span><span class="s1">&#39;_[r&quot;/usr/bin&quot;]&#39;</span>
 
-    <span class="n">out</span> <span class="o">=</span> <span class="n">lexer</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="n">code</span><span class="p">))</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;_&quot;&quot;&quot;c:\windows&quot;&quot;&quot;&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">lexer</span><span class="p">(</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span> <span class="o">==</span> <span class="sa">r</span><span class="s1">&#39;_[r&quot;&quot;&quot;c:\windows&quot;&quot;&quot;]&#39;</span>
+
+    <span class="n">code</span> <span class="o">=</span> <span class="n">StringIO</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;_&quot;*.jpg&quot;&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">lexer</span><span class="p">(</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span> <span class="o">==</span> <span class="sa">r</span><span class="s1">&#39;_[r&quot;)*.jpg&quot;]&#39;</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">test_lexer</span><span class="p">()</span>
 </pre></div>
 
            </div>

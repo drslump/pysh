@@ -211,8 +211,8 @@
 <li class="toctree-l2"><a class="reference internal" href="_apidoc/pysh.html#submodules">Submodules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="_apidoc/pysh.cli.html">pysh.cli module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_apidoc/pysh.command.html">pysh.command module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="_apidoc/pysh.dsl.html">pysh.dsl module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_apidoc/pysh.env.html">pysh.env module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="_apidoc/pysh.path.html">pysh.path module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_apidoc/pysh.stream.html">pysh.stream module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="_apidoc/pysh.version.html">pysh.version module</a></li>
 </ul>
@@ -234,46 +234,39 @@
 <h2>Todo list<a class="headerlink" href="#todo-list" title="Permalink to this headline">¶</a></h2>
 <div class="admonition-todo admonition">
 <p class="first admonition-title">Todo</p>
+<p class="last">Move this section out, not really an operator?</p>
+</div>
+<p class="todo-source"><a class="reference internal" href="dsl/operators.html#index-0"><em>original entry</em></a></p>
+<div class="admonition-todo admonition">
+<p class="first admonition-title">Todo</p>
+<p class="last">move to operators path section??</p>
+</div>
+<p class="todo-source"><a class="reference internal" href="dsl/types.html#index-0"><em>original entry</em></a></p>
+<div class="admonition-todo admonition">
+<p class="first admonition-title">Todo</p>
+<p class="last">move to operators??</p>
+</div>
+<p class="todo-source"><a class="reference internal" href="dsl/types.html#index-1"><em>original entry</em></a></p>
+<div class="admonition-todo admonition">
+<p class="first admonition-title">Todo</p>
+<p class="last">move out to a section about utilities.</p>
+</div>
+<p class="todo-source"><a class="reference internal" href="dsl/types.html#index-2"><em>original entry</em></a></p>
+<div class="admonition-todo admonition">
+<p class="first admonition-title">Todo</p>
 <p class="last">Allow arguments and environment variables interpolation in the code snippet.</p>
 </div>
 <p class="todo-source"><a class="reference internal" href="usage.html#index-0"><em>original entry</em></a></p>
 <div class="admonition-todo admonition">
 <p class="first admonition-title">Todo</p>
-<p class="last">experiment with supporing globing inside slice syntax.</p>
-</div>
-<p class="todo-source"><a class="reference internal" href="dsl/types.html#index-0"><em>original entry</em></a></p>
-<div class="admonition-todo admonition">
-<p class="first admonition-title">Todo</p>
 <p class="last"><code class="docutils literal notranslate"><span class="pre">foo</span> <span class="pre">&lt;=</span> <span class="pre">bar</span> <span class="pre">&gt;</span> <span class="pre">null</span></code> is evaled as <code class="docutils literal notranslate"><span class="pre">foo(bar)</span> <span class="pre">&gt;</span> <span class="pre">null</span></code></p>
 </div>
-<p class="todo-source"><a class="reference internal" href="_apidoc/pysh.command.html#index-0"><em>original entry</em></a></p>
+<p class="todo-source"><a class="reference internal" href="_apidoc/pysh.dsl.html#index-0"><em>original entry</em></a></p>
 <div class="admonition-todo admonition">
 <p class="first admonition-title">Todo</p>
 <p class="last">Does it belong in the interface? shouldn’t it be part of External?</p>
 </div>
-<p class="todo-source"><a class="reference internal" href="_apidoc/pysh.command.html#index-1"><em>original entry</em></a></p>
-<div class="admonition-todo admonition">
-<p class="first admonition-title">Todo</p>
-<p>Paths globbing should be lazy too. This means that we need to use
-pathlib internally and expose a custom interface that resolves on str and
-iter. That would allow to do this:</p>
-<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">imgs</span> <span class="o">=</span> <span class="n">_</span> <span class="o">//</span> <span class="s1">&#39;*.jpg&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>  <span class="c1"># globbing is computed</span>
-<span class="gp">&gt;&gt;&gt; </span>  <span class="nb">zip</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>        <span class="c1"># globbing is computed again</span>
-</pre></div>
-</div>
-</div>
-<p class="todo-source"><a class="reference internal" href="_apidoc/pysh.path.html#index-0"><em>original entry</em></a></p>
-<div class="admonition-todo admonition">
-<p class="first admonition-title">Todo</p>
-<p class="last">Move this section to types, not really an operator?</p>
-</div>
-<p class="todo-source"><a class="reference internal" href="dsl/operators.html#index-0"><em>original entry</em></a></p>
-<div class="admonition-todo admonition">
-<p class="first admonition-title">Todo</p>
-<p class="last">comment about escaping rules</p>
-</div>
-<p class="todo-source"><a class="reference internal" href="dsl/operators.html#index-1"><em>original entry</em></a></p>
+<p class="todo-source"><a class="reference internal" href="_apidoc/pysh.dsl.html#index-1"><em>original entry</em></a></p>
 </div>
 <div class="section" id="indices-and-tables">
 <h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>

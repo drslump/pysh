@@ -1,0 +1,369 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysh.transforms.alpha.lazyexpr &mdash; pysh 0.0.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+
+  
+  <script src="../../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../dsl/index.html">Domain Specific Language</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../_apidoc/pysh.html">pysh package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Changelog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Unreleased</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html#version-0-0-3">Version 0.0.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html#version-0-0-1">Version 0.0.1</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../../pysh.html">pysh</a> &raquo;</li>
+        
+          <li><a href="../../transforms.html">pysh.transforms</a> &raquo;</li>
+        
+      <li>pysh.transforms.alpha.lazyexpr</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pysh.transforms.alpha.lazyexpr</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Infers the requirement of a lambda by detecting which expressions use the</span>
+<span class="sd">``?`` placeholder.</span>
+
+<span class="sd">Only expressions in an assignment or in parameter positions are transformed.</span>
+
+<span class="sd">&gt;&gt;&gt; pipe.map( &#39;foo&#39; + ?.lower() )</span>
+<span class="sd">  # pipe.map( lambda __1, *args: &#39;foo&#39; + __1.lower() )</span>
+
+<span class="sd">TODO: Support multiple placeholders `?1 + ?2` -- `??` is whole varargs</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">StringIO</span>
+
+<span class="kn">from</span> <span class="nn">pysh.transforms</span> <span class="k">import</span> <span class="n">TokenIO</span>
+
+
+<span class="n">PLACEHOLDER</span> <span class="o">=</span> <span class="s1">&#39;__INFERRED_LAMBDA_PLACEHOLDER__&#39;</span>
+
+
+<div class="viewcode-block" id="lexer"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.alpha.lazyexpr.html#pysh.transforms.alpha.lazyexpr.lexer">[docs]</a><span class="k">def</span> <span class="nf">lexer</span><span class="p">(</span><span class="n">code</span><span class="p">:</span> <span class="n">StringIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StringIO</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Lexer just replaces the ``?`` placeholder with something that doesn&#39;t</span>
+<span class="sd">    make the Python parser chock up.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">TokenIO</span><span class="p">()</span>
+    <span class="n">tokens</span> <span class="o">=</span> <span class="n">TokenIO</span><span class="p">(</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">iter_tokens</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">tkn</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">tkn</span><span class="o">.</span><span class="n">string</span> <span class="o">==</span> <span class="s1">&#39;?&#39;</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">write_token</span><span class="p">(</span><span class="n">tkn</span><span class="p">,</span> <span class="n">override</span><span class="o">=</span><span class="n">PLACEHOLDER</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">write_token</span><span class="p">(</span><span class="n">tkn</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="InferredLambdaTransformer"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.alpha.lazyexpr.html#pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer">[docs]</a><span class="k">class</span> <span class="nc">InferredLambdaTransformer</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeTransformer</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">placeholder</span> <span class="o">=</span> <span class="n">PlaceholderTransformer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="InferredLambdaTransformer.do_placeholder"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.alpha.lazyexpr.html#pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer.do_placeholder">[docs]</a>    <span class="k">def</span> <span class="nf">do_placeholder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">expr</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">placeholder</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">placeholder</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">placeholder</span><span class="o">.</span><span class="n">replaced</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Lambda</span><span class="p">(</span>
+                <span class="n">args</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">arguments</span><span class="p">(</span>
+                    <span class="n">args</span><span class="o">=</span><span class="p">[],</span>
+                    <span class="n">vararg</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">arg</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="s1">&#39;__varargs&#39;</span><span class="p">),</span>
+                    <span class="n">kwonlyargs</span><span class="o">=</span><span class="p">[],</span>
+                    <span class="n">kw_defaults</span><span class="o">=</span><span class="p">[],</span>
+                    <span class="n">kwarg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">defaults</span><span class="o">=</span><span class="p">[]),</span>
+                <span class="n">body</span><span class="o">=</span><span class="n">node</span><span class="p">,</span>
+                <span class="n">lineno</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span>
+                <span class="n">col_offset</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">col_offset</span><span class="p">)</span>
+
+            <span class="n">ast</span><span class="o">.</span><span class="n">fix_missing_locations</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">node</span></div>
+
+<div class="viewcode-block" id="InferredLambdaTransformer.visit_Name"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.alpha.lazyexpr.html#pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer.visit_Name">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">PLACEHOLDER</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="n">node</span></div>
+
+<div class="viewcode-block" id="InferredLambdaTransformer.visit_Assign"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.alpha.lazyexpr.html#pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer.visit_Assign">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">Assign</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">Assign</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">found</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_placeholder</span><span class="p">(</span><span class="n">node</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">node</span></div>
+
+<div class="viewcode-block" id="InferredLambdaTransformer.visit_Call"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.alpha.lazyexpr.html#pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer.visit_Call">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">Call</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">Call</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generic_visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">found</span><span class="p">:</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">do_placeholder</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">keywords</span> <span class="o">=</span> <span class="p">[(</span><span class="n">arg</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">do_placeholder</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="k">for</span> <span class="n">arg</span><span class="p">,</span><span class="n">value</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">keywords</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">node</span></div></div>
+
+
+<div class="viewcode-block" id="PlaceholderTransformer"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.alpha.lazyexpr.html#pysh.transforms.alpha.lazyexpr.PlaceholderTransformer">[docs]</a><span class="k">class</span> <span class="nc">PlaceholderTransformer</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeTransformer</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replaced</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="PlaceholderTransformer.reset"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.alpha.lazyexpr.html#pysh.transforms.alpha.lazyexpr.PlaceholderTransformer.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">replaced</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="PlaceholderTransformer.visit_Name"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.alpha.lazyexpr.html#pysh.transforms.alpha.lazyexpr.PlaceholderTransformer.visit_Name">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">PLACEHOLDER</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">replaced</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">Subscript</span><span class="p">(</span>
+                <span class="n">value</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="s1">&#39;__varargs&#39;</span><span class="p">,</span> <span class="n">ctx</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Load</span><span class="p">()),</span>
+                <span class="nb">slice</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Num</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+                <span class="n">ctx</span><span class="o">=</span><span class="n">ast</span><span class="o">.</span><span class="n">Load</span><span class="p">(),</span>
+                <span class="n">lineno</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span>
+                <span class="n">col_offset</span><span class="o">=</span><span class="n">node</span><span class="o">.</span><span class="n">col_offset</span><span class="p">)</span>
+            <span class="n">ast</span><span class="o">.</span><span class="n">fix_missing_locations</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">node</span></div></div>
+
+
+<div class="viewcode-block" id="PlaceholderVisitor"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.alpha.lazyexpr.html#pysh.transforms.alpha.lazyexpr.PlaceholderVisitor">[docs]</a><span class="k">class</span> <span class="nc">PlaceholderVisitor</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">NodeVisitor</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fname</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fname</span> <span class="o">=</span> <span class="n">fname</span>
+
+<div class="viewcode-block" id="PlaceholderVisitor.visit_Name"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.alpha.lazyexpr.html#pysh.transforms.alpha.lazyexpr.PlaceholderVisitor.visit_Name">[docs]</a>    <span class="k">def</span> <span class="nf">visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">PLACEHOLDER</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">warnings</span> <span class="k">import</span> <span class="n">warn_explicit</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">&#39;Detected an un-transformed lazyexpr `?` symbol. &#39;</span>
+                <span class="s1">&#39;Only valid in assignments or argument positions. &#39;</span>
+                <span class="s1">&#39;(from pysh.transform.alpha.lazyexpr)&#39;</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">id</span><span class="p">)</span>
+
+            <span class="n">warn_explicit</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="ne">SyntaxWarning</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fname</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">lineno</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="parser"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.alpha.lazyexpr.html#pysh.transforms.alpha.lazyexpr.parser">[docs]</a><span class="k">def</span> <span class="nf">parser</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">,</span> <span class="n">fname</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">:</span>
+    <span class="n">node</span> <span class="o">=</span> <span class="n">InferredLambdaTransformer</span><span class="p">()</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="n">PlaceholderVisitor</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">node</span></div>
+
+
+
+<span class="n">code</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s1">print(list( map(?.lower(), [&#39;Foo&#39;, &#39;Bar&#39;]) ))</span>
+<span class="s1">&#39;&#39;&#39;</span>
+
+<span class="n">out</span> <span class="o">=</span> <span class="n">lexer</span><span class="p">(</span><span class="n">StringIO</span><span class="p">(</span><span class="n">code</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+
+<span class="kn">import</span> <span class="nn">ast</span><span class="o">,</span> <span class="nn">pprint</span>
+<span class="n">node</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">out</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span>
+<span class="n">node</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;&lt;code&gt;&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ast</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">node</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;],&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">],</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;=[&#39;</span><span class="p">,</span> <span class="s1">&#39;=[</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+<span class="n">co_code</span> <span class="o">=</span> <span class="nb">compile</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="s1">&#39;&lt;code&gt;&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="n">exec</span><span class="p">(</span><span class="n">co_code</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../../',
+            VERSION:'0.0.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

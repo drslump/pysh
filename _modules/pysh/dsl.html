@@ -1,0 +1,1125 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysh.dsl &mdash; pysh 0.0.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+
+  
+  <script src="../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dsl/index.html">Domain Specific Language</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../_apidoc/pysh.html">pysh package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Changelog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Unreleased</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html#version-0-0-3">Version 0.0.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html#version-0-0-1">Version 0.0.1</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../pysh.html">pysh</a> &raquo;</li>
+        
+      <li>pysh.dsl</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pysh.dsl</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module for the types implementing the *domain specific language*. Normally</span>
+<span class="sd">scripts won&#39;t need to construct these types directly but they are the</span>
+<span class="sd">core of *pysh*.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">ABCMeta</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">IOBase</span>
+
+<span class="c1">#TODO: Migrate to a custom implementation?</span>
+<span class="kn">from</span> <span class="nn">braceexpand</span> <span class="k">import</span> <span class="n">braceexpand</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Pattern</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span>
+
+
+<div class="viewcode-block" id="is_glob"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.is_glob">[docs]</a><span class="k">def</span> <span class="nf">is_glob</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Checks if a string contains unescaped glob characters</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">any</span><span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(</span><span class="se">\\</span><span class="s1">*)[*?[]&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="unescape"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.unescape">[docs]</a><span class="k">def</span> <span class="nf">unescape</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Removes escapes from a string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">(.)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="unescape_glob"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.unescape_glob">[docs]</a><span class="k">def</span> <span class="nf">unescape_glob</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Keeps escapes of special glob characters using ranges.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">([*?[])&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;[\1]&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">unescape</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="braceexpansion"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.braceexpansion">[docs]</a><span class="k">def</span> <span class="nf">braceexpansion</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; The braceexpand module unescapes all the escapes, since it&#39;s the first</span>
+<span class="sd">        step it&#39;ll undo any glob escaping. So before giving the value to the</span>
+<span class="sd">        module we double any glob related escape.</span>
+
+<span class="sd">        See: https://github.com/trendels/braceexpand/issues/2</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">([*?[</span><span class="se">\\</span><span class="s1">])&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;</span><span class="se">\\\\</span><span class="s1">\1&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">braceexpand</span><span class="p">(</span><span class="n">value</span><span class="p">))</span></div>
+
+
+<span class="c1">#TODO: Can we inherit from .Path so it supports posix/windows flavours?</span>
+<div class="viewcode-block" id="Path"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Path">[docs]</a><span class="k">class</span> <span class="nc">Path</span><span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">PosixPath</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a path.</span>
+
+<span class="sd">    - ``/``: path segment(s) verbatim</span>
+<span class="sd">    - ``//``: glob + brace-expansion segment(s)</span>
+<span class="sd">    - ``//``: segment with anchored regex pattern or function</span>
+<span class="sd">    - ``**``: same as // but recursive</span>
+
+<span class="sd">    TODO: how to handle in command when a glob expansion produces 0 results?</span>
+<span class="sd">        in Sh and Bash it just provides as argument the actual glob (i.e *.jpg),</span>
+<span class="sd">        (unless globfail is set), but with support for regexes/funcs this is not</span>
+<span class="sd">        an option. Csh/Fish raise an error which seems the sensible thing to do.</span>
+
+<span class="sd">    TODO: Sort matches (joining digits so 4&lt;11) ?? Use __lt__ and functools.total_ordering.</span>
+<span class="sd">        To keep natural order, we can split the path into segments, next split segments</span>
+<span class="sd">        into words/numbers/symbols, then use Python tuple comparison.</span>
+<span class="sd">        pathlib does sort already splitting the segments, but it doesn&#39;t sort by</span>
+<span class="sd">        natural order. I think the best approach is to not try to sort and refer to</span>
+<span class="sd">        an external crate for natural sorting.</span>
+<span class="sd">        http://natsort.readthedocs.io/en/master/howitworks.html#sorting-filesystem-paths</span>
+
+<span class="sd">    TODO: ``with _/&#39;path&#39;:`` changes directory</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1">#TODO: Why is it not inherited?</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__hash__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">segments</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Path&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calling allows to join an arbitrary number of segments to a path. It&#39;s</span>
+<span class="sd">        an alias to ``PurePath.joinpath``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Expected at least one path segment&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="o">*</span><span class="n">segments</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Path.joinpath"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Path.joinpath">[docs]</a>    <span class="k">def</span> <span class="nf">joinpath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Path&#39;</span><span class="p">:</span>
+        <span class="c1">#TODO: Added because of pylint, check if joinpath returns a PurePath or respect the type</span>
+        <span class="k">return</span> <span class="n">Path</span><span class="p">(</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">))</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;Path&#39;</span><span class="p">,</span> <span class="s1">&#39;PathMatcher&#39;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Slicing has the following behaviour depending on the value:</span>
+
+<span class="sd">         - contains brace expansions: returns a Matcher</span>
+<span class="sd">         - contains glob characters: returns a Matcher</span>
+<span class="sd">         - otherwise concats the value and returns a Path</span>
+
+<span class="sd">        Escaping is supported with the backslash `\`, escaping non especial</span>
+<span class="sd">        characters has no effect other than the backslash being removed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#TODO: Support multiple items, error on slice instances</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="n">braceexpansion</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">items</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">GlobMatcher</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unescape_glob</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">if</span> <span class="n">is_glob</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="k">else</span> <span class="bp">self</span> <span class="o">/</span> <span class="n">unescape</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">items</span><span class="p">]</span>
+
+            <span class="k">return</span> <span class="n">ExpansionMatcher</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+
+        <span class="n">item</span> <span class="o">=</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">is_glob</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">GlobMatcher</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unescape_glob</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">/</span> <span class="n">unescape</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_matcher_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Pattern</span><span class="p">,</span> <span class="n">Callable</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;PathMatcher&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="n">expansions</span> <span class="o">=</span> <span class="n">braceexpansion</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">expansions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ExpansionMatcher</span><span class="p">([</span>
+                    <span class="n">GlobMatcher</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unescape_glob</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+                    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">expansions</span>
+                    <span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">GlobMatcher</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unescape_glob</span><span class="p">(</span><span class="n">expansions</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s1">&#39;fullmatch&#39;</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Pattern</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>  <span class="c1">#XXX help mypy</span>
+            <span class="k">return</span> <span class="n">RegexMatcher</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">FilterMatcher</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unsupported path matcher type </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__floordiv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Pattern</span><span class="p">,</span> <span class="n">Callable</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;PathMatcher&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The ``//`` operator forces the use of a path matcher, if the value is a</span>
+<span class="sd">        string it&#39;s handled as a glob with brace expansion, a regex pattern will</span>
+<span class="sd">        keep a path if it matches the whole entry name and a callable receives</span>
+<span class="sd">        Path instances keeping only those for which it returns True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_matcher_for</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__pow__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Pattern</span><span class="p">,</span> <span class="n">Callable</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;RecursiveMatcher&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Recursive globbing. See :meth:`__floordiv__` for more details.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Prefer right-associativity to support the pathpow transform</span>
+        <span class="c1">#TODO: Move this to a patch on pathpow when possible</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="s1">&#39;__rpow__&#39;</span><span class="p">):</span>
+            <span class="n">casted</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Any</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>  <span class="c1">#XXX help mypy</span>
+            <span class="k">return</span> <span class="n">casted</span><span class="o">.</span><span class="fm">__rpow__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">RecursiveMatcher</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_matcher_for</span><span class="p">(</span><span class="n">rhs</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Overload equality so we can support comparison against plain strings</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#TODO: try to resolve before comparing equality?</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if the path exists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+
+    <span class="c1">## Helpers accept an optional subpath unlike pahtlib</span>
+    <span class="c1">#TODO: support for the other helpers in pathlib and equivalents to bash -X tests</span>
+
+<div class="viewcode-block" id="Path.exists"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Path.exists">[docs]</a>    <span class="k">def</span> <span class="nf">exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subpath</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tests if a path exists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">subpath</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">/</span><span class="n">subpath</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Path.is_empty"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Path.is_empty">[docs]</a>    <span class="k">def</span> <span class="nf">is_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subpath</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if a path refers to an empty file.</span>
+<span class="sd">        Will raise an OSError if there is some issue accessing the file.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">/</span><span class="n">subpath</span> <span class="k">if</span> <span class="n">subpath</span> <span class="k">else</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="n">p</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_size</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span></div></div>
+
+
+<span class="c1">#TODO: support comparisons against paths/str: if fname == _&#39;foo?.jpg&#39; -- if fname in _&#39;foo?.jpg&#39;</span>
+<div class="viewcode-block" id="PathMatcher"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.PathMatcher">[docs]</a><span class="k">class</span> <span class="nc">PathMatcher</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for path matcher types.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PathMatcher.iter_posix"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.PathMatcher.iter_posix">[docs]</a>    <span class="k">def</span> <span class="nf">iter_posix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Matchers work with posix like path strings to avoid creating Path</span>
+<span class="sd">        objects if not needed. The iterator interface feeds from this one</span>
+<span class="sd">        to yield Path objects.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Descendant types should implement it&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PathMatcher.for_path"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.PathMatcher.for_path">[docs]</a>    <span class="k">def</span> <span class="nf">for_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;PathMatcher&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Descendant types should implement it&#39;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Path</span><span class="p">]:</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_posix</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">Path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the number of matches, to do so **it has to perform the matching**</span>
+<span class="sd">        so if you intend to use the results afterwards it&#39;s best to cast to</span>
+<span class="sd">        list() first.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_posix</span><span class="p">():</span>
+            <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">cnt</span>
+
+    <span class="c1"># Optimize for some comparisons</span>
+
+    <span class="k">def</span> <span class="nf">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__gt__</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+        <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_posix</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">cnt</span> <span class="o">==</span> <span class="n">other</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+        <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_posix</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">cnt</span> <span class="o">&gt;=</span> <span class="n">other</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+        <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_posix</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">cnt</span> <span class="o">&gt;</span> <span class="n">other</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="n">cnt</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__lt__</span><span class="p">(</span><span class="n">other</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__gt__</span><span class="p">(</span><span class="n">other</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GlobMatcher"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.GlobMatcher">[docs]</a><span class="k">class</span> <span class="nc">GlobMatcher</span><span class="p">(</span><span class="n">PathMatcher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Matcher based on glob expressions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span>
+
+<div class="viewcode-block" id="GlobMatcher.for_path"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.GlobMatcher.for_path">[docs]</a>    <span class="k">def</span> <span class="nf">for_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;GlobMatcher&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">GlobMatcher</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GlobMatcher.iter_posix"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.GlobMatcher.iter_posix">[docs]</a>    <span class="k">def</span> <span class="nf">iter_posix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Use the glob module instead of pathlib.</span>
+
+<span class="sd">        TODO: On Windows we might have to handle casefolding.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
+        <span class="k">yield from</span> <span class="n">glob</span><span class="o">.</span><span class="n">iglob</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RegexMatcher"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.RegexMatcher">[docs]</a><span class="k">class</span> <span class="nc">RegexMatcher</span><span class="p">(</span><span class="n">PathMatcher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Matcher based on regex patterns.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="s1">&#39;pattern&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">,</span> <span class="n">pattern</span><span class="p">:</span> <span class="n">Pattern</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span>
+
+<div class="viewcode-block" id="RegexMatcher.for_path"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.RegexMatcher.for_path">[docs]</a>    <span class="k">def</span> <span class="nf">for_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;RegexMatcher&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">RegexMatcher</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RegexMatcher.iter_posix"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.RegexMatcher.iter_posix">[docs]</a>    <span class="k">def</span> <span class="nf">iter_posix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span><span class="o">.</span><span class="n">fullmatch</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">os</span><span class="o">.</span><span class="n">scandir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">it</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">match</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+                    <span class="k">yield</span> <span class="n">entry</span><span class="o">.</span><span class="n">path</span></div></div>
+
+
+<div class="viewcode-block" id="FilterMatcher"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.FilterMatcher">[docs]</a><span class="k">class</span> <span class="nc">FilterMatcher</span><span class="p">(</span><span class="n">PathMatcher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Matcher based on filtering functions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="s1">&#39;func&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+
+<div class="viewcode-block" id="FilterMatcher.for_path"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.FilterMatcher.for_path">[docs]</a>    <span class="k">def</span> <span class="nf">for_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;FilterMatcher&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">FilterMatcher</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FilterMatcher.iter_posix"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.FilterMatcher.iter_posix">[docs]</a>    <span class="k">def</span> <span class="nf">iter_posix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">iterdir</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">func</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+                <span class="c1"># try to have the same format as other matchers</span>
+                <span class="k">yield</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div></div>
+
+
+<span class="c1">#TODO: Seems super slow even with simple globs!</span>
+<div class="viewcode-block" id="RecursiveMatcher"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.RecursiveMatcher">[docs]</a><span class="k">class</span> <span class="nc">RecursiveMatcher</span><span class="p">(</span><span class="n">PathMatcher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recursive matcher that will apply a child matcher against a path tree.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">,</span> <span class="s1">&#39;matcher&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">,</span> <span class="n">matcher</span><span class="p">:</span> <span class="n">PathMatcher</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">matcher</span> <span class="o">=</span> <span class="n">matcher</span>
+
+<div class="viewcode-block" id="RecursiveMatcher.for_path"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.RecursiveMatcher.for_path">[docs]</a>    <span class="k">def</span> <span class="nf">for_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;RecursiveMatcher&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">RecursiveMatcher</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">matcher</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RecursiveMatcher.iter_posix"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.RecursiveMatcher.iter_posix">[docs]</a>    <span class="k">def</span> <span class="nf">iter_posix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">matcher</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">matcher</span>
+
+        <span class="c1"># TODO: use itertools to keep it dry</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">matcher</span><span class="o">.</span><span class="n">for_path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">iter_posix</span><span class="p">():</span>
+            <span class="k">yield</span> <span class="n">pp</span>
+
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+                <span class="n">m</span> <span class="o">=</span> <span class="n">matcher</span><span class="o">.</span><span class="n">for_path</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">m</span><span class="o">.</span><span class="n">iter_posix</span><span class="p">():</span>
+                    <span class="k">yield</span> <span class="n">pp</span></div></div>
+
+
+<div class="viewcode-block" id="ExpansionMatcher"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.ExpansionMatcher">[docs]</a><span class="k">class</span> <span class="nc">ExpansionMatcher</span><span class="p">(</span><span class="n">PathMatcher</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Holds the results of brace expansion which can be concrete paths or child</span>
+<span class="sd">    matchers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;expansions&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expansions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">,</span> <span class="n">PathMatcher</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expansions</span> <span class="o">=</span> <span class="n">expansions</span>
+
+<div class="viewcode-block" id="ExpansionMatcher.for_path"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.ExpansionMatcher.for_path">[docs]</a>    <span class="k">def</span> <span class="nf">for_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;ExpansionMatcher&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;ExpansionMatcher does not support for_path&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ExpansionMatcher.iter_posix"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.ExpansionMatcher.iter_posix">[docs]</a>    <span class="k">def</span> <span class="nf">iter_posix</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="n">seen</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">expansion</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">expansions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expansion</span><span class="p">,</span> <span class="n">PathMatcher</span><span class="p">):</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">expansion</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                    <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                    <span class="k">yield</span> <span class="n">path</span>
+                <span class="k">continue</span>
+
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">expansion</span><span class="o">.</span><span class="n">iter_posix</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+                    <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                    <span class="k">yield</span> <span class="n">p</span></div></div>
+
+
+<span class="c1"># Internal type to hold arguments when constructing commands</span>
+<span class="n">Arg</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s1">&#39;Arg&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;positional&#39;</span><span class="p">,</span> <span class="s1">&#39;keywords&#39;</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="BaseSpec"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.BaseSpec">[docs]</a><span class="k">class</span> <span class="nc">BaseSpec</span><span class="p">:</span>  <span class="c1">#TODO: (meta=ABCMeta) breaks?</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base abstract class for representing how a command should execute.</span>
+
+<span class="sd">    Check :class:`ExternalSpec` for a concrete implementation of the</span>
+<span class="sd">    interface that allows to run external commands.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="BaseSpec.run"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.BaseSpec.run">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">builder</span><span class="p">:</span> <span class="s1">&#39;Command&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        This is a somewhat internal method to execute a builder according to</span>
+<span class="sd">        the spec. It&#39;s intended to be used by :meth:`CommandBuilder.invoke`.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="BaseSpec.parse_args"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.BaseSpec.parse_args">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">parse_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">positional</span><span class="p">,</span> <span class="n">keyword</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Used by :meth:`CommandBuilder` call and slicing protocols to convert</span>
+<span class="sd">        their received values into arguments according to the spec.</span>
+
+<span class="sd">        .. TODO:: Does it belong in the interface? shouldn&#39;t it be part of External?</span>
+<span class="sd">        &quot;&quot;&quot;</span></div></div>
+
+<div class="viewcode-block" id="Pipeline"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Pipeline">[docs]</a><span class="k">class</span> <span class="nc">Pipeline</span><span class="p">:</span>  <span class="c1">#TODO: breaks?? (meta=ABCMeta):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for DSL expression builders.</span>
+
+<span class="sd">    .. automethod:: __or__</span>
+<span class="sd">    .. automethod:: __ror__</span>
+<span class="sd">    .. automethod:: __xor__</span>
+<span class="sd">    .. automethod:: __le__</span>
+<span class="sd">    .. automethod:: __ge__</span>
+<span class="sd">    .. automethod:: __rshift__</span>
+<span class="sd">    .. automethod:: __invert__</span>
+<span class="sd">    .. automethod:: __autoexpr__</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+        <span class="n">clone</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">clone</span>
+
+<div class="viewcode-block" id="Pipeline.invoke"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Pipeline.invoke">[docs]</a>    <span class="k">def</span> <span class="nf">invoke</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Result&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes the command as currently configured and return a :class:`Result`</span>
+<span class="sd">        instance to track its execution.</span>
+
+<span class="sd">        The actual implementation is on the derived classes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Pipeline.pipe"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Pipeline.pipe">[docs]</a>    <span class="k">def</span> <span class="nf">pipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;Pipe&#39;</span><span class="p">,</span> <span class="s1">&#39;Piperr&#39;</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot; Explicit interface for the ``|`` and ``^`` operators.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__copy__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">stderr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">^</span> <span class="n">stderr</span>
+        <span class="k">if</span> <span class="n">stdout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">|</span> <span class="n">stdout</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="Pipeline.__autoexpr__"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Pipeline.__autoexpr__">[docs]</a>    <span class="k">def</span> <span class="nf">__autoexpr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Hook for the :mod:`transforms.autoexpr`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">invoke</span><span class="p">()</span>
+        <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Invoke and get the exit status code.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">invoke</span><span class="p">()</span>
+        <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">proc</span><span class="o">.</span><span class="n">status</span>
+
+    <span class="k">def</span> <span class="nf">__bytes__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Invoke and get the stdout as binary.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">proc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">invoke</span><span class="p">()</span>
+        <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Invoke and get the stdout as text.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#TODO: This needs further work to handle the encoding properly</span>
+        <span class="k">return</span> <span class="nb">bytes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Redirect&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; :ref:`Redirection: &gt;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Pipeline</span><span class="p">):</span>
+            <span class="c1">#TODO: issue warning log</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+        <span class="c1">#TODO: support callables</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Redirect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">(</span><span class="n">other</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">,</span> <span class="n">IOBase</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">Redirect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Redirect&#39;</span><span class="p">:</span>
+        <span class="c1"># Not possible to redirect to an expression?</span>
+        <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+<div class="viewcode-block" id="Pipeline.__rshift__"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Pipeline.__rshift__">[docs]</a>    <span class="k">def</span> <span class="nf">__rshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Redirect&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; :ref:`Appending Redirection: &gt;&gt;`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Command</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Redirect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">appending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Pipeline.__or__"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Pipeline.__or__">[docs]</a>    <span class="k">def</span> <span class="nf">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Pipe&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; :ref:`Pipe: |`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Pipeline</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+        <span class="k">return</span> <span class="n">Pipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Pipeline.__ror__"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Pipeline.__ror__">[docs]</a>    <span class="k">def</span> <span class="nf">__ror__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Pipe&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Reverse for :meth:`__or__` to handle ``value | command``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">Pipeline</span><span class="p">):</span>
+            <span class="c1">#TODO: lhs should be injected into stdin</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+        <span class="k">return</span> <span class="n">Pipe</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Pipeline.__xor__"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Pipeline.__xor__">[docs]</a>    <span class="k">def</span> <span class="nf">__xor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Piperr&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; :ref:`Piperr: ^ 🚧`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Prefer right associative if it has the reverse (precedence transform)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="s1">&#39;__rxor__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">rhs</span><span class="o">.</span><span class="fm">__rxor__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">rhs</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Piperr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Pipeline.__invert__"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Pipeline.__invert__">[docs]</a>    <span class="k">def</span> <span class="nf">__invert__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Reckless&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; ``~``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Reckless</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="lex_command_slice"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.lex_command_slice">[docs]</a><span class="k">def</span> <span class="nf">lex_command_slice</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Custom lexer for the command slices:</span>
+
+<span class="sd">    - whitespace separates arguments</span>
+<span class="sd">    - detects paths/globs</span>
+<span class="sd">    - preserves escapes</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">opens</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;{&#39;</span><span class="p">,</span> <span class="s1">&#39;[&#39;</span><span class="p">)</span>
+    <span class="n">closes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;}&#39;</span><span class="p">:</span> <span class="s1">&#39;{&#39;</span><span class="p">,</span> <span class="s1">&#39;]&#39;</span><span class="p">:</span> <span class="s1">&#39;[&#39;</span><span class="p">}</span>
+    <span class="n">counters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;{&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;[&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">esc</span> <span class="o">=</span> <span class="n">ispath</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">text</span> <span class="o">+</span> <span class="s1">&#39;  &#39;</span><span class="p">:</span>  <span class="c1"># suffix with space so we trigger the last value</span>
+        <span class="k">if</span> <span class="n">esc</span><span class="p">:</span>
+            <span class="n">value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
+            <span class="n">esc</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">ch</span> <span class="o">==</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">:</span>
+            <span class="n">esc</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">opens</span><span class="p">:</span>
+            <span class="n">counters</span><span class="p">[</span><span class="n">ch</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">ispath</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">ch</span> <span class="ow">in</span> <span class="n">closes</span><span class="p">:</span>
+            <span class="n">counters</span><span class="p">[</span><span class="n">closes</span><span class="p">[</span><span class="n">ch</span><span class="p">]]</span> <span class="o">-=</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">ch</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="s1">&#39;?&#39;</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">):</span>
+            <span class="n">ispath</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">ch</span><span class="o">.</span><span class="n">isspace</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">counters</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">ispath</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">Path</span><span class="p">()[</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="p">]</span>
+                <span class="n">ispath</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+            <span class="n">value</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">continue</span>
+
+        <span class="n">value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">x</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">counters</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s1">&#39;Unbalanced expression&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Command"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Command">[docs]</a><span class="k">class</span> <span class="nc">Command</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    .. automethod:: __lshift__</span>
+<span class="sd">    .. automethod:: __rshift__</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_spec&#39;</span><span class="p">,</span> <span class="s1">&#39;_args&#39;</span><span class="p">,</span> <span class="s1">&#39;_no_raise&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="n">BaseSpec</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="n">spec</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Arg</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_no_raise</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
+        <span class="n">clone</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__copy__</span><span class="p">()</span>
+        <span class="n">clone</span><span class="o">.</span><span class="n">_spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span>
+        <span class="n">clone</span><span class="o">.</span><span class="n">_args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">)</span>
+        <span class="n">clone</span><span class="o">.</span><span class="n">_no_raise</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_no_raise</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">clone</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">arg</span><span class="o">.</span><span class="n">positional</span><span class="p">)</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">=</span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">arg</span><span class="o">.</span><span class="n">keyword</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">program</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s1">&#39;`</span><span class="si">{}</span><span class="s1">`&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmd</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Slice access records arguments almost in verbatim form, however there</span>
+<span class="sd">        is splitting on whitespace so if you want to pass an argument containing</span>
+<span class="sd">        whitespace it needs to be escaped with backslash.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#TODO: support multiple values cmd[1,2,3]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+        <span class="n">clone</span><span class="p">:</span> <span class="n">Command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__copy__</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="n">clone</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Arg</span><span class="p">((</span><span class="n">key</span><span class="p">,),</span> <span class="p">{}))</span>
+            <span class="k">return</span> <span class="n">clone</span>
+
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">lex_command_slice</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="n">unescape</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+            <span class="n">clone</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Arg</span><span class="p">((</span><span class="n">arg</span><span class="p">,),</span> <span class="p">{}))</span>
+
+        <span class="k">return</span> <span class="n">clone</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Accessing an attribute sets a boolean option:</span>
+
+<span class="sd">        &gt;&gt;&gt; jq.compact</span>
+<span class="sd">          # jq --compact</span>
+<span class="sd">        &gt;&gt;&gt; tar.x.v.z.f(&#39;archive.tgz&#39;)[&#39;*.py&#39;]</span>
+<span class="sd">          # tar -xvzf archive.tgz *.py</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
+        <span class="n">clone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__copy__</span><span class="p">()</span>
+        <span class="n">clone</span><span class="o">.</span><span class="n">_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Arg</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">clone</span>
+
+<div class="viewcode-block" id="Command.io"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Command.io">[docs]</a>    <span class="k">def</span> <span class="nf">io</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># encoding: applies to all</span>
+        <span class="c1"># TODO: Shall it apply to commands only? or belongs to Pipeline?</span>
+        <span class="c1"># TODO: buffering stuff to be defined, too many variables, no need</span>
+        <span class="c1">#       to expose everything, we need sensible defaults with a clear</span>
+        <span class="c1">#       explanation. Probably the best approach would be to allow to</span>
+        <span class="c1">#       define them as part of the CommandSpec since buffering is</span>
+        <span class="c1">#       usually command specific.</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="Command.catch"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Command.catch">[docs]</a>    <span class="k">def</span> <span class="nf">catch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">statuses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Avoids raising upon given status codes. If no statuses are provided</span>
+<span class="sd">            then it&#39;ll catch all of them.</span>
+
+<span class="sd">            grep[&#39;foo&#39;].catch()   # ignore any exit status</span>
+<span class="sd">            grep[&#39;foo&#39;].catch(1)  # ignore exit status 1</span>
+<span class="sd">            grep[&#39;foo&#39;].catch(1, 3)  # ignore exit status 1 or 3</span>
+<span class="sd">            grep[&#39;foo&#39;].catch(*range(1, 10))  # ignore status 1-9</span>
+
+<span class="sd">            grep[&#39;foo&#39;].catch(errcho(&#39;foo&#39;))  # echo for all</span>
+<span class="sd">            grep[&#39;foo&#39;].catch(1, _2=echo(&#39;foo&#39;))  # ignore 1, 2 echos</span>
+
+<span class="sd">            grep[&#39;foo&#39;].catch(</span>
+<span class="sd">                _0 = echo(&#39;found&#39;),        # 0 (even if it doesn&#39;t raise)</span>
+<span class="sd">                _1_2 = echo(&#39;error&#39;),      # 1,2</span>
+<span class="sd">                _1__4 = echo(&#39;error&#39;),      # 1,2,3,4 echo</span>
+<span class="sd">                _10 = echo(&#39;error&#39;) and exit(1),   # 10 echoes and returns 1 to the pipe</span>
+<span class="sd">                __10 = echo(&#39;&lt;=10&#39;),</span>
+<span class="sd">                10__ = echo(&#39;&gt;=10&#39;),</span>
+<span class="sd">                _ = exit(1, &#39;not found!&#39;)  # else</span>
+<span class="sd">            )</span>
+
+<span class="sd">            grep[&#39;foo&#39;].catch(lambda p: print(p.status))</span>
+
+<span class="sd">            grep[&#39;foo&#39;].catch(signals=signals.SIGHUP)</span>
+<span class="sd">            grep[&#39;foo&#39;].catch(SIGHUP=None, SIGUSR2=echo(&#39;received!&#39;))</span>
+<span class="sd">            grep[&#39;foo&#39;].catch(0, SIGHUP=None)</span>
+<span class="sd">            grep[&#39;foo&#39;].catch(0, -signals.SIGHUP)</span>
+<span class="sd">            #TODO: maybe a method called .trap() like bash?</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO: Shall it apply to commands only? or belongs to Pipeline?</span>
+
+        <span class="n">clone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__copy__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">statuses</span><span class="p">:</span>
+            <span class="n">clone</span><span class="o">.</span><span class="n">_no_raise</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">256</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">clone</span><span class="o">.</span><span class="n">_no_raise</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">statuses</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">clone</span></div>
+
+<div class="viewcode-block" id="Command.__lshift__"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Command.__lshift__">[docs]</a>    <span class="k">def</span>  <span class="nf">__lshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; :ref:`Application: &lt;&lt; 🚧`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__rlshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot; Reverse for :meth:`__lshift__` to handle ``func &lt;&lt; command``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+        <span class="k">return</span> <span class="n">other</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Pipe"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Pipe">[docs]</a><span class="k">class</span> <span class="nc">Pipe</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a pipe ``|`` operation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">:</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="n">Pipeline</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;(</span><span class="si">{!r}</span><span class="s1"> | </span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Piperr"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Piperr">[docs]</a><span class="k">class</span> <span class="nc">Piperr</span><span class="p">(</span><span class="n">Pipe</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a piperr ``^`` operation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="n">IOBase</span><span class="p">)</span> <span class="k">else</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;(</span><span class="si">{!r}</span><span class="s1"> ^ </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Redirect"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Redirect">[docs]</a><span class="k">class</span> <span class="nc">Redirect</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a redirection ``&gt;`` or ``&gt;&gt;`` operation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">:</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pathlib</span><span class="o">.</span><span class="n">PurePath</span><span class="p">,</span> <span class="n">IOBase</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">appending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">appending</span> <span class="o">=</span> <span class="n">appending</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="s1">&#39;&gt;&gt;&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">appending</span> <span class="k">else</span> <span class="s1">&#39;&gt;&#39;</span>
+        <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="n">IOBase</span><span class="p">)</span> <span class="k">else</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;(</span><span class="si">{!r}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Reckless"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Reckless">[docs]</a><span class="k">class</span> <span class="nc">Reckless</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents the reckless operator ``~``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;expr&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Pipeline</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;~</span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Application"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Application">[docs]</a><span class="k">class</span> <span class="nc">Application</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TODO: Not needed?</span>
+
+<span class="sd">    Represents the application operator ``&lt;&lt;``</span>
+
+<span class="sd">    .. TODO:: ``foo &lt;= bar &gt; null`` is evaled as ``foo(bar) &gt; null``</span>
+
+<span class="sd">    Maybe it&#39;s best to use a ``&lt;&lt;`` as application operator, that</span>
+<span class="sd">    allows to have an eager one:</span>
+
+<span class="sd">        sh &lt;&lt; &#39; ... &#39; &gt; null  # sh(&#39;...&#39;) &gt; null</span>
+
+<span class="sd">    and also a lazy one that should work for most use cases:</span>
+
+<span class="sd">        fork &lt;&lt;= grep[&#39;foo&#39;] &gt; null  # fork(grep[&#39;foo&#39;] &gt; null)</span>
+
+<span class="sd">    the drawback is that the following is not valid syntax:</span>
+
+<span class="sd">        fork(n=8) &lt;&lt;= cmd &gt; null  # cannot assign to a call expression</span>
+
+<span class="sd">    that might be solved with a lexer transform but it feels dirty:</span>
+
+<span class="sd">        __1 = fork(n=8); __1 &lt;&lt;= cmd &gt; null</span>
+
+<span class="sd">    or by forcing the user to change the expression to:</span>
+
+<span class="sd">        fork(n=8).fn &lt;&lt;= cmd &gt; null</span>
+
+<span class="sd">    but then operator are also NOT allows:</span>
+
+<span class="sd">        cat | xargs(n=1) &lt;&lt;= cmd &gt; null</span>
+
+<span class="sd">    so the only ergonomic solution seems to be the lexer transformation:</span>
+
+<span class="sd">        cat | xargs(n=1) &lt;&lt; (cmd &gt; null)</span>
+
+<span class="sd">    although for the time being, experiment with the explicit version:</span>
+
+<span class="sd">        runner = cat | xargs(n=1)</span>
+<span class="sd">        runner &lt;&lt;= cmd &gt; null</span>
+
+<span class="sd">    TODO !!IMPORTANT:</span>
+<span class="sd">        Perhaps the simpler way is to forget about this lazy application</span>
+<span class="sd">        altogether and bring it more to Python for this advanced use cases.</span>
+
+<span class="sd">        &gt;&gt;&gt; cat | xargs(foo | bar, n=1) &gt; null</span>
+<span class="sd">        &gt;&gt;&gt; cat | xargs(  # my favorite I think</span>
+<span class="sd">        &gt;&gt;&gt;     n=1,</span>
+<span class="sd">        &gt;&gt;&gt;     expr= foo | bar</span>
+<span class="sd">        &gt;&gt;&gt; ) &gt; null</span>
+<span class="sd">        &gt;&gt;&gt; cat | xargs(n=1)[</span>
+<span class="sd">        &gt;&gt;&gt;    foo | bar</span>
+<span class="sd">        &gt;&gt;&gt; ] &gt; null</span>
+<span class="sd">        &gt;&gt;&gt; cat | xargs(n=1) &lt;&lt; (foo | bar) &gt; null</span>
+
+<span class="sd">        In practice any flow-control command will probably need to have a</span>
+<span class="sd">        custom implementation and if so it can use existing mechanisms to</span>
+<span class="sd">        provide a convenient syntax.</span>
+
+<span class="sd">        If anything, the ``&lt;&lt;=`` seems like the best fit, since it should</span>
+<span class="sd">        allow something like:</span>
+
+<span class="sd">        &gt;&gt;&gt; results.txt &lt; xargs(-n) &lt;&lt;= foo | bar</span>
+
+<span class="sd">        which looks quite bad to be honest, it might be useful for a ``time``</span>
+<span class="sd">        style command, that doesn&#39;t need to handle the output:</span>
+
+<span class="sd">        &gt;&gt;&gt; time &lt;&lt;= foo | bar</span>
+
+<span class="sd">        but even then, it&#39;s not so common as to justify having such a complex</span>
+<span class="sd">        operator. If we get rid of lazy application we can just simplify the</span>
+<span class="sd">        precedence transform so it only operates over ``&gt;`` and ``&lt;``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;(</span><span class="si">{!r}</span><span class="s1"> &lt;&lt; </span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Result"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Result">[docs]</a><span class="k">class</span> <span class="nc">Result</span><span class="p">:</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;pipeline&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;stdin&#39;</span><span class="p">,</span> <span class="s1">&#39;stdout&#39;</span><span class="p">,</span> <span class="s1">&#39;stderr&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">:</span> <span class="n">Pipeline</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">pipeline</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span>
+
+<div class="viewcode-block" id="Result.wait"><a class="viewcode-back" href="../../_apidoc/pysh.dsl.html#pysh.dsl.Result.wait">[docs]</a>    <span class="k">def</span> <span class="nf">wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Block until the command terminates.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;Result{{</span><span class="si">{!r}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pipeline</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.0.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

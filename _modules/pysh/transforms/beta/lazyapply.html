@@ -199,7 +199,7 @@
 <div class="viewcode-block" id="lexer"><a class="viewcode-back" href="../../../../_apidoc/pysh.transforms.beta.lazyapply.html#pysh.transforms.beta.lazyapply.lexer">[docs]</a><span class="k">def</span> <span class="nf">lexer</span><span class="p">(</span><span class="n">code</span><span class="p">:</span> <span class="n">StringIO</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StringIO</span><span class="p">:</span>
     <span class="n">out</span> <span class="o">=</span> <span class="n">TokenIO</span><span class="p">()</span>
     <span class="n">lazy</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">tkn</span> <span class="ow">in</span> <span class="n">TokenIO</span><span class="p">(</span><span class="n">code</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">tkn</span> <span class="ow">in</span> <span class="n">TokenIO</span><span class="p">(</span><span class="n">code</span><span class="p">)</span><span class="o">.</span><span class="n">iter_tokens</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">is_lazy</span><span class="p">(</span><span class="n">tkn</span><span class="p">):</span>
             <span class="n">lazy</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="n">out</span><span class="o">.</span><span class="n">write_token</span><span class="p">(</span><span class="n">tkn</span><span class="p">,</span> <span class="n">override</span><span class="o">=</span><span class="s1">&#39;&lt;&lt;(&#39;</span><span class="p">)</span>

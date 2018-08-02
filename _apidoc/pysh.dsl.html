@@ -1,0 +1,1010 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysh.dsl module &mdash; pysh 0.0.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pysh.env module" href="pysh.env.html" />
+    <link rel="prev" title="pysh.command module" href="pysh.command.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dsl/index.html">Domain Specific Language</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pysh.html">pysh package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="pysh.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="pysh.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="pysh.cli.html">pysh.cli module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.command.html">pysh.command module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">pysh.dsl module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.env.html">pysh.env module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.stream.html">pysh.stream module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.version.html">pysh.version module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Changelog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Unreleased</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html#version-0-0-3">Version 0.0.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html#version-0-0-1">Version 0.0.1</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="pysh.html">pysh package</a> &raquo;</li>
+        
+      <li>pysh.dsl module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/_apidoc/pysh.dsl.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pysh.dsl">
+<span id="pysh-dsl-module"></span><h1>pysh.dsl module<a class="headerlink" href="#module-pysh.dsl" title="Permalink to this headline">¶</a></h1>
+<p>Module for the types implementing the <em>domain specific language</em>. Normally
+scripts won’t need to construct these types directly but they are the
+core of <em>pysh</em>.</p>
+<dl class="class">
+<dt id="pysh.dsl.Application">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">Application</code><span class="sig-paren">(</span><em>lhs</em>, <em>rhs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Application"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Application" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.dsl.Pipeline" title="pysh.dsl.Pipeline"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.Pipeline</span></code></a></p>
+<p>TODO: Not needed?</p>
+<p>Represents the application operator <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code></p>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last"><code class="docutils literal notranslate"><span class="pre">foo</span> <span class="pre">&lt;=</span> <span class="pre">bar</span> <span class="pre">&gt;</span> <span class="pre">null</span></code> is evaled as <code class="docutils literal notranslate"><span class="pre">foo(bar)</span> <span class="pre">&gt;</span> <span class="pre">null</span></code></p>
+</div>
+<p>Maybe it’s best to use a <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> as application operator, that
+allows to have an eager one:</p>
+<blockquote>
+<div>sh &lt;&lt; ‘ … ‘ &gt; null  # sh(‘…’) &gt; null</div></blockquote>
+<p>and also a lazy one that should work for most use cases:</p>
+<blockquote>
+<div>fork &lt;&lt;= grep[‘foo’] &gt; null  # fork(grep[‘foo’] &gt; null)</div></blockquote>
+<p>the drawback is that the following is not valid syntax:</p>
+<blockquote>
+<div>fork(n=8) &lt;&lt;= cmd &gt; null  # cannot assign to a call expression</div></blockquote>
+<p>that might be solved with a lexer transform but it feels dirty:</p>
+<blockquote>
+<div>__1 = fork(n=8); __1 &lt;&lt;= cmd &gt; null</div></blockquote>
+<p>or by forcing the user to change the expression to:</p>
+<blockquote>
+<div>fork(n=8).fn &lt;&lt;= cmd &gt; null</div></blockquote>
+<p>but then operator are also NOT allows:</p>
+<blockquote>
+<div>cat | xargs(n=1) &lt;&lt;= cmd &gt; null</div></blockquote>
+<p>so the only ergonomic solution seems to be the lexer transformation:</p>
+<blockquote>
+<div>cat | xargs(n=1) &lt;&lt; (cmd &gt; null)</div></blockquote>
+<p>although for the time being, experiment with the explicit version:</p>
+<blockquote>
+<div>runner = cat | xargs(n=1)
+runner &lt;&lt;= cmd &gt; null</div></blockquote>
+<dl class="docutils">
+<dt>TODO !!IMPORTANT:</dt>
+<dd><p class="first">Perhaps the simpler way is to forget about this lazy application
+altogether and bring it more to Python for this advanced use cases.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cat</span> <span class="o">|</span> <span class="n">xargs</span><span class="p">(</span><span class="n">foo</span> <span class="o">|</span> <span class="n">bar</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">null</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cat</span> <span class="o">|</span> <span class="n">xargs</span><span class="p">(</span>  <span class="c1"># my favorite I think</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">expr</span><span class="o">=</span> <span class="n">foo</span> <span class="o">|</span> <span class="n">bar</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">null</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cat</span> <span class="o">|</span> <span class="n">xargs</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span>
+<span class="gp">&gt;&gt;&gt; </span>   <span class="n">foo</span> <span class="o">|</span> <span class="n">bar</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">null</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cat</span> <span class="o">|</span> <span class="n">xargs</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">foo</span> <span class="o">|</span> <span class="n">bar</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">null</span>
+</pre></div>
+</div>
+<p>In practice any flow-control command will probably need to have a
+custom implementation and if so it can use existing mechanisms to
+provide a convenient syntax.</p>
+<p>If anything, the <code class="docutils literal notranslate"><span class="pre">&lt;&lt;=</span></code> seems like the best fit, since it should
+allow something like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span><span class="o">.</span><span class="n">txt</span> <span class="o">&lt;</span> <span class="n">xargs</span><span class="p">(</span><span class="o">-</span><span class="n">n</span><span class="p">)</span> <span class="o">&lt;&lt;=</span> <span class="n">foo</span> <span class="o">|</span> <span class="n">bar</span>
+</pre></div>
+</div>
+<p>which looks quite bad to be honest, it might be useful for a <code class="docutils literal notranslate"><span class="pre">time</span></code>
+style command, that doesn’t need to handle the output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">time</span> <span class="o">&lt;&lt;=</span> <span class="n">foo</span> <span class="o">|</span> <span class="n">bar</span>
+</pre></div>
+</div>
+<p class="last">but even then, it’s not so common as to justify having such a complex
+operator. If we get rid of lazy application we can just simplify the
+precedence transform so it only operates over <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.Arg">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">Arg</code><span class="sig-paren">(</span><em>positional</em>, <em>keywords</em><span class="sig-paren">)</span><a class="headerlink" href="#pysh.dsl.Arg" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<dl class="attribute">
+<dt id="pysh.dsl.Arg.keywords">
+<code class="descname">keywords</code><a class="headerlink" href="#pysh.dsl.Arg.keywords" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.Arg.positional">
+<code class="descname">positional</code><a class="headerlink" href="#pysh.dsl.Arg.positional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.BaseSpec">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">BaseSpec</code><a class="reference internal" href="../_modules/pysh/dsl.html#BaseSpec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.BaseSpec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base abstract class for representing how a command should execute.</p>
+<p>Check <code class="xref py py-class docutils literal notranslate"><span class="pre">ExternalSpec</span></code> for a concrete implementation of the
+interface that allows to run external commands.</p>
+<dl class="method">
+<dt id="pysh.dsl.BaseSpec.parse_args">
+<code class="descname">parse_args</code><span class="sig-paren">(</span><em>positional</em>, <em>keyword</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#BaseSpec.parse_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.BaseSpec.parse_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used by <code class="xref py py-meth docutils literal notranslate"><span class="pre">CommandBuilder()</span></code> call and slicing protocols to convert
+their received values into arguments according to the spec.</p>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">Does it belong in the interface? shouldn’t it be part of External?</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.BaseSpec.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>builder</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#BaseSpec.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.BaseSpec.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a somewhat internal method to execute a builder according to
+the spec. It’s intended to be used by <code class="xref py py-meth docutils literal notranslate"><span class="pre">CommandBuilder.invoke()</span></code>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.Command">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">Command</code><span class="sig-paren">(</span><em>spec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.dsl.Pipeline" title="pysh.dsl.Pipeline"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.Pipeline</span></code></a></p>
+<dl class="method">
+<dt id="pysh.dsl.Command.__lshift__">
+<code class="descname">__lshift__</code><span class="sig-paren">(</span><em>other</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Command.__lshift__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Command.__lshift__" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="xref std std-ref">Application: &lt;&lt; 🚧</span></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.Command" title="pysh.dsl.Command"><code class="xref py py-class docutils literal notranslate"><span class="pre">Command</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Command.__rshift__">
+<code class="descname">__rshift__</code><span class="sig-paren">(</span><em>rhs</em><span class="sig-paren">)</span><a class="headerlink" href="#pysh.dsl.Command.__rshift__" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="xref std std-ref">Appending Redirection: &gt;&gt;</span></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.Redirect" title="pysh.dsl.Redirect"><code class="xref py py-class docutils literal notranslate"><span class="pre">Redirect</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Command.catch">
+<code class="descname">catch</code><span class="sig-paren">(</span><em>*statuses</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Command.catch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Command.catch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Avoids raising upon given status codes. If no statuses are provided
+then it’ll catch all of them.</p>
+<p>grep[‘foo’].catch()   # ignore any exit status
+grep[‘foo’].catch(1)  # ignore exit status 1
+grep[‘foo’].catch(1, 3)  # ignore exit status 1 or 3
+grep[‘foo’].catch(<a href="#id1"><span class="problematic" id="id2">*</span></a>range(1, 10))  # ignore status 1-9</p>
+<p>grep[‘foo’].catch(errcho(‘foo’))  # echo for all
+grep[‘foo’].catch(1, _2=echo(‘foo’))  # ignore 1, 2 echos</p>
+<dl class="docutils">
+<dt>grep[‘foo’].catch(</dt>
+<dd>_0 = echo(‘found’),        # 0 (even if it doesn’t raise)
+_1_2 = echo(‘error’),      # 1,2
+_1__4 = echo(‘error’),      # 1,2,3,4 echo
+_10 = echo(‘error’) and exit(1),   # 10 echoes and returns 1 to the pipe
+__10 = echo(‘&lt;=10’),
+<a href="#id5"><span class="problematic" id="id6">10__</span></a> = echo(‘&gt;=10’),
+_ = exit(1, ‘not found!’)  # else</dd>
+</dl>
+<p>)</p>
+<p>grep[‘foo’].catch(lambda p: print(p.status))</p>
+<p>grep[‘foo’].catch(signals=signals.SIGHUP)
+grep[‘foo’].catch(SIGHUP=None, SIGUSR2=echo(‘received!’))
+grep[‘foo’].catch(0, SIGHUP=None)
+grep[‘foo’].catch(0, -signals.SIGHUP)
+#TODO: maybe a method called .trap() like bash?</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.Command" title="pysh.dsl.Command"><code class="xref py py-class docutils literal notranslate"><span class="pre">Command</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Command.io">
+<code class="descname">io</code><span class="sig-paren">(</span><em>encoding=None</em>, <em>*</em>, <em>stdin=None</em>, <em>stdout=None</em>, <em>stderr=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Command.io"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Command.io" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.ExpansionMatcher">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">ExpansionMatcher</code><span class="sig-paren">(</span><em>expansions</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#ExpansionMatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.ExpansionMatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.dsl.PathMatcher" title="pysh.dsl.PathMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.PathMatcher</span></code></a></p>
+<p>Holds the results of brace expansion which can be concrete paths or child
+matchers.</p>
+<dl class="attribute">
+<dt id="pysh.dsl.ExpansionMatcher.expansions">
+<code class="descname">expansions</code><a class="headerlink" href="#pysh.dsl.ExpansionMatcher.expansions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.ExpansionMatcher.for_path">
+<code class="descname">for_path</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#ExpansionMatcher.for_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.ExpansionMatcher.for_path" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.ExpansionMatcher" title="pysh.dsl.ExpansionMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExpansionMatcher</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.ExpansionMatcher.iter_posix">
+<code class="descname">iter_posix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#ExpansionMatcher.iter_posix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.ExpansionMatcher.iter_posix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matchers work with posix like path strings to avoid creating Path
+objects if not needed. The iterator interface feeds from this one
+to yield Path objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.FilterMatcher">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">FilterMatcher</code><span class="sig-paren">(</span><em>path</em>, <em>func</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#FilterMatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.FilterMatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.dsl.PathMatcher" title="pysh.dsl.PathMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.PathMatcher</span></code></a></p>
+<p>Matcher based on filtering functions.</p>
+<dl class="method">
+<dt id="pysh.dsl.FilterMatcher.for_path">
+<code class="descname">for_path</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#FilterMatcher.for_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.FilterMatcher.for_path" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.FilterMatcher" title="pysh.dsl.FilterMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">FilterMatcher</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.FilterMatcher.func">
+<code class="descname">func</code><a class="headerlink" href="#pysh.dsl.FilterMatcher.func" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.FilterMatcher.iter_posix">
+<code class="descname">iter_posix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#FilterMatcher.iter_posix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.FilterMatcher.iter_posix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matchers work with posix like path strings to avoid creating Path
+objects if not needed. The iterator interface feeds from this one
+to yield Path objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.FilterMatcher.path">
+<code class="descname">path</code><a class="headerlink" href="#pysh.dsl.FilterMatcher.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.GlobMatcher">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">GlobMatcher</code><span class="sig-paren">(</span><em>path</em>, <em>pattern</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#GlobMatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.GlobMatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.dsl.PathMatcher" title="pysh.dsl.PathMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.PathMatcher</span></code></a></p>
+<p>Matcher based on glob expressions.</p>
+<dl class="method">
+<dt id="pysh.dsl.GlobMatcher.for_path">
+<code class="descname">for_path</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#GlobMatcher.for_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.GlobMatcher.for_path" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.GlobMatcher" title="pysh.dsl.GlobMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">GlobMatcher</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.GlobMatcher.iter_posix">
+<code class="descname">iter_posix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#GlobMatcher.iter_posix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.GlobMatcher.iter_posix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use the glob module instead of pathlib.</p>
+<p>TODO: On Windows we might have to handle casefolding.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.GlobMatcher.path">
+<code class="descname">path</code><a class="headerlink" href="#pysh.dsl.GlobMatcher.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.GlobMatcher.pattern">
+<code class="descname">pattern</code><a class="headerlink" href="#pysh.dsl.GlobMatcher.pattern" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.Path">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">Path</code><a class="reference internal" href="../_modules/pysh/dsl.html#Path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pathlib.PosixPath</span></code></p>
+<p>Represents a path.</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">/</span></code>: path segment(s) verbatim</li>
+<li><code class="docutils literal notranslate"><span class="pre">//</span></code>: glob + brace-expansion segment(s)</li>
+<li><code class="docutils literal notranslate"><span class="pre">//</span></code>: segment with anchored regex pattern or function</li>
+<li><code class="docutils literal notranslate"><span class="pre">**</span></code>: same as // but recursive</li>
+</ul>
+<dl class="docutils">
+<dt>TODO: how to handle in command when a glob expansion produces 0 results?</dt>
+<dd>in Sh and Bash it just provides as argument the actual glob (i.e <a href="#id3"><span class="problematic" id="id4">*</span></a>.jpg),
+(unless globfail is set), but with support for regexes/funcs this is not
+an option. Csh/Fish raise an error which seems the sensible thing to do.</dd>
+<dt>TODO: Sort matches (joining digits so 4&lt;11) ?? Use __lt__ and functools.total_ordering.</dt>
+<dd>To keep natural order, we can split the path into segments, next split segments
+into words/numbers/symbols, then use Python tuple comparison.
+pathlib does sort already splitting the segments, but it doesn’t sort by
+natural order. I think the best approach is to not try to sort and refer to
+an external crate for natural sorting.
+<a class="reference external" href="http://natsort.readthedocs.io/en/master/howitworks.html#sorting-filesystem-paths">http://natsort.readthedocs.io/en/master/howitworks.html#sorting-filesystem-paths</a></dd>
+</dl>
+<p>TODO: <code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">_/'path':</span></code> changes directory</p>
+<dl class="method">
+<dt id="pysh.dsl.Path.exists">
+<code class="descname">exists</code><span class="sig-paren">(</span><em>subpath=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Path.exists"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Path.exists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests if a path exists.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Path.is_empty">
+<code class="descname">is_empty</code><span class="sig-paren">(</span><em>subpath=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Path.is_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Path.is_empty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if a path refers to an empty file.
+Will raise an OSError if there is some issue accessing the file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Path.joinpath">
+<code class="descname">joinpath</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Path.joinpath"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Path.joinpath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combine this path with one or several arguments, and return a
+new path representing either a subpath (if all arguments are relative
+paths) or a totally different path (if one of the arguments is
+anchored).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.Path" title="pysh.dsl.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.PathMatcher">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">PathMatcher</code><a class="reference internal" href="../_modules/pysh/dsl.html#PathMatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.PathMatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for path matcher types.</p>
+<dl class="method">
+<dt id="pysh.dsl.PathMatcher.for_path">
+<code class="descname">for_path</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#PathMatcher.for_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.PathMatcher.for_path" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.PathMatcher" title="pysh.dsl.PathMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathMatcher</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.PathMatcher.iter_posix">
+<code class="descname">iter_posix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#PathMatcher.iter_posix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.PathMatcher.iter_posix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matchers work with posix like path strings to avoid creating Path
+objects if not needed. The iterator interface feeds from this one
+to yield Path objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.Pipe">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">Pipe</code><span class="sig-paren">(</span><em>lhs</em>, <em>rhs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Pipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Pipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.dsl.Pipeline" title="pysh.dsl.Pipeline"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.Pipeline</span></code></a></p>
+<p>Represents a pipe <code class="docutils literal notranslate"><span class="pre">|</span></code> operation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.Pipeline">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">Pipeline</code><a class="reference internal" href="../_modules/pysh/dsl.html#Pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for DSL expression builders.</p>
+<dl class="method">
+<dt id="pysh.dsl.Pipeline.__or__">
+<code class="descname">__or__</code><span class="sig-paren">(</span><em>rhs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Pipeline.__or__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Pipeline.__or__" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="../dsl/operators.html#pipe"><span class="std std-ref">Pipe: |</span></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.Pipe" title="pysh.dsl.Pipe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipe</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Pipeline.__ror__">
+<code class="descname">__ror__</code><span class="sig-paren">(</span><em>lhs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Pipeline.__ror__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Pipeline.__ror__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reverse for <a class="reference internal" href="#pysh.dsl.Pipeline.__or__" title="pysh.dsl.Pipeline.__or__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__or__()</span></code></a> to handle <code class="docutils literal notranslate"><span class="pre">value</span> <span class="pre">|</span> <span class="pre">command</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.Pipe" title="pysh.dsl.Pipe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipe</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Pipeline.__xor__">
+<code class="descname">__xor__</code><span class="sig-paren">(</span><em>rhs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Pipeline.__xor__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Pipeline.__xor__" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="../dsl/operators.html#piperr"><span class="std std-ref">Piperr: ^ 🚧</span></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.Piperr" title="pysh.dsl.Piperr"><code class="xref py py-class docutils literal notranslate"><span class="pre">Piperr</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Pipeline.__le__">
+<code class="descname">__le__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysh.dsl.Pipeline.__le__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self&lt;=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Pipeline.__ge__">
+<code class="descname">__ge__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pysh.dsl.Pipeline.__ge__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self&gt;=value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Pipeline.__rshift__">
+<code class="descname">__rshift__</code><span class="sig-paren">(</span><em>rhs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Pipeline.__rshift__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Pipeline.__rshift__" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="xref std std-ref">Appending Redirection: &gt;&gt;</span></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.Redirect" title="pysh.dsl.Redirect"><code class="xref py py-class docutils literal notranslate"><span class="pre">Redirect</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Pipeline.__invert__">
+<code class="descname">__invert__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Pipeline.__invert__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Pipeline.__invert__" title="Permalink to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">~</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.Reckless" title="pysh.dsl.Reckless"><code class="xref py py-class docutils literal notranslate"><span class="pre">Reckless</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Pipeline.__autoexpr__">
+<code class="descname">__autoexpr__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Pipeline.__autoexpr__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Pipeline.__autoexpr__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hook for the <code class="xref py py-mod docutils literal notranslate"><span class="pre">transforms.autoexpr</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Pipeline.invoke">
+<code class="descname">invoke</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Pipeline.invoke"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Pipeline.invoke" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the command as currently configured and return a <a class="reference internal" href="#pysh.dsl.Result" title="pysh.dsl.Result"><code class="xref py py-class docutils literal notranslate"><span class="pre">Result</span></code></a>
+instance to track its execution.</p>
+<p>The actual implementation is on the derived classes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.Result" title="pysh.dsl.Result"><code class="xref py py-class docutils literal notranslate"><span class="pre">Result</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Pipeline.pipe">
+<code class="descname">pipe</code><span class="sig-paren">(</span><em>stdout=None</em>, <em>*</em>, <em>stderr=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Pipeline.pipe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Pipeline.pipe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explicit interface for the <code class="docutils literal notranslate"><span class="pre">|</span></code> and <code class="docutils literal notranslate"><span class="pre">^</span></code> operators.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.Pipe" title="pysh.dsl.Pipe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipe</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.Piperr">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">Piperr</code><span class="sig-paren">(</span><em>lhs</em>, <em>rhs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Piperr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Piperr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.dsl.Pipe" title="pysh.dsl.Pipe"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.Pipe</span></code></a></p>
+<p>Represents a piperr <code class="docutils literal notranslate"><span class="pre">^</span></code> operation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.Reckless">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">Reckless</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Reckless"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Reckless" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.dsl.Pipeline" title="pysh.dsl.Pipeline"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.Pipeline</span></code></a></p>
+<p>Represents the reckless operator <code class="docutils literal notranslate"><span class="pre">~</span></code></p>
+<dl class="attribute">
+<dt id="pysh.dsl.Reckless.expr">
+<code class="descname">expr</code><a class="headerlink" href="#pysh.dsl.Reckless.expr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.RecursiveMatcher">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">RecursiveMatcher</code><span class="sig-paren">(</span><em>path</em>, <em>matcher</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#RecursiveMatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.RecursiveMatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.dsl.PathMatcher" title="pysh.dsl.PathMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.PathMatcher</span></code></a></p>
+<p>Recursive matcher that will apply a child matcher against a path tree.</p>
+<dl class="method">
+<dt id="pysh.dsl.RecursiveMatcher.for_path">
+<code class="descname">for_path</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#RecursiveMatcher.for_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.RecursiveMatcher.for_path" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.RecursiveMatcher" title="pysh.dsl.RecursiveMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">RecursiveMatcher</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.RecursiveMatcher.iter_posix">
+<code class="descname">iter_posix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#RecursiveMatcher.iter_posix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.RecursiveMatcher.iter_posix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matchers work with posix like path strings to avoid creating Path
+objects if not needed. The iterator interface feeds from this one
+to yield Path objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.RecursiveMatcher.matcher">
+<code class="descname">matcher</code><a class="headerlink" href="#pysh.dsl.RecursiveMatcher.matcher" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.RecursiveMatcher.path">
+<code class="descname">path</code><a class="headerlink" href="#pysh.dsl.RecursiveMatcher.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.Redirect">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">Redirect</code><span class="sig-paren">(</span><em>lhs</em>, <em>rhs</em>, <em>*</em>, <em>appending=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Redirect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Redirect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.dsl.Pipeline" title="pysh.dsl.Pipeline"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.Pipeline</span></code></a></p>
+<p>Represents a redirection <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code> operation.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.RegexMatcher">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">RegexMatcher</code><span class="sig-paren">(</span><em>path</em>, <em>pattern</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#RegexMatcher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.RegexMatcher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pysh.dsl.PathMatcher" title="pysh.dsl.PathMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.PathMatcher</span></code></a></p>
+<p>Matcher based on regex patterns.</p>
+<dl class="method">
+<dt id="pysh.dsl.RegexMatcher.for_path">
+<code class="descname">for_path</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#RegexMatcher.for_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.RegexMatcher.for_path" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#pysh.dsl.RegexMatcher" title="pysh.dsl.RegexMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">RegexMatcher</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.RegexMatcher.iter_posix">
+<code class="descname">iter_posix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#RegexMatcher.iter_posix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.RegexMatcher.iter_posix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Matchers work with posix like path strings to avoid creating Path
+objects if not needed. The iterator interface feeds from this one
+to yield Path objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.RegexMatcher.path">
+<code class="descname">path</code><a class="headerlink" href="#pysh.dsl.RegexMatcher.path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.RegexMatcher.pattern">
+<code class="descname">pattern</code><a class="headerlink" href="#pysh.dsl.RegexMatcher.pattern" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.dsl.Result">
+<em class="property">class </em><code class="descclassname">pysh.dsl.</code><code class="descname">Result</code><span class="sig-paren">(</span><em>pipeline</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Result"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="attribute">
+<dt id="pysh.dsl.Result.pipeline">
+<code class="descname">pipeline</code><a class="headerlink" href="#pysh.dsl.Result.pipeline" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.Result.status">
+<code class="descname">status</code><a class="headerlink" href="#pysh.dsl.Result.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.Result.stderr">
+<code class="descname">stderr</code><a class="headerlink" href="#pysh.dsl.Result.stderr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.Result.stdin">
+<code class="descname">stdin</code><a class="headerlink" href="#pysh.dsl.Result.stdin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pysh.dsl.Result.stdout">
+<code class="descname">stdout</code><a class="headerlink" href="#pysh.dsl.Result.stdout" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysh.dsl.Result.wait">
+<code class="descname">wait</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#Result.wait"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.Result.wait" title="Permalink to this definition">¶</a></dt>
+<dd><p>Block until the command terminates.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pysh.dsl.braceexpansion">
+<code class="descclassname">pysh.dsl.</code><code class="descname">braceexpansion</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#braceexpansion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.braceexpansion" title="Permalink to this definition">¶</a></dt>
+<dd><p>The braceexpand module unescapes all the escapes, since it’s the first
+step it’ll undo any glob escaping. So before giving the value to the
+module we double any glob related escape.</p>
+<p>See: <a class="reference external" href="https://github.com/trendels/braceexpand/issues/2">https://github.com/trendels/braceexpand/issues/2</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pysh.dsl.is_glob">
+<code class="descclassname">pysh.dsl.</code><code class="descname">is_glob</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#is_glob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.is_glob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if a string contains unescaped glob characters</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pysh.dsl.lex_command_slice">
+<code class="descclassname">pysh.dsl.</code><code class="descname">lex_command_slice</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#lex_command_slice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.lex_command_slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Custom lexer for the command slices:</p>
+<ul class="simple">
+<li>whitespace separates arguments</li>
+<li>detects paths/globs</li>
+<li>preserves escapes</li>
+</ul>
+</dd></dl>
+
+<dl class="function">
+<dt id="pysh.dsl.unescape">
+<code class="descclassname">pysh.dsl.</code><code class="descname">unescape</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#unescape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.unescape" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes escapes from a string</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pysh.dsl.unescape_glob">
+<code class="descclassname">pysh.dsl.</code><code class="descname">unescape_glob</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/dsl.html#unescape_glob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.dsl.unescape_glob" title="Permalink to this definition">¶</a></dt>
+<dd><p>Keeps escapes of special glob characters using ranges.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pysh.env.html" class="btn btn-neutral float-right" title="pysh.env module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pysh.command.html" class="btn btn-neutral" title="pysh.command module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.0.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

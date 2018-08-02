@@ -162,18 +162,18 @@
 
 <span class="kn">from</span> <span class="nn">.version</span> <span class="k">import</span> <span class="n">__version__</span>
 
-<span class="kn">from</span> <span class="nn">.path</span> <span class="k">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">.dsl</span> <span class="k">import</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Command</span>
 <span class="kn">from</span> <span class="nn">.env</span> <span class="k">import</span> <span class="n">Env</span>
-<span class="kn">from</span> <span class="nn">.command</span> <span class="k">import</span> <span class="n">command</span><span class="p">,</span> <span class="n">ShCommand</span><span class="p">,</span> <span class="n">ShSpec</span>
+<span class="kn">from</span> <span class="nn">.command</span> <span class="k">import</span> <span class="n">command</span><span class="p">,</span> <span class="n">ShSpec</span>
 
 
 <span class="c1"># Prelude for scripts</span>
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="s1">&#39;PWD&#39;</span><span class="p">,</span>
     <span class="s1">&#39;ENV&#39;</span><span class="p">,</span>
-    <span class="c1">#TODO: these break sphinx!</span>
-    <span class="c1"># &#39;command&#39;,</span>
-    <span class="c1"># &#39;sh&#39;,</span>
+    <span class="s1">&#39;exec&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;command&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;sh&#39;</span><span class="p">,</span>
     <span class="c1"># Augmented at the bottom for all the Exit stuff</span>
 <span class="p">]</span>
 
@@ -181,7 +181,47 @@
 <span class="n">ENV</span> <span class="o">=</span> <span class="n">Env</span><span class="p">()</span>
 <span class="n">_</span> <span class="o">=</span> <span class="n">PWD</span> <span class="o">=</span> <span class="n">Path</span><span class="p">()</span>
 
-<span class="n">sh</span> <span class="o">=</span> <span class="n">ShCommand</span><span class="p">(</span><span class="n">ShSpec</span><span class="p">())</span>
+<span class="n">sh</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">ShSpec</span><span class="p">())</span>
+
+
+<span class="k">class</span> <span class="nc">ExecOverride</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implements the override for the ``exec`` builtin that allows to invoke</span>
+<span class="sd">    pysh pipelines. While normally we can rely on the autoexpr transform to</span>
+<span class="sd">    automatically call expressions, some IDEs will warn about having an</span>
+<span class="sd">    statement without side-effects, to accomodate for that users can use this</span>
+<span class="sd">    augmented ``exec``.</span>
+
+<span class="sd">    TODO: Merge this interface with ``sh``?</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__lshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allows the ``&lt;&lt;`` operator to provide the pipeline to execute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__ilshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        To ensure we evaluate the whole pipeline we override the inplace operator</span>
+<span class="sd">        ``&lt;&lt;=`` so it doesn&#39;t replace ``exec``, it simply invokes the the pipeline</span>
+<span class="sd">        and discards the result.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Overrides the exec builtin so it understands pysh pipelines.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;__autoexpr__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="o">.</span><span class="n">__autoexpr__</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">builtins</span>
+            <span class="k">return</span> <span class="n">builtins</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="n">exec</span> <span class="o">=</span> <span class="n">ExecOverride</span><span class="p">()</span>
 
 
 <span class="c1"># TODO: Perhaps the ABC module can be used to replace the __new__ code</span>

@@ -180,13 +180,38 @@
 <p>A transformation module defines at least one of:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">lexer(code:</span> <span class="pre">StringIO,</span> <span class="pre">fname:</span> <span class="pre">str)</span> <span class="pre">-&gt;</span> <span class="pre">StringIO</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">lexer(code:</span> <span class="pre">TextIOBase,</span> <span class="pre">fname:</span> <span class="pre">str)</span> <span class="pre">-&gt;</span> <span class="pre">TextIOBase</span></code></li>
 <li><code class="docutils literal notranslate"><span class="pre">parser(root:</span> <span class="pre">AST,</span> <span class="pre">fname:</span> <span class="pre">str)</span> <span class="pre">-&gt;</span> <span class="pre">AST</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">patch(types:</span> <span class="pre">Dict[str,</span> <span class="pre">type])</span> <span class="pre">-&gt;</span> <span class="pre">None</span></code></li>
 </ul>
 </div></blockquote>
 <p>Additionally the module symbols referenced on its <code class="docutils literal notranslate"><span class="pre">__all__</span></code> will
 be made available as globals for the script. This allows to define
 <em>runtime</em> functions on the generated code.</p>
+<p>Transform modules might want to patch the DSL types in order to provide
+additionaly features or modify somehow the standard behaviour. Before
+compiling some script code the transform will have a chance for doing
+so via the <code class="docutils literal notranslate"><span class="pre">patch</span></code> hook. It’s very important that module transforms
+don’t try to monkey patch the types by importing them, instead it should
+use the types provided to the <code class="docutils literal notranslate"><span class="pre">patch</span></code> function.</p>
+<p>TODO: Implement patching support for the DSL:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Create a lazy-dict with the types in the DSL</li>
+<li>When a type is required it returns a new subtype</li>
+<li>Pass the dict to the patch function</li>
+<li>Get as result a dict with the types to override</li>
+<li>add a global __PYSH_DSL_OVERRIDES__ with that override</li>
+<li>DSL types implement a __new__ that looks into
+__PYSH_DSL_OVERRIDES__, if found return an instance of that
+type, otherwise act as normal.</li>
+<li>compiled scripts should get the modified type, a
+descendant of the standard one. Other scripts will
+not be affected, unless the user interacts with the
+DSL directly in some of its code that gets imported
+as a module.</li>
+</ul>
+</div></blockquote>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The code AST is wrapped in a <code class="docutils literal notranslate"><span class="pre">FunctionDef</span></code> before calling
@@ -195,7 +220,7 @@ function wrapping the script code.</p>
 </div>
 <dl class="class">
 <dt id="pysh.transforms.Compiler">
-<em class="property">class </em><code class="descclassname">pysh.transforms.</code><code class="descname">Compiler</code><span class="sig-paren">(</span><em>transforms: List[str] = []</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#Compiler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.Compiler" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">pysh.transforms.</code><code class="descname">Compiler</code><span class="sig-paren">(</span><em>transforms=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#Compiler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.Compiler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Allows to register transform modules and obtain an executable
 function from some source code.</p>
@@ -206,7 +231,7 @@ function from some source code.</p>
 
 <dl class="method">
 <dt id="pysh.transforms.Compiler.add_transform">
-<code class="descname">add_transform</code><span class="sig-paren">(</span><em>transform: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#Compiler.add_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.Compiler.add_transform" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add_transform</code><span class="sig-paren">(</span><em>transform</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#Compiler.add_transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.Compiler.add_transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Accepts a module name which can be inside a package.</p>
 <p>If it fails to find the module it will try with a list of common
 prefixes from <a class="reference internal" href="#pysh.transforms.Compiler.FALLBACK_PREFIXES" title="pysh.transforms.Compiler.FALLBACK_PREFIXES"><code class="xref py py-const docutils literal notranslate"><span class="pre">FALLBACK_PREFIXES</span></code></a>, this allows to
@@ -220,35 +245,72 @@ point to its directory before running the command.</p>
 
 <dl class="method">
 <dt id="pysh.transforms.Compiler.compile">
-<code class="descname">compile</code><span class="sig-paren">(</span><em>code: _io.StringIO</em>, <em>fname='&lt;string&gt;'</em><span class="sig-paren">)</span> &#x2192; Callable[Any]<a class="reference internal" href="../_modules/pysh/transforms.html#Compiler.compile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.Compiler.compile" title="Permalink to this definition">¶</a></dt>
+<code class="descname">compile</code><span class="sig-paren">(</span><em>code</em>, <em>fname='&lt;string&gt;'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#Compiler.compile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.Compiler.compile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Given some script code it’ll perform any configured transformation
 and return a function containing the compiled code. That function can
 be called to execute the script.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[], <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
 <dt id="pysh.transforms.Compiler.lex">
-<code class="descname">lex</code><span class="sig-paren">(</span><em>code: io.IOBase</em>, <em>fname='&lt;string&gt;'</em><span class="sig-paren">)</span> &#x2192; io.IOBase<a class="reference internal" href="../_modules/pysh/transforms.html#Compiler.lex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.Compiler.lex" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">lex</code><span class="sig-paren">(</span><em>code</em>, <em>fname='&lt;string&gt;'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#Compiler.lex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.Compiler.lex" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">TextIOBase</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="pysh.transforms.Compiler.parse">
-<code class="descname">parse</code><span class="sig-paren">(</span><em>code: io.IOBase</em>, <em>fname='&lt;string&gt;'</em>, <em>name='_pysh_func'</em><span class="sig-paren">)</span> &#x2192; _ast.AST<a class="reference internal" href="../_modules/pysh/transforms.html#Compiler.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.Compiler.parse" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descname">parse</code><span class="sig-paren">(</span><em>code</em>, <em>fname='&lt;string&gt;'</em>, <em>name='_pysh_func'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#Compiler.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.Compiler.parse" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">AST</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="pysh.transforms.TokenIO">
-<em class="property">class </em><code class="descclassname">pysh.transforms.</code><code class="descname">TokenIO</code><span class="sig-paren">(</span><em>code: Union[str</em>, <em>_io.StringIO] = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#TokenIO"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.TokenIO" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">pysh.transforms.</code><code class="descname">TokenIO</code><span class="sig-paren">(</span><em>code=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#TokenIO"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.TokenIO" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_io.StringIO</span></code></p>
 <p>Helper class for lexers that understands Python tokenize’s TokenInfo
 and can generate an output string that respects the original white space.</p>
 <p>It also wraps <code class="docutils literal notranslate"><span class="pre">tokenize.tokenize</span></code> so tokens, instead of lines, will be
 obtained when iterating.</p>
 <dl class="method">
+<dt id="pysh.transforms.TokenIO.iter_tokens">
+<code class="descname">iter_tokens</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#TokenIO.iter_tokens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.TokenIO.iter_tokens" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TokenInfo</span></code>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="pysh.transforms.TokenIO.write">
-<code class="descname">write</code><span class="sig-paren">(</span><em>value: str</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#TokenIO.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.TokenIO.write" title="Permalink to this definition">¶</a></dt>
+<code class="descname">write</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#TokenIO.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.TokenIO.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write string to file.</p>
 <p>Returns the number of characters written, which is always equal to
 the length of the string.</p>
@@ -256,7 +318,7 @@ the length of the string.</p>
 
 <dl class="method">
 <dt id="pysh.transforms.TokenIO.write_token">
-<code class="descname">write_token</code><span class="sig-paren">(</span><em>token: tokenize.TokenInfo</em>, <em>*</em>, <em>override: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#TokenIO.write_token"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.TokenIO.write_token" title="Permalink to this definition">¶</a></dt>
+<code class="descname">write_token</code><span class="sig-paren">(</span><em>token</em>, <em>*</em>, <em>override=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms.html#TokenIO.write_token"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.TokenIO.write_token" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a token adjusting white space, optionally overriding its
 output with a custom value.</p>
 </dd></dl>
@@ -274,6 +336,14 @@ be provided.</p>
 <span class="gp">&gt;&gt;&gt; </span>     <span class="o">...</span>
 </pre></div>
 </div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterator</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[~T], ~T]]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <div class="section" id="subpackages">
@@ -284,6 +354,8 @@ be provided.</p>
 <li class="toctree-l2"><a class="reference internal" href="pysh.transforms.alpha.html#submodules">Submodules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="pysh.transforms.alpha.bangexpr.html">pysh.transforms.alpha.bangexpr module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pysh.transforms.alpha.lazybools.html">pysh.transforms.alpha.lazybools module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.alpha.lazyexpr.html">pysh.transforms.alpha.lazyexpr module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.alpha.spacey.html">pysh.transforms.alpha.spacey module</a></li>
 </ul>
 </li>
 </ul>
@@ -309,8 +381,14 @@ be provided.</p>
 <li class="toctree-l1"><a class="reference internal" href="pysh.transforms.pathpow.html">pysh.transforms.pathpow module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pysh.transforms.pathstring.html">pysh.transforms.pathstring module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pysh.transforms.precedence.html">pysh.transforms.precedence module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysh.transforms.protectnames.html">pysh.transforms.protectnames module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pysh.transforms.restring.html">pysh.transforms.restring module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.transforms.shadowing.html">pysh.transforms.shadowing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.transforms.test_pathpow.html">pysh.transforms.test_pathpow module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.transforms.test_pathstring.html">pysh.transforms.test_pathstring module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.transforms.test_precedence.html">pysh.transforms.test_precedence module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.transforms.test_restring.html">pysh.transforms.test_restring module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.transforms.test_shadowing.html">pysh.transforms.test_shadowing module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.transforms.testutils.html">pysh.transforms.testutils module</a></li>
 </ul>
 </div>
 </div>

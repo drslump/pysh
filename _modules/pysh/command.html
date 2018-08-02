@@ -161,127 +161,89 @@
             
   <h1>Source code for pysh.command</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">command:</span>
-<span class="sd">  - A factory for a Command with a concrete BaseSpec</span>
-
-<span class="sd">BaseSpec (and concrete classes):</span>
-<span class="sd">  - Defines how a command must be called</span>
-<span class="sd">  - Understands external commands and also pure python functions</span>
-
-<span class="sd">Expr:</span>
-<span class="sd">  - Base class for all builders.</span>
-<span class="sd">  - Each operation returns a cloned copy so stored references are immutable</span>
-
-<span class="sd">Command:</span>
-<span class="sd">  - DSL interface for command construction</span>
-
-<span class="sd">Pipe, Redirect:</span>
-<span class="sd">  - Expression represent an operation</span>
-
-<span class="sd">Result:</span>
-<span class="sd">  - When a Expr is executed this object tracks it</span>
-<span class="sd">  - Allows to access streams</span>
-<span class="sd">  - Allows to query the exit status</span>
-
-
 <span class="sd">TODO: check http://harp.pythonanywhere.com/python_doc/library/concurrent.html</span>
 <span class="sd">      for launching python commands</span>
 
+<span class="sd">TODO: Check http://www.pixelbeat.org/programming/sigpipe_handling.html</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">Iterable</span>
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">PurePath</span>
-<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">abstractmethod</span><span class="p">,</span> <span class="n">ABCMeta</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">IOBase</span>
 
-<span class="kn">from</span> <span class="nn">pysh.path</span> <span class="k">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">pysh.dsl</span> <span class="k">import</span> <span class="n">Path</span><span class="p">,</span> <span class="n">Command</span><span class="p">,</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">BaseSpec</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">cast</span>
 
 
-<div class="viewcode-block" id="command"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.command">[docs]</a><span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="command"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command">[docs]</a><span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="o">*</span><span class="n">commands</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Command</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Command</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Command factory. Returns a :class:`Command` configured with concreate</span>
-<span class="sd">    implementation of :class:`BaseSpec` suitable for the given command.</span>
+<span class="sd">    Command factory. Returns a :class:`pysh.dsl.Command` configured with</span>
+<span class="sd">    a concrete implementation of :class:`BaseSpec` suitable for the given command.</span>
 
-<span class="sd">    Any additional keyword arguments will be provided to the implementation</span>
-<span class="sd">    of :class:`Spec`.</span>
+<span class="sd">    Any additional keyword arguments will be provided to the implementation of</span>
+<span class="sd">    :class:`Spec`.</span>
 
-<span class="sd">    .. note:: Currently *command* can only be a path-like reference which</span>
-<span class="sd">              refers to an external command, check :class:`ExternalSpec` for</span>
-<span class="sd">              additional details.</span>
+<span class="sd">    When multiple commands are given they are all created and returned in a tuple</span>
+<span class="sd">    respecting the given order. This allows to easy bootstrap a bunch of them with</span>
+<span class="sd">    unpacking.</span>
+
+<span class="sd">    .. note:: Currently *command* can only be a path-like reference which refers to</span>
+<span class="sd">              an external command, check :class:`ExternalSpec` for additional details.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">PurePath</span><span class="p">)):</span>
-        <span class="n">spec</span> <span class="o">=</span> <span class="n">ExternalSpec</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">commands</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Expected at least one command&#39;</span>
+
+    <span class="n">results</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Command</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">command</span> <span class="ow">in</span> <span class="n">commands</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">PurePath</span><span class="p">)):</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">ExternalSpec</span><span class="p">(</span><span class="n">command</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#TODO: Support functions!</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Only external commands are currently supported!&#39;</span><span class="p">)</span>
+
+        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Command</span><span class="p">(</span><span class="n">spec</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1">#TODO: Support functions!</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Only external commands are currently supported!&#39;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">Command</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">results</span></div>
 
 
-<div class="viewcode-block" id="BaseSpec"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.BaseSpec">[docs]</a><span class="k">class</span> <span class="nc">BaseSpec</span><span class="p">:</span>  <span class="c1">#TODO: (meta=ABCMeta) breaks?</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Base abstract class for representing how a command should execute.</span>
 
-<span class="sd">    Check :class:`ExternalSpec` for a concrete implementation of the</span>
-<span class="sd">    interface that allows to run external commands.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="BaseSpec.run"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.BaseSpec.run">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">builder</span><span class="p">:</span> <span class="s1">&#39;Command&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        This is a somewhat internal method to execute a builder according to</span>
-<span class="sd">        the spec. It&#39;s intended to be used by :meth:`CommandBuilder.invoke`.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
-
-<div class="viewcode-block" id="BaseSpec.parse_args"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.BaseSpec.parse_args">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">parse_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Used by :meth:`CommandBuilder` call and slicing protocols to convert</span>
-<span class="sd">        their received values into arguments according to the spec.</span>
-
-<span class="sd">        .. TODO:: Does it belong in the interface? shouldn&#39;t it be part of External?</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
-
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(</span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="ExternalSpec"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.ExternalSpec">[docs]</a><span class="k">class</span> <span class="nc">ExternalSpec</span><span class="p">(</span><span class="n">BaseSpec</span><span class="p">):</span>
+<div class="viewcode-block" id="ExternalSpec"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.ExternalSpec">[docs]</a><span class="k">class</span> <span class="nc">ExternalSpec</span><span class="p">(</span><span class="n">BaseSpec</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Implementation for external commands.</span>
 
 <span class="sd">    Handles arguments according to the following rules:</span>
 
-<span class="sd">    - keywords are always sorted to be reproducible</span>
-<span class="sd">    - keywords always go before *positional* arguments</span>
-<span class="sd">    - single char keywords get a ``-`` prefix (*shortpre* setting)</span>
-<span class="sd">    - multi char keywords get a ``--`` prefix (*longpre* setting)</span>
+<span class="sd">    - keywords always go before *positional* arguments except for ``_``</span>
+<span class="sd">    - single char keywords get a ``-`` prefix (*short* setting)</span>
+<span class="sd">    - multi char keywords get a ``--`` prefix (*long* setting)</span>
 <span class="sd">    - keywords starting with ``_`` are not prefixed (with *hyphenate* setting)</span>
+<span class="sd">    - keyword ``_`` can contain *positional arguments*</span>
 <span class="sd">    - ``an_option`` -&gt; ``an-option`` (*hyphenate* setting)</span>
 <span class="sd">    - *False* and *None* values for keywords don&#39;t produce an option</span>
-<span class="sd">    - when *argspre* is set it&#39;s used before the positional arguments</span>
-<span class="sd">    - keyword values produce an additional argument (*valuepre* setting)</span>
+<span class="sd">    - when *args* is set it&#39;s used before the positional arguments</span>
+<span class="sd">    - keyword values produce an additional argument (*value* setting)</span>
 <span class="sd">    - iterables get expanded, repeating keyword if *repeat* is *True* or</span>
 <span class="sd">      joining them with the value of *repeat* if it&#39;s a string. When *repeat*</span>
 <span class="sd">      is *False* additional arguments are placed after the option.</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;command&#39;</span><span class="p">,</span> <span class="s1">&#39;ok_status&#39;</span><span class="p">,</span> <span class="s1">&#39;hyphenate&#39;</span><span class="p">,</span> <span class="s1">&#39;repeat&#39;</span><span class="p">,</span> <span class="s1">&#39;shortpre&#39;</span><span class="p">,</span> <span class="s1">&#39;longpre&#39;</span><span class="p">,</span> <span class="s1">&#39;valuepre&#39;</span><span class="p">,</span> <span class="s1">&#39;falsepre&#39;</span><span class="p">,</span> <span class="s1">&#39;argspre&#39;</span><span class="p">)</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;command&#39;</span><span class="p">,</span> <span class="s1">&#39;ok_status&#39;</span><span class="p">,</span> <span class="s1">&#39;hyphenate&#39;</span><span class="p">,</span> <span class="s1">&#39;repeat&#39;</span><span class="p">,</span> <span class="s1">&#39;short&#39;</span><span class="p">,</span> <span class="s1">&#39;long&#39;</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">,</span> <span class="s1">&#39;false&#39;</span><span class="p">,</span> <span class="s1">&#39;args&#39;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">program</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
                  <span class="n">ok_status</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,),</span> <span class="n">hyphenate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">repeat</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-                 <span class="n">shortpre</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">longpre</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span>
-                 <span class="n">valuepre</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">argspre</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="n">command</span>
+                 <span class="n">short</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">long</span><span class="o">=</span><span class="s1">&#39;--&#39;</span><span class="p">,</span>
+                 <span class="n">value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">program</span> <span class="o">=</span> <span class="n">program</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ok_status</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">ok_status</span><span class="p">])</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ok_status</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="n">ok_status</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hyphenate</span> <span class="o">=</span> <span class="n">hyphenate</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">shortpre</span> <span class="o">=</span> <span class="n">shortpre</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">longpre</span> <span class="o">=</span> <span class="n">longpre</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">valuepre</span> <span class="o">=</span> <span class="n">valuepre</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">argspre</span> <span class="o">=</span> <span class="n">argspre</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shortpre</span> <span class="o">=</span> <span class="n">short</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">longpre</span> <span class="o">=</span> <span class="n">long</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valuepre</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">argspre</span> <span class="o">=</span> <span class="n">args</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">repeat</span> <span class="o">=</span> <span class="n">repeat</span>
 
     <span class="k">def</span> <span class="nf">_parse_option</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">option</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -304,476 +266,74 @@
             <span class="k">return</span> <span class="p">[</span><span class="n">option</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>  <span class="c1">#XXX ignores valuepre in this case</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeat</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">repeat</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)]</span>  <span class="c1">#XXX custom repeat separator</span>
+                <span class="n">repeat</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">repeat</span><span class="p">)</span>  <span class="c1">#XXX help mypy</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">repeat</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">)]</span>  <span class="c1">#XXX custom repeat separator</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">valuepre</span><span class="p">:</span>
                 <span class="k">return</span> <span class="p">[</span><span class="n">option</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">valuepre</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="nb">sum</span><span class="p">([[</span><span class="n">option</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">value</span><span class="p">],</span> <span class="p">[])</span>  <span class="c1">#XXX flattens the list</span>
 
-<div class="viewcode-block" id="ExternalSpec.parse_args"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.ExternalSpec.parse_args">[docs]</a>    <span class="k">def</span> <span class="nf">parse_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<div class="viewcode-block" id="ExternalSpec.parse_args"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.ExternalSpec.parse_args">[docs]</a>    <span class="k">def</span> <span class="nf">parse_args</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">positional</span><span class="p">,</span> <span class="n">keyword</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="c1">#TODO: According to PEP468 since 3.6 keywords order is preserved</span>
-        <span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
-            <span class="n">value</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">option</span><span class="p">]</span>
+        <span class="c1"># since Python 3.6 keyword order is preserved</span>
+        <span class="k">for</span> <span class="n">option</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">keyword</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span>
+                <span class="n">positional</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">positional</span><span class="p">)</span>
+                <span class="n">positional</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">continue</span>
+
             <span class="c1">#TODO: We need to resolve value at this point to make repeated options reliable</span>
             <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parse_option</span><span class="p">(</span><span class="n">option</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">argspre</span><span class="p">:</span>
-            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">argspre</span><span class="p">)</span>
+        <span class="n">idx_positional</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
         <span class="c1">#TODO: We need to resolve arg at this point</span>
-        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">positional</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
                 <span class="n">arg</span> <span class="o">=</span> <span class="p">[</span><span class="n">arg</span><span class="p">]</span>
 
             <span class="n">result</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">arg</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">result</span></div>
-
-<div class="viewcode-block" id="ExternalSpec.run"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.ExternalSpec.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">builder</span><span class="p">:</span> <span class="s1">&#39;Command&#39;</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;sorry!&#39;</span><span class="p">)</span></div></div>
-
-
-<div class="viewcode-block" id="Expr"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Expr">[docs]</a><span class="k">class</span> <span class="nc">Expr</span><span class="p">:</span>  <span class="c1">#TODO: breaks?? (meta=ABCMeta):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Base class for DSL expression builders.</span>
-
-<span class="sd">    .. automethod:: __or__</span>
-<span class="sd">    .. automethod:: __ror__</span>
-<span class="sd">    .. automethod:: __xor__</span>
-<span class="sd">    .. automethod:: __le__</span>
-<span class="sd">    .. automethod:: __ge__</span>
-<span class="sd">    .. automethod:: __rshift__</span>
-<span class="sd">    .. automethod:: __invert__</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-<div class="viewcode-block" id="Expr.invoke"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Expr.invoke">[docs]</a>    <span class="k">def</span> <span class="nf">invoke</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Invocation&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Executes the command as currently configured</span>
-
-<span class="sd">            XXX .invoke launch the process and returns immediatly the invocation object.</span>
-<span class="sd">                Autoexpr calls it with .wait() so its syncronous. exec is the explicit</span>
-<span class="sd">                equivalent to autoexpr</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">Result</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Expr.to_status"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Expr.to_status">[docs]</a>    <span class="k">def</span> <span class="nf">to_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">invoke</span><span class="p">()</span>
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span></div>
-
-<div class="viewcode-block" id="Expr.to_binary"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Expr.to_binary">[docs]</a>    <span class="k">def</span> <span class="nf">to_binary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">invoke</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span></div>
-
-<div class="viewcode-block" id="Expr.to_text"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Expr.to_text">[docs]</a>    <span class="k">def</span> <span class="nf">to_text</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">invoke</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Expr.pipe"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Expr.pipe">[docs]</a>    <span class="k">def</span> <span class="nf">pipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;Pipe&#39;</span><span class="p">,</span> <span class="s1">&#39;Piperr&#39;</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot; Explicit interface for the ``|`` and ``^`` operators.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__copy__</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">stderr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">^</span> <span class="n">stderr</span>
-        <span class="k">if</span> <span class="n">stdout</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">result</span> <span class="o">=</span> <span class="n">result</span> <span class="o">|</span> <span class="n">stdout</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">argspre</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">argspre</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+            <span class="n">test</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shortpre</span><span class="p">)</span> <span class="ow">or</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">longpre</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">test</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="n">idx_positional</span><span class="p">:]):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">idx_positional</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">argspre</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">result</span></div>
 
-    <span class="k">def</span> <span class="nf">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Redirect&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; :ref:`Redirection: &gt;`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Expr</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+<div class="viewcode-block" id="ExternalSpec.get_args_for"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.ExternalSpec.get_args_for">[docs]</a>    <span class="k">def</span> <span class="nf">get_args_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">builder</span><span class="p">:</span> <span class="s1">&#39;Command&#39;</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">builder</span><span class="o">.</span><span class="n">_args</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">arg</span><span class="o">.</span><span class="n">positional</span><span class="p">,</span> <span class="n">arg</span><span class="o">.</span><span class="n">keywords</span><span class="p">)</span>
 
-        <span class="c1">#TODO: support callables</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">IOBase</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">PurePath</span><span class="p">,</span> <span class="n">Path</span><span class="p">)):</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
+            <span class="c1"># Make sure we only output argspre once</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">argspre</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">argspre</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">argspre</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span> <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">argspre</span><span class="p">]</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{!r}</span><span class="s1"> __GT__ </span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">))</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">Redirect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">args</span></div>
 
-    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Redirect&#39;</span><span class="p">:</span>
-        <span class="c1"># Not possible to redirect to an expression?</span>
-        <span class="k">return</span> <span class="bp">NotImplemented</span>
-
-<div class="viewcode-block" id="Expr.__rshift__"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Expr.__rshift__">[docs]</a>    <span class="k">def</span> <span class="nf">__rshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Redirect&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; :ref:`Appending Redirection: &gt;&gt;`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">assert</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Command</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">Redirect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">appending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Expr.__or__"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Expr.__or__">[docs]</a>    <span class="k">def</span> <span class="nf">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Pipe&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; :ref:`Pipe: |`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Expr</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
-
-        <span class="k">return</span> <span class="n">Pipe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Expr.__ror__"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Expr.__ror__">[docs]</a>    <span class="k">def</span> <span class="nf">__ror__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Pipe&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Reverse for :meth:`__or__` to handle ``value | command``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">Expr</span><span class="p">):</span>
-            <span class="c1">#TODO: lhs should be injected into stdin</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
-
-        <span class="k">return</span> <span class="n">Pipe</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Expr.__xor__"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Expr.__xor__">[docs]</a>    <span class="k">def</span> <span class="nf">__xor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Piperr&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; :ref:`Piperr: ^ 🚧`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Prefer right associative if it has the reverse (precedence transform)</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="s1">&#39;__rxor__&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">rhs</span><span class="o">.</span><span class="fm">__rxor__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">Piperr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="Expr.__invert__"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Expr.__invert__">[docs]</a>    <span class="k">def</span> <span class="nf">__invert__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Reckless&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; :ref:`Reckless: ~`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">Reckless</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
-
-    <span class="k">def</span> <span class="nf">__lazybooland__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs_callable</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Lazy boolean protocol for ``and``.</span>
-
-<span class="sd">            .. note:: This is a non-standard protocol from the lazybools transform.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">and_then</span><span class="p">(</span><span class="n">rhs_callable</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__lazyboolor__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs_callable</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Lazy boolean protocol for ``or``.</span>
-
-<span class="sd">            .. note:: This is a non-standard protocol from the lazybools transform.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">or_else</span><span class="p">(</span><span class="n">rhs_callable</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__lazyboolnot__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Lazy boolean protocol for ``not``.</span>
-
-<span class="sd">            Raises an error, not possible to negate a command.</span>
-
-<span class="sd">            .. note:: This is a non-standard protocol from the lazybools transform.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s1">&#39;a command cannot be negated&#39;</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Command"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Command">[docs]</a><span class="k">class</span> <span class="nc">Command</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    .. automethod:: __lshift__</span>
-<span class="sd">    .. automethod:: __rshift__</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;spec&#39;</span><span class="p">,</span> <span class="s1">&#39;args&#39;</span><span class="p">,</span> <span class="s1">&#39;no_raise&#39;</span><span class="p">,)</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">:</span> <span class="s1">&#39;BaseSpec&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">no_raise</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-    <span class="k">def</span> <span class="nf">__copy__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
-        <span class="n">clone</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
-        <span class="n">clone</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
-        <span class="n">clone</span><span class="o">.</span><span class="n">no_raise</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">no_raise</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">clone</span>
+<div class="viewcode-block" id="ExternalSpec.run"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.ExternalSpec.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">builder</span><span class="p">:</span> <span class="s1">&#39;Command&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;sorry!&#39;</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">command</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">))</span>
-        <span class="k">return</span> <span class="s1">&#39;`</span><span class="si">{}</span><span class="s1">`&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmd</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">{{</span><span class="si">{}</span><span class="s1">}})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">program</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Slice access records arguments almost in verbatim form, however</span>
-<span class="sd">            there is splitting on whitespace so if you want to pass an argument</span>
-<span class="sd">            containing whitespace it needs to be escaped with backslash.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
-        <span class="n">clone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__copy__</span><span class="p">()</span>
-
-        <span class="c1">#TODO: detect paths/globs and create PathWrapper instances as args</span>
-
-        <span class="n">args</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(?&lt;!</span><span class="se">\\</span><span class="s1">)\s&#39;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">arg</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">or</span> <span class="n">arg</span><span class="o">.</span><span class="n">isspace</span><span class="p">():</span>
-                <span class="k">continue</span>
-            <span class="n">arg</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;</span><span class="se">\\</span><span class="s1">(\s)&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\1&#39;</span><span class="p">,</span> <span class="n">arg</span><span class="p">)</span>  <span class="c1"># unescape white space</span>
-            <span class="n">clone</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
-
-        <span class="k">return</span> <span class="n">clone</span>
-
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
-        <span class="n">clone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__copy__</span><span class="p">()</span>
-        <span class="n">clone</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">clone</span>
-
-<div class="viewcode-block" id="Command.io"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Command.io">[docs]</a>    <span class="k">def</span> <span class="nf">io</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">stdin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="c1"># encoding: applies to all</span>
-        <span class="c1"># TODO: Shall it apply to commands only? or belongs to Expr?</span>
-        <span class="c1"># TODO: buffering stuff to be defined, too many variables, no need</span>
-        <span class="c1">#       to expose everything, we need sensible defaults with a clear</span>
-        <span class="c1">#       explanation. Probably the best approach would be to allow to</span>
-        <span class="c1">#       define them as part of the CommandSpec since buffering is</span>
-        <span class="c1">#       usually command specific.</span>
-        <span class="k">pass</span></div>
-
-<div class="viewcode-block" id="Command.catch"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Command.catch">[docs]</a>    <span class="k">def</span> <span class="nf">catch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">statuses</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Avoids raising upon given status codes. If no statuses are provided</span>
-<span class="sd">            then it&#39;ll catch all of them.</span>
-
-<span class="sd">            grep[&#39;foo&#39;].catch()   # ignore any exit status</span>
-<span class="sd">            grep[&#39;foo&#39;].catch(1)  # ignore exit status 1</span>
-<span class="sd">            grep[&#39;foo&#39;].catch(1, 3)  # ignore exit status 1 or 3</span>
-<span class="sd">            grep[&#39;foo&#39;].catch(*range(1, 10))  # ignore status 1-9</span>
-
-<span class="sd">            grep[&#39;foo&#39;].catch(errcho(&#39;foo&#39;))  # echo for all</span>
-<span class="sd">            grep[&#39;foo&#39;].catch(1, _2=echo(&#39;foo&#39;))  # ignore 1, 2 echos</span>
-
-<span class="sd">            grep[&#39;foo&#39;].catch(</span>
-<span class="sd">                _0 = echo(&#39;found&#39;),        # 0 (even if it doesn&#39;t raise)</span>
-<span class="sd">                _1_2 = echo(&#39;error&#39;),      # 1,2</span>
-<span class="sd">                _1__4 = echo(&#39;error&#39;),      # 1,2,3,4 echo</span>
-<span class="sd">                _10 = echo(&#39;error&#39;) and exit(1),   # 10 echoes and returns 1 to the pipe</span>
-<span class="sd">                __10 = echo(&#39;&lt;=10&#39;),</span>
-<span class="sd">                10__ = echo(&#39;&gt;=10&#39;),</span>
-<span class="sd">                _ = exit(1, &#39;not found!&#39;)  # else</span>
-<span class="sd">            )</span>
-
-<span class="sd">            grep[&#39;foo&#39;].catch(lambda p: print(p.status))</span>
-
-<span class="sd">            grep[&#39;foo&#39;].catch(signals=signals.SIGHUP)</span>
-<span class="sd">            grep[&#39;foo&#39;].catch(SIGHUP=None, SIGUSR2=echo(&#39;received!&#39;))</span>
-<span class="sd">            grep[&#39;foo&#39;].catch(0, SIGHUP=None)</span>
-<span class="sd">            grep[&#39;foo&#39;].catch(0, -signals.SIGHUP)</span>
-<span class="sd">            #TODO: maybe a method called .trap() like bash?</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="c1"># TODO: Shall it apply to commands only? or belongs to Expr?</span>
-
-        <span class="n">clone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__copy__</span><span class="p">()</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">statuses</span><span class="p">:</span>
-            <span class="n">statuses</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">256</span><span class="p">))</span>
-        <span class="n">clone</span><span class="o">.</span><span class="n">no_raise</span> <span class="o">=</span> <span class="n">statuses</span>
-        <span class="k">return</span> <span class="n">clone</span></div>
-
-<div class="viewcode-block" id="Command.__lshift__"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Command.__lshift__">[docs]</a>    <span class="k">def</span>  <span class="nf">__lshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; :ref:`Application: &lt;&lt; 🚧`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
-
-    <span class="k">def</span> <span class="nf">__rlshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Command&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot; Reverse for :meth:`__lshift__` to handle ``func &lt;&lt; command``</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">NotImplemented</span>
-
-        <span class="k">return</span> <span class="n">other</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__int__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_status</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">__bytes__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_binary</span><span class="p">()</span>
-
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_text</span><span class="p">()</span></div>
-
-
-<div class="viewcode-block" id="Pipe"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Pipe">[docs]</a><span class="k">class</span> <span class="nc">Pipe</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Represents a pipe ``|`` operation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">:</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="n">Expr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span>
-
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;(</span><span class="si">{!r}</span><span class="s1"> | </span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Piperr"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Piperr">[docs]</a><span class="k">class</span> <span class="nc">Piperr</span><span class="p">(</span><span class="n">Pipe</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Represents a piperr ``^`` operation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="n">IOBase</span><span class="p">)</span> <span class="k">else</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s1">&#39;(</span><span class="si">{!r}</span><span class="s1"> ^ </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Redirect"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Redirect">[docs]</a><span class="k">class</span> <span class="nc">Redirect</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Represents a redirection ``&gt;`` or ``&gt;&gt;`` operation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">:</span> <span class="n">Expr</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Path</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">appending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">appending</span> <span class="o">=</span> <span class="n">appending</span>
-
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">op</span> <span class="o">=</span> <span class="s1">&#39;&gt;&gt;&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">appending</span> <span class="k">else</span> <span class="s1">&#39;&gt;&#39;</span>
-        <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="n">IOBase</span><span class="p">)</span> <span class="k">else</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s1">&#39;(</span><span class="si">{!r}</span><span class="s1"> </span><span class="si">{}</span><span class="s1"> </span><span class="si">{}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Reckless"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Reckless">[docs]</a><span class="k">class</span> <span class="nc">Reckless</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Represents the reckless operator ``~``</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Expr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span>
-
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;~</span><span class="si">{!r}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Application"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Application">[docs]</a><span class="k">class</span> <span class="nc">Application</span><span class="p">(</span><span class="n">Expr</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    TODO: Not needed?</span>
-
-<span class="sd">    Represents the application operator ``&lt;&lt;``</span>
-
-<span class="sd">    .. TODO:: ``foo &lt;= bar &gt; null`` is evaled as ``foo(bar) &gt; null``</span>
-
-<span class="sd">    Maybe it&#39;s best to use a ``&lt;&lt;`` as application operator, that</span>
-<span class="sd">    allows to have an eager one:</span>
-
-<span class="sd">        sh &lt;&lt; &#39; ... &#39; &gt; null  # sh(&#39;...&#39;) &gt; null</span>
-
-<span class="sd">    and also a lazy one that should work for most use cases:</span>
-
-<span class="sd">        fork &lt;&lt;= grep[&#39;foo&#39;] &gt; null  # fork(grep[&#39;foo&#39;] &gt; null)</span>
-
-<span class="sd">    the drawback is that the following is not valid syntax:</span>
-
-<span class="sd">        fork(n=8) &lt;&lt;= cmd &gt; null  # cannot assign to a call expression</span>
-
-<span class="sd">    that might be solved with a lexer transform but it feels dirty:</span>
-
-<span class="sd">        __1 = fork(n=8); __1 &lt;&lt;= cmd &gt; null</span>
-
-<span class="sd">    or by forcing the user to change the expression to:</span>
-
-<span class="sd">        fork(n=8).fn &lt;&lt;= cmd &gt; null</span>
-
-<span class="sd">    but then operator are also NOT allows:</span>
-
-<span class="sd">        cat | xargs(n=1) &lt;&lt;= cmd &gt; null</span>
-
-<span class="sd">    so the only ergonomic solution seems to be the lexer transformation:</span>
-
-<span class="sd">        cat | xargs(n=1) &lt;&lt; (cmd &gt; null)</span>
-
-<span class="sd">    although for the time being, experiment with the explicit version:</span>
-
-<span class="sd">        runner = cat | xargs(n=1)</span>
-<span class="sd">        runner &lt;&lt;= cmd &gt; null</span>
-
-<span class="sd">    TODO !!IMPORTANT:</span>
-<span class="sd">        Perhaps the simpler way is to forget about this lazy application</span>
-<span class="sd">        altogether and bring it more to Python for this advanced use cases.</span>
-
-<span class="sd">        &gt;&gt;&gt; cat | xargs(foo | bar, n=1) &gt; null</span>
-<span class="sd">        &gt;&gt;&gt; cat | xargs(  # my favorite I think</span>
-<span class="sd">        &gt;&gt;&gt;     n=1,</span>
-<span class="sd">        &gt;&gt;&gt;     expr= foo | bar</span>
-<span class="sd">        &gt;&gt;&gt; ) &gt; null</span>
-<span class="sd">        &gt;&gt;&gt; cat | xargs(n=1)[</span>
-<span class="sd">        &gt;&gt;&gt;    foo | bar</span>
-<span class="sd">        &gt;&gt;&gt; ] &gt; null</span>
-<span class="sd">        &gt;&gt;&gt; cat | xargs(n=1) &lt;&lt; (foo | bar) &gt; null</span>
-
-<span class="sd">        In practice any flow-control command will probably need to have a</span>
-<span class="sd">        custom implementation and if so it can use existing mechanisms to</span>
-<span class="sd">        provide a convenient syntax.</span>
-
-<span class="sd">        If anything, the ``&lt;&lt;=`` seems like the best fit, since it should</span>
-<span class="sd">        allow something like:</span>
-
-<span class="sd">        &gt;&gt;&gt; results.txt &lt; xargs(-n) &lt;&lt;= foo | bar</span>
-
-<span class="sd">        which looks quite bad to be honest, it might be useful for a ``time``</span>
-<span class="sd">        style command, that doesn&#39;t need to handle the output:</span>
-
-<span class="sd">        &gt;&gt;&gt; time &lt;&lt;= foo | bar</span>
-
-<span class="sd">        but even then, it&#39;s not so common as to justify having such a complex</span>
-<span class="sd">        operator. If we get rid of lazy application we can just simplify the</span>
-<span class="sd">        precedence transform so it only operates over ``&gt;`` and ``&lt;``.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lhs</span><span class="p">:</span> <span class="n">Command</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span>
-
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;(</span><span class="si">{!r}</span><span class="s1"> &lt;&lt; </span><span class="si">{!r}</span><span class="s1">)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rhs</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Result"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Result">[docs]</a><span class="k">class</span> <span class="nc">Result</span><span class="p">:</span>
-    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;expr&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;stdin&#39;</span><span class="p">,</span> <span class="s1">&#39;stdout&#39;</span><span class="p">,</span> <span class="s1">&#39;stderr&#39;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="n">Expr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">expr</span> <span class="o">=</span> <span class="n">expr</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stdout</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stderr</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span>
-
-<div class="viewcode-block" id="Result.wait"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.Result.wait">[docs]</a>    <span class="k">def</span> <span class="nf">wait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Block until the command terminates.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
-
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s1">&#39;Result{{</span><span class="si">{!r}</span><span class="s1">}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="ShSpec"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.ShSpec">[docs]</a><span class="k">class</span> <span class="nc">ShSpec</span><span class="p">(</span><span class="n">BaseSpec</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Runs a command via a shell.</span>
-
-<span class="sd">    The first argument is the command to run, it&#39;ll be extended with</span>
-<span class="sd">    the arguments expansion, so the shell can forward any extra arguments</span>
-<span class="sd">    to it.</span>
-
-<span class="sd">    &gt;&gt;&gt; sh[&#39;ls&#39;]</span>
-<span class="sd">    /bin/sh -e -c &#39;ls &quot;$@&quot;&#39;</span>
-
-<span class="sd">    &gt;&gt;&gt; sh.jq[&#39;-c&#39;, foo]</span>
-<span class="sd">    /bin/sh -e -c &#39;jq &quot;$@&quot;&#39; -- -c &#39;.field | @csv&#39;</span>
-
-<span class="sd">    Additionally, the first argument is scanned for `$variables` so</span>
-<span class="sd">    they can be matched against the current locals/globals and exposed</span>
-<span class="sd">    on the environment when running it.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">pass</span></div>
-
-
-<div class="viewcode-block" id="ShCommand"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.ShCommand">[docs]</a><span class="k">class</span> <span class="nc">ShCommand</span><span class="p">(</span><span class="n">Command</span><span class="p">):</span>
-
-    <span class="k">def</span> <span class="nf">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Allows for ``sh.cat`` style shortcuts &quot;&quot;&quot;</span>
-        <span class="c1"># Once the first argument was given just forward to Command</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-
-        <span class="n">clone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__copy__</span><span class="p">()</span>
-        <span class="n">clone</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">clone</span></div>
 
 
 
 <span class="c1">### ----------</span>
 
-<div class="viewcode-block" id="LazyEnvInterpolator"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.LazyEnvInterpolator">[docs]</a><span class="k">class</span> <span class="nc">LazyEnvInterpolator</span><span class="p">:</span>
+<div class="viewcode-block" id="LazyEnvInterpolator"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.LazyEnvInterpolator">[docs]</a><span class="k">class</span> <span class="nc">LazyEnvInterpolator</span><span class="p">:</span>
 
-<div class="viewcode-block" id="LazyEnvInterpolator.get_frame_vars"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.LazyEnvInterpolator.get_frame_vars">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="LazyEnvInterpolator.get_frame_vars"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.LazyEnvInterpolator.get_frame_vars">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_frame_vars</span><span class="p">(</span><span class="n">back_cnt</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Helper to obtain the variables from the scope of a calling frame</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -795,7 +355,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tpl</span> <span class="o">=</span> <span class="n">tpl</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vars</span> <span class="o">=</span> <span class="nb">vars</span>
 
-<div class="viewcode-block" id="LazyEnvInterpolator.get_variable_names"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.command.LazyEnvInterpolator.get_variable_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_variable_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="LazyEnvInterpolator.get_variable_names"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.LazyEnvInterpolator.get_variable_names">[docs]</a>    <span class="k">def</span> <span class="nf">get_variable_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">pattern</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\$\{?([A-Za-z][A-Za-z0-9_]*)&#39;</span>
         <span class="k">return</span> <span class="p">[</span>
             <span class="n">m</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -804,6 +364,26 @@
 
 
 
+<div class="viewcode-block" id="ShSpec"><a class="viewcode-back" href="../../_apidoc/pysh.command.html#pysh.ShSpec">[docs]</a><span class="k">class</span> <span class="nc">ShSpec</span><span class="p">(</span><span class="n">ExternalSpec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Runs a command via a shell.</span>
+
+<span class="sd">    The first argument is the command to run, it&#39;ll be extended with</span>
+<span class="sd">    the arguments expansion, so the shell can forward any extra arguments</span>
+<span class="sd">    to it.</span>
+
+<span class="sd">    &gt;&gt;&gt; sh[&#39;ls&#39;]</span>
+<span class="sd">    /bin/sh -e -c &#39;ls &quot;$@&quot;&#39;</span>
+
+<span class="sd">    &gt;&gt;&gt; sh.jq[&#39;-c&#39;, foo]</span>
+<span class="sd">    /bin/sh -e -c &#39;jq &quot;$@&quot;&#39; -- -c &#39;.field | @csv&#39;</span>
+
+<span class="sd">    Additionally, the first argument is scanned for `$variables` so</span>
+<span class="sd">    they can be matched against the current locals/globals and exposed</span>
+<span class="sd">    on the environment when running it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div>
 </pre></div>
 
            </div>

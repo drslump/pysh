@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="pysh.transforms.protectnames module" href="pysh.transforms.protectnames.html" />
+    <link rel="next" title="pysh.transforms.restring module" href="pysh.transforms.restring.html" />
     <link rel="prev" title="pysh.transforms.pathstring module" href="pysh.transforms.pathstring.html" /> 
 
   
@@ -178,17 +178,18 @@
             
   <div class="section" id="module-pysh.transforms.precedence">
 <span id="pysh-transforms-precedence-module"></span><h1>pysh.transforms.precedence module<a class="headerlink" href="#module-pysh.transforms.precedence" title="Permalink to this headline">¶</a></h1>
-<p>Modifies operator binding precedence for <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> to match those from
+<p>Modifies operator binding precedence for <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> to emulate those found
 in a <em>sh</em> based shell.</p>
 <div class="admonition danger">
 <p class="first admonition-title">Danger</p>
 <p class="last">The transformation not only applies to <em>pysh</em> expressions but to
 <strong>all the expressions</strong> using those operators in the script. For
-most uses it should be transparent though but it might introduce
-unexpected behaviour in what would be totally valid Python code.</p>
+most uses it should be transparent but there is always the risk
+of introduce unexpected behaviour in what would be totally valid
+Python code.</p>
 </div>
 <p>Here is a table listing the binding precedence for the operators used in the
-DSL, from lower to higher, comparing that of Python with the one in a shell:</p>
+DSL, from lower to higher, comparing those of Python with the ones in a shell:</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="40%" />
@@ -214,16 +215,16 @@ DSL, from lower to higher, comparing that of Python with the one in a shell:</p>
 </tr>
 </tbody>
 </table>
-<p>They are too different, in a shell all <em>redirections</em> share the same precedence
-so they are naturaly evaluated (left associative), however in Python different
-<em>redirection</em> operators have different binding precedece and more importantly,
-the pipe operator has a higher precedence than the normal redirections.</p>
+<p>In a shell all <em>redirections</em> share the same precedence so they are naturaly
+evaluated (left associative), however in Python different <em>redirection</em> operators
+have different binding precedece and more importantly, the pipe operator <code class="docutils literal notranslate"><span class="pre">|</span></code>
+has a higher precedence than the normal redirections.</p>
 <p>For simple expressions it doesn’t really matter, the DSL can be designed to
 dissambiguate common use cases, however once the expression is a bit more complex
-having the correct binding precedence is crucial, otherwise the programmer is
+having the correct binding precedence is critical, otherwise the programmer is
 forced to use parenthesis to enforce the correct meaning.</p>
-<p>Take for instance the following example where we want to ignore the stdout from
-a command and do a pipeline from its stderr:</p>
+<p>Take for instance the following example where we want to ignore the <em>stdout</em> from
+a command and do a pipeline from its <em>stderr</em>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cmd</span> <span class="o">&gt;</span><span class="n">null</span> <span class="o">^</span><span class="n">stdout</span> <span class="o">|</span> <span class="n">bar</span> <span class="o">&gt;</span><span class="n">null</span>
 <span class="go">python: ( cmd &gt; ( ( null ^ stdout ) | bar ) ) &gt; null</span>
 <span class="go"> shell: ( ( cmd &gt; null ) ^ stdout ) | ( bar  &gt; null )</span>
@@ -268,27 +269,27 @@ whole script. The final binding precedence table is as follows (lower to higher)
 </tr>
 </tbody>
 </table>
-<p>The implementation is quite a hack though, in order to keep it simple we want to
-leverage the Python parsing infrastructure as much as possible instead of creating
-our own parser with different binding precedences. We abuse the fact that only two
-the intended precedence is the same as the bitwise operator <code class="docutils literal notranslate"><span class="pre">^</span></code>, mapping the
-redirections to it so we can keep the of the operators unchanged. While that mapping
-ensures the correct parsing we need to <em>annotate</em> somehow the original operator,
-for that we rely on some runtime helpers and the use of <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, which has higher
-binding precedence than <code class="docutils literal notranslate"><span class="pre">^</span></code>, this is merely a trick to avoid having to detect
-whole expressions boundaries at the lexer level as to wrap them in a call to the
-runtime helper, instead the parser will do that for us automatically and then it
-uses the <code class="docutils literal notranslate"><span class="pre">__and__</span></code> overload.</p>
+<p>The implementation is quite a hack though, in order to keep it simple we want
+to leverage the Python parsing infrastructure as much as possible instead of
+creating our own parser with different binding precedences. We abuse the fact
+that the two operators we want to change should have the same one as the bitwise
+operator <code class="docutils literal notranslate"><span class="pre">^</span></code>, mapping the redirections to it so we can keep the rest of operators
+unchanged. While that mapping ensures the correct parsing we need to <em>annotate</em>
+somehow the original operator, for that we rely on some runtime helpers and the
+use of <code class="docutils literal notranslate"><span class="pre">&amp;</span></code>, which has slightly higher binding precedence than <code class="docutils literal notranslate"><span class="pre">^</span></code>, this is
+merely a trick to avoid having to detect whole expressions boundaries at the lexer
+level as to wrap them in a call to the runtime helper, instead the parser will do
+that for us automatically and then it uses the <code class="docutils literal notranslate"><span class="pre">__and__</span></code> overload.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">&lt;</span> <span class="n">cmd</span> <span class="o">^</span> <span class="n">stdout</span> <span class="o">|</span> <span class="n">head</span> <span class="o">&gt;</span> <span class="s1">&#39;errors.txt&#39;</span>
 <span class="go">    fname ^LT&amp; cmd ^ stdout | head ^GT&amp; &#39;errors.txt&#39;</span>
 <span class="go">    ( (fname ^ (LT &amp; cmd)) ^ stdout ) | ( head ^ (GT &amp; &#39;errors.txt&#39;) )</span>
 </pre></div>
 </div>
 <p>The approach has the benefit that the common pipe operator is unchanged, so it has
-no runtime cost. For the redirections first the helper’s bitwise <code class="docutils literal notranslate"><span class="pre">__and__</span></code> will
-be called so it can obtain the right-hand operand, then it returns an instance
-with a <code class="docutils literal notranslate"><span class="pre">__rxor__</span></code> overload suitable to perform the original operation when Python
-evaluates the injected <code class="docutils literal notranslate"><span class="pre">^</span></code> operator.</p>
+no runtime cost. For the <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> operators first the helper’s bitwise
+<code class="docutils literal notranslate"><span class="pre">__and__</span></code> will be called so it can obtain the right-hand operand, then it returns
+an instance with a <code class="docutils literal notranslate"><span class="pre">__rxor__</span></code> overload suitable to perform the original operation
+when Python evaluates the injected <code class="docutils literal notranslate"><span class="pre">^</span></code> operator.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cmd</span> <span class="o">&gt;</span> <span class="n">null</span>
 <span class="go">    cmd ^ (GT &amp; null)</span>
 <span class="go">    GT.__and__(null).__rxor__(cmd) =&gt; cmd &gt; null</span>
@@ -296,11 +297,11 @@ evaluates the injected <code class="docutils literal notranslate"><span class="p
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p>If the code being transformed uses numerical bitwise operators or classes
+<p>if the code being transformed uses numerical bitwise operators or classes
 that overload them the results might be unexpected. The whole system relies
 on working with standard types and the <em>pysh</em> DSL types.</p>
-<p class="last">The same applies to <em>chained comparisons</em>, althought that case is detected
-and a syntax warning is issued pointing out the problematic use.</p>
+<p class="last">The same applies to <em>chained comparisons</em>, althought some of those cases are
+detected and a syntax warning is issued pointing out the problematic use.</p>
 </div>
 </div>
 
@@ -312,7 +313,7 @@ and a syntax warning is issued pointing out the problematic use.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="pysh.transforms.protectnames.html" class="btn btn-neutral float-right" title="pysh.transforms.protectnames module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="pysh.transforms.restring.html" class="btn btn-neutral float-right" title="pysh.transforms.restring module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="pysh.transforms.pathstring.html" class="btn btn-neutral" title="pysh.transforms.pathstring module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

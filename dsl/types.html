@@ -98,6 +98,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#shell-command-sh">Shell command: sh</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#pipeline">Pipeline</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="operators.html">Operators</a></li>
@@ -235,6 +236,10 @@ in the future.</p>
 there is a setup step that is later used as many times as required.</p>
 <div class="section" id="path-factory">
 <h3>Path factory: _<a class="headerlink" href="#path-factory" title="Permalink to this headline">¶</a></h3>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">move to operators path section??</p>
+</div>
 <p>Allows to easily define paths in a concise style. The symbol by itself refers
 to the <em>current working directory</em> (the <code class="docutils literal notranslate"><span class="pre">$PWD</span></code> variable in <em>Bash</em>).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span> <span class="n">_</span> <span class="p">)</span>
@@ -300,7 +305,7 @@ ergonomic but easy to maintain.</p>
 <p>Creating a command for an external utility is as simple as calling the <code class="docutils literal notranslate"><span class="pre">command</span></code>
 factory function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span> <span class="o">=</span> <span class="n">command</span><span class="p">(</span><span class="s1">&#39;grep&#39;</span><span class="p">)</span>
-<span class="go">    CommandBuilder&lt;grep&gt;</span>
+<span class="go">    Command&lt;grep&gt;</span>
 </pre></div>
 </div>
 <p>Now we can <em>build an invocation</em> by providing arguments to it. There are two
@@ -311,13 +316,13 @@ ways to do so, with slightly different behaviors:</p>
 <div><p>The value provided as argument is used verbatim on the called command.
 No need to think about strange quoting and escaping rules.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">(</span><span class="s1">&#39;-e&#39;</span><span class="p">,</span> <span class="s1">&#39;foo bar&#39;</span><span class="p">)</span>
-<span class="go">    grep -e &#39;foo bar&#39;</span>
+<span class="go">  # grep -e &#39;foo bar&#39;</span>
 </pre></div>
 </div>
 <p>Keyword arguments are automatically converted to options following a
 set of rules which can be tuned when creating a command.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">(</span><span class="s1">&#39;foo bar&#39;</span><span class="p">,</span> <span class="s1">&#39;myfile.txt&#39;</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">line_buffered</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="go">    grep -A 3 --line-buffered &#39;foo bar&#39; myfile.txt</span>
+<span class="go">  # grep -A 3 --line-buffered &#39;foo bar&#39; myfile.txt</span>
 </pre></div>
 </div>
 <div class="admonition hint">
@@ -330,54 +335,67 @@ set of rules which can be tuned when creating a command.</p>
 <div><p>When slicing the value is splitted on whitespace, similarly to what a
 shell would do, so one or more arguments can be added to the command.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">[</span><span class="s1">&#39;-e   foo    bar&#39;</span><span class="p">]</span>
-<span class="go">    grep -e foo bar</span>
+<span class="go">    grep(&#39;-e&#39;, &#39;foo&#39;, &#39;bar&#39;)</span>
+<span class="go">  # grep -e foo bar</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">[</span><span class="sa">r</span><span class="s1">&#39;-e escaped\ whitespace\ \ is\ \ preserved&#39;</span><span class="p">]</span>
-<span class="go">    grep -e &quot;escaped whitespace  is  preserved&quot;</span>
+<span class="go">    grep(&#39;-e&#39;, &#39;escaped whitespace  is  preserved&#39;)</span>
+<span class="go">  # grep -e &quot;escaped whitespace  is  preserved&quot;</span>
+</pre></div>
+</div>
+<p>Additionally it detects paths and globbing syntax, automatically creating
+<a class="reference internal" href="../_apidoc/pysh.dsl.html#pysh.dsl.Path" title="pysh.dsl.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.Path</span></code></a> and <a class="reference internal" href="../_apidoc/pysh.dsl.html#pysh.dsl.GlobMatcher" title="pysh.dsl.GlobMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.GlobMatcher</span></code></a> instances for
+those.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ls</span><span class="p">[</span><span class="s1">&#39;*.jpg&#39;</span><span class="p">]</span>
+<span class="go">    ls( _[&#39;*.jpg&#39;] )</span>
+<span class="go">  # ls file1.jpg file2.jpg ...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tar</span><span class="p">[</span><span class="s1">&#39;-cvf archive.tar imgs/*.{jpg,gif}&#39;</span><span class="p">]</span>
+<span class="go">    tar( &#39;-cvf&#39;, archive.tar, _[&#39;imgs/*.{jpg,gif}&#39;] )</span>
+<span class="go">  # tar -cvf archive.tar imgs/file1.jpg imgs/file2.gif ...</span>
 </pre></div>
 </div>
 <div class="admonition caution">
 <p class="first admonition-title">Caution</p>
-<p class="last">There is no parsing of quoted strings on the value, <strong>only
-whitespace</strong> has special meaning. If you need to provide some
+<p class="last">There is no parsing of quoted strings on the value, only <em>whitespace</em>
+and <em>globbing syntax</em> have special meaning. If you need to provide some
 text with quotes use the <strong>call</strong> style.</p>
 </div>
-<div class="admonition-todo admonition" id="index-0">
-<p class="first admonition-title">Todo</p>
-<p class="last">experiment with supporing globing inside slice syntax.</p>
-</div>
 </div></blockquote>
 </div></blockquote>
-<p>Each time we <em>call</em> or <em>slice</em> on a command a cloned instance is returned with the
-changes, this usually works transparently due to the chained nature of the DSL.
+<p>Each time we <em>call</em> or <em>slice</em> on a command a <strong>cloned instance is returned</strong> with
+the changes, this usually works transparently due to the chained nature of the DSL.
 However if you try to use a more imperative style you need to be aware of it:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">[</span><span class="s1">&#39;-e&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
-<span class="go">    grep foo  # not what we might be expecting</span>
+<span class="go">  # grep foo  # not what we might be expecting</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">grep</span><span class="p">[</span><span class="s1">&#39;-e&#39;</span><span class="p">](</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
-<span class="go">    grep -e foo  # now it works</span>
+<span class="go">  # grep -e foo  # now it works</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a_grep</span> <span class="o">=</span> <span class="n">grep</span><span class="p">[</span><span class="s1">&#39;-e&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a_grep</span> <span class="o">=</span> <span class="n">a_grep</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a_grep</span>
-<span class="go">    grep -e foo  # also works since we&#39;re using the returned copy</span>
+<span class="go">  # grep -e foo  # also works since we&#39;re using the returned copy</span>
 </pre></div>
 </div>
-<p>Evaluation of the built command happens explicitly when we cast it to a
-primitive value:</p>
+<p>Evaluation of the built command happens explicitly when we cast it to a primitive
+value:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">str</span><span class="p">(</span> <span class="n">grep</span><span class="p">[</span><span class="s1">&#39;foo&#39;</span><span class="p">]</span> <span class="p">)</span>
-<span class="go">    executes and returns stdout as a string</span>
+<span class="go">  # executes and returns stdout as a string</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">bytes</span><span class="p">(</span> <span class="n">grep</span><span class="p">[</span><span class="s1">&#39;foo&#39;</span><span class="p">]</span> <span class="p">)</span>
-<span class="go">    executes and returns stdout as binary data</span>
+<span class="go">  # executes and returns stdout as binary data</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">int</span><span class="p">(</span> <span class="n">grep</span><span class="p">[</span><span class="s1">&#39;foo&#39;</span><span class="p">]</span> <span class="p">)</span>
-<span class="go">    executes and returns the exit status code</span>
+<span class="go">  # executes and returns the exit status code</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">bool</span><span class="p">(</span> <span class="n">grep</span><span class="p">[</span><span class="s1">&#39;foo&#39;</span><span class="p">]</span> <span class="p">)</span>
-<span class="go">    executes and returns True if it exited with 0, False otherwise</span>
+<span class="go">  # executes and returns True if it exited with 0, False otherwise</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">grep</span><span class="p">[</span><span class="s1">&#39;foo&#39;</span><span class="p">]:</span>
 <span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-<span class="go">    execution is also triggered by iteration</span>
+<span class="go">  # execution is also triggered by iteration</span>
 </pre></div>
 </div>
 <div class="section" id="autoexpr-transformation">
 <h3>AutoExpr transformation<a class="headerlink" href="#autoexpr-transformation" title="Permalink to this headline">¶</a></h3>
+<div class="admonition-todo admonition" id="index-1">
+<p class="first admonition-title">Todo</p>
+<p class="last">move to operators??</p>
+</div>
 <p>A key ergonomics feature is a transformation applied to scripts by <em>pysh</em>
 where it will detect expressions that form a statement on their own,
 usually meaning that they are not part of an assignment or a flow control
@@ -397,6 +415,10 @@ with the <code class="docutils literal notranslate"><span class="pre">pysh</span
 </div>
 <div class="section" id="shell-command-sh">
 <h3>Shell command: sh<a class="headerlink" href="#shell-command-sh" title="Permalink to this headline">¶</a></h3>
+<div class="admonition-todo admonition" id="index-2">
+<p class="first admonition-title">Todo</p>
+<p class="last">move out to a section about utilities.</p>
+</div>
 <p>There are many good reasons to use an <em>sh compatible shell</em> to run a command,
 sometimes it’s just easier to express something with its syntax, maybe we’re
 copy-pasting a one liner from a Stack Overflow answer or perhaps we’re porting
@@ -449,6 +471,25 @@ to use the <span class="xref std std-ref">Lazy: &lt;= 🚧</span> operator with 
 <em>dash</em> in <em>posix mode</em>. However restricting to <em>posix syntax</em> is recommended
 if you want to keep the script portable.</p>
 </div>
+</div>
+</div>
+<div class="section" id="pipeline">
+<h2>Pipeline<a class="headerlink" href="#pipeline" title="Permalink to this headline">¶</a></h2>
+<p>A pipeline groups <em>one or more commands</em> with their redirection configurations.
+It’s a helpful abstraction to handle arbitrarily complex chains of commands as
+a simple entity.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">cat</span> <span class="o">|</span> <span class="n">wc</span><span class="p">[</span><span class="s1">&#39;-l&#39;</span><span class="p">]</span>
+<span class="go">  # the above generates a pipeline composed of two commands</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pipeline</span> <span class="o">&gt;</span> <span class="s1">&#39;results.txt&#39;</span>
+<span class="go">  # redirects the output of the pipeline to a file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">)</span> <span class="o">|</span> <span class="n">pipeline</span>
+<span class="go">  # feed some content to the first command in the pipeline</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><em>Command</em> and <em>Pipeline</em> are used interchangeably in the documentation since
+almost all operations available for a command are also exposed in a pipeline.</p>
 </div>
 </div>
 </div>

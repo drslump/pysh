@@ -98,8 +98,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="pysh.cli.html">pysh.cli module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pysh.command.html">pysh.command module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.dsl.html">pysh.dsl module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pysh.env.html">pysh.env module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysh.path.html">pysh.path module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pysh.stream.html">pysh.stream module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pysh.version.html">pysh.version module</a></li>
 </ul>
@@ -178,6 +178,31 @@
             
   <div class="section" id="module-pysh">
 <span id="pysh-package"></span><h1>pysh package<a class="headerlink" href="#module-pysh" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="pysh.command">
+<code class="descclassname">pysh.</code><code class="descname">command</code><span class="sig-paren">(</span><em>*commands</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/command.html#command"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.command" title="Permalink to this definition">¶</a></dt>
+<dd><p>Command factory. Returns a <a class="reference internal" href="pysh.dsl.html#pysh.dsl.Command" title="pysh.dsl.Command"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.dsl.Command</span></code></a> configured with
+a concrete implementation of <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseSpec</span></code> suitable for the given command.</p>
+<p>Any additional keyword arguments will be provided to the implementation of
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Spec</span></code>.</p>
+<p>When multiple commands are given they are all created and returned in a tuple
+respecting the given order. This allows to easy bootstrap a bunch of them with
+unpacking.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Currently <em>command</em> can only be a path-like reference which refers to
+an external command, check <code class="xref py py-class docutils literal notranslate"><span class="pre">ExternalSpec</span></code> for additional details.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<a class="reference internal" href="pysh.dsl.html#pysh.dsl.Command" title="pysh.dsl.Command"><code class="xref py py-class docutils literal notranslate"><span class="pre">Command</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<a class="reference internal" href="pysh.dsl.html#pysh.dsl.Command" title="pysh.dsl.Command"><code class="xref py py-class docutils literal notranslate"><span class="pre">Command</span></code></a>]]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="exception">
 <dt id="pysh.ExitError">
 <em class="property">exception </em><code class="descclassname">pysh.</code><code class="descname">ExitError</code><span class="sig-paren">(</span><em>status</em>, <em>message=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh.html#ExitError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.ExitError" title="Permalink to this definition">¶</a></dt>
@@ -308,6 +333,8 @@ to raise</em> instances of those errors.</p>
 <li class="toctree-l4"><a class="reference internal" href="pysh.transforms.alpha.html#submodules">Submodules</a><ul>
 <li class="toctree-l5"><a class="reference internal" href="pysh.transforms.alpha.bangexpr.html">pysh.transforms.alpha.bangexpr module</a></li>
 <li class="toctree-l5"><a class="reference internal" href="pysh.transforms.alpha.lazybools.html">pysh.transforms.alpha.lazybools module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="pysh.transforms.alpha.lazyexpr.html">pysh.transforms.alpha.lazyexpr module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="pysh.transforms.alpha.spacey.html">pysh.transforms.alpha.spacey module</a></li>
 </ul>
 </li>
 </ul>
@@ -329,8 +356,14 @@ to raise</em> instances of those errors.</p>
 <li class="toctree-l3"><a class="reference internal" href="pysh.transforms.pathpow.html">pysh.transforms.pathpow module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pysh.transforms.pathstring.html">pysh.transforms.pathstring module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pysh.transforms.precedence.html">pysh.transforms.precedence module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.protectnames.html">pysh.transforms.protectnames module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pysh.transforms.restring.html">pysh.transforms.restring module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.shadowing.html">pysh.transforms.shadowing module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.test_pathpow.html">pysh.transforms.test_pathpow module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.test_pathstring.html">pysh.transforms.test_pathstring module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.test_precedence.html">pysh.transforms.test_precedence module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.test_restring.html">pysh.transforms.test_restring module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.test_shadowing.html">pysh.transforms.test_shadowing module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pysh.transforms.testutils.html">pysh.transforms.testutils module</a></li>
 </ul>
 </li>
 </ul>
@@ -344,8 +377,8 @@ to raise</em> instances of those errors.</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="pysh.cli.html">pysh.cli module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pysh.command.html">pysh.command module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pysh.dsl.html">pysh.dsl module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pysh.env.html">pysh.env module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pysh.path.html">pysh.path module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pysh.stream.html">pysh.stream module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pysh.version.html">pysh.version module</a></li>
 </ul>

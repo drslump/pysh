@@ -26,6 +26,12 @@ Submodules
    pysh.transforms.pathpow
    pysh.transforms.pathstring
    pysh.transforms.precedence
-   pysh.transforms.protectnames
    pysh.transforms.restring
+   pysh.transforms.shadowing
+   pysh.transforms.test_pathpow
+   pysh.transforms.test_pathstring
+   pysh.transforms.test_precedence
+   pysh.transforms.test_restring
+   pysh.transforms.test_shadowing
+   pysh.transforms.testutils
 

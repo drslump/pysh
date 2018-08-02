@@ -192,8 +192,8 @@ when chaining commands in a pipeline. Here is a table with the operator binding
 precedence from <strong>lower to higher</strong>:</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="36%" />
-<col width="64%" />
+<col width="32%" />
+<col width="68%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">operator</th>
@@ -205,24 +205,27 @@ precedence from <strong>lower to higher</strong>:</p>
 <td>&#160;</td>
 </tr>
 <tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">^</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> <code class="docutils literal notranslate"><span class="pre">&gt;</span></code></td>
-<td><code class="docutils literal notranslate"><span class="pre">&lt;</span></code> <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> modified to match Python’s <code class="docutils literal notranslate"><span class="pre">^</span></code>
+<td><code class="docutils literal notranslate"><span class="pre">&lt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> modified to match Python’s <code class="docutils literal notranslate"><span class="pre">^</span></code>
 (see <a class="reference internal" href="../_apidoc/pysh.transforms.precedence.html#module-pysh.transforms.precedence" title="pysh.transforms.precedence"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pysh.transforms.precedence</span></code></a>)</td>
 </tr>
 <tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code></td>
 <td>&#160;</td>
 </tr>
-<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">/</span></code> <code class="docutils literal notranslate"><span class="pre">//</span></code> <code class="docutils literal notranslate"><span class="pre">*</span></code> <code class="docutils literal notranslate"><span class="pre">**</span></code></td>
+<tr class="row-odd"><td><code class="docutils literal notranslate"><span class="pre">/</span></code> <code class="docutils literal notranslate"><span class="pre">//</span></code> <code class="docutils literal notranslate"><span class="pre">**</span></code></td>
 <td><code class="docutils literal notranslate"><span class="pre">**</span></code> modified to match Python’s <code class="docutils literal notranslate"><span class="pre">//</span></code>
 (see <a class="reference internal" href="../_apidoc/pysh.transforms.pathpow.html#module-pysh.transforms.pathpow" title="pysh.transforms.pathpow"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pysh.transforms.pathpow</span></code></a>)</td>
+</tr>
+<tr class="row-even"><td><code class="docutils literal notranslate"><span class="pre">~</span></code></td>
+<td>&#160;</td>
 </tr>
 </tbody>
 </table>
 <div class="section" id="pipe">
 <h2>Pipe: |<a class="headerlink" href="#pipe" title="Permalink to this headline">¶</a></h2>
-<p><strong>command</strong> <code class="docutils literal notranslate"><span class="pre">|</span></code> <strong>command</strong></p>
+<p><strong>pipeline</strong> <code class="docutils literal notranslate"><span class="pre">|</span></code> <strong>command</strong></p>
 <blockquote>
-<div><p>The typical shell piping operation where the output of the program
-on the left is feed as input for the program on the right.</p>
+<div><p>The typical shell piping operation where the output of the last command
+on the left is feed as input for the command on the right.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">head</span><span class="p">[</span><span class="s1">&#39;-10&#39;</span><span class="p">]</span> <span class="o">|</span> <span class="n">grep</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
 <span class="go">head[&#39;-10&#39;].pipe( stdout = grep(&#39;foo&#39;) )</span>
 </pre></div>
@@ -232,19 +235,20 @@ on the left is feed as input for the program on the right.</p>
 <p class="last">just as above sans the braces: <code class="docutils literal notranslate"><span class="pre">head</span> <span class="pre">-10</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">foo</span></code></p>
 </div>
 </div></blockquote>
-<p><strong>command</strong> <code class="docutils literal notranslate"><span class="pre">|</span></code> <strong>function</strong></p>
+<p><strong>pipeline</strong> <code class="docutils literal notranslate"><span class="pre">|</span></code> <strong>callable</strong></p>
 <blockquote>
-<div><p>When the right operand is a function then it acts as a <em>reverse application
-operator</em>, where the right operand receives the left one as argument.</p>
+<div><p>When the right operand is a callable then it acts as a <em>reverse application
+operator</em>, where the right operand receives the <em>stdout stream</em> of the last
+command on the pipeline as argument.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">head</span><span class="p">[</span><span class="s1">&#39;-10&#39;</span><span class="p">]</span> <span class="o">|</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span>
 <span class="go">&#39;,&#39;.join( line for line in head[&#39;-10&#39;] )</span>
 </pre></div>
 </div>
 </div></blockquote>
-<p><strong>value</strong> <code class="docutils literal notranslate"><span class="pre">|</span></code> <strong>command</strong></p>
+<p><strong>value</strong> <code class="docutils literal notranslate"><span class="pre">|</span></code> <strong>pipeline</strong></p>
 <blockquote>
 <div><p>An arbitrary value as left operand is automatically wrapped in an iterator
-so it can be feed to the <em>command</em> on the right.</p>
+so it can be feed to the <em>stdin</em> of the <em>first command</em> on the pipeline.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="vm">__doc__</span> <span class="o">|</span> <span class="n">wc</span><span class="p">[</span><span class="s1">&#39;-l&#39;</span><span class="p">]</span>
 <span class="go">echo(__doc__).pipe( stdout = wc[&#39;-l&#39;] )</span>
 <span class="go">&gt;&gt; range(10) | wc[&#39;-l&#39;]</span>
@@ -259,13 +263,10 @@ so it can be feed to the <em>command</em> on the right.</p>
 </div>
 <div class="section" id="piperr">
 <h2>Piperr: ^ 🚧<a class="headerlink" href="#piperr" title="Permalink to this headline">¶</a></h2>
-<div class="admonition warning">
-<p class="first admonition-title">Warning</p>
-<p class="last">🚧 Validate that it’ll work as documented</p>
-</div>
-<p>🚧 <strong>command</strong> <code class="docutils literal notranslate"><span class="pre">^</span></code> (<strong>stream</strong> | <strong>path</strong> | <strong>str</strong>) 🚧</p>
+<p>🚧 <strong>pipeline</strong> <code class="docutils literal notranslate"><span class="pre">^</span></code> (<strong>stream</strong> | <strong>path</strong> | <strong>str</strong>) 🚧</p>
 <blockquote>
-<div><p>Redirect <em>stderr</em> to a stream or a file.</p>
+<div><p>Redirect <em>stderr</em> from the <em>last command</em> in the pipeline to a stream or
+a file.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gcc</span> <span class="o">^</span> <span class="n">null</span>
 <span class="go">discard stderr output</span>
 </pre></div>
@@ -283,10 +284,10 @@ so it can be feed to the <em>command</em> on the right.</p>
 <p class="last">quite similar, the <code class="docutils literal notranslate"><span class="pre">^</span></code> is <code class="docutils literal notranslate"><span class="pre">2&gt;</span></code>. An example: <code class="docutils literal notranslate"><span class="pre">gcc</span> <span class="pre">2&gt;errors.txt</span> <span class="pre">|</span> <span class="pre">wc</span> <span class="pre">-l</span></code></p>
 </div>
 </div></blockquote>
-<p>🚧 <strong>command</strong> <code class="docutils literal notranslate"><span class="pre">^</span></code> <strong>command</strong> 🚧</p>
+<p>🚧 <strong>pipeline</strong> <code class="docutils literal notranslate"><span class="pre">^</span></code> <strong>pipeline</strong> 🚧</p>
 <blockquote>
-<div><p>Pipe <em>stderr</em> from the command on the left to <em>stdin</em> from the command on
-the right.</p>
+<div><p>Pipe <em>stderr</em> from the <em>last command</em> in the pipeline on the left to <em>stdin</em>
+of the <em>first command</em> from the pipeline on the right.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gcc</span> <span class="o">^</span> <span class="n">wc</span><span class="p">[</span><span class="s1">&#39;-l&#39;</span><span class="p">]</span>
 <span class="go">count lines on stderr (stdout is unused)</span>
 </pre></div>
@@ -325,10 +326,11 @@ precedence modified to match that of the <code class="docutils literal notransla
 ergonomics when building pipelines. Check <a class="reference internal" href="../_apidoc/pysh.transforms.precedence.html#module-pysh.transforms.precedence" title="pysh.transforms.precedence"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pysh.transforms.precedence</span></code></a>
 for more details.</p>
 </div>
-<p><strong>command</strong> <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> (<strong>stream</strong> | <strong>path</strong> | <strong>str</strong>)</p>
+<p><strong>pipeline</strong> <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> (<strong>stream</strong> | <strong>path</strong> | <strong>str</strong>)</p>
 <blockquote>
-<div><p>Like in a standard shell the redirection places the output from the <em>command</em>
-on the left in the file referenced on the right, creating the file if necessary.</p>
+<div><p>Like in a standard shell the redirection places the output from the last
+<em>command</em> in the pipeline on the left to a file referenced on the right,
+creating the file if necessary.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cat</span> <span class="o">&gt;</span> <span class="n">stderr</span>
 <span class="go"># the output of cat gets redirected to stderr</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cat</span> <span class="o">|</span> <span class="n">head</span> <span class="o">&gt;</span> <span class="s1">&#39;first.txt&#39;</span>
@@ -356,26 +358,26 @@ redirected. In practice this is only an issue when using its <em>reverse version
 <p class="last">exactly the same… <code class="docutils literal notranslate"><span class="pre">cat</span> <span class="pre">|</span> <span class="pre">head</span> <span class="pre">&gt;</span> <span class="pre">'first-lines.txt'</span></code></p>
 </div>
 </div></blockquote>
-<p>(<strong>stream</strong> | <strong>path</strong> | <strong>str</strong>) <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> <strong>command</strong></p>
+<p>(<strong>stream</strong> | <strong>path</strong> | <strong>str</strong>) <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> <strong>pipeline</strong></p>
 <blockquote>
-<div><p>When the target is a <em>comand</em> then file referenced on the left operand is read
-and provided to the <em>command’s stdin</em>.</p>
+<div><p>When the target is a <em>pipeline</em> then the file referenced on the left operand
+is read and provided to the <em>stdin</em> of the pipeline’s <em>first command</em>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">fname</span> <span class="o">&gt;</span> <span class="n">head</span>
 <span class="go"># get first lines from the file referenced in fname</span>
 </pre></div>
 </div>
 </div></blockquote>
-<p><strong>command</strong> <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> <strong>callable</strong></p>
+<p><strong>pipeline</strong> <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> <strong>callable</strong></p>
 <blockquote>
-<div><p>An interesting use case for the redirection operator is to set a <em>callable</em> as
-its target. In this scenario the whole output of the command will be buffered
-and then passed as an argument to the target function.</p>
+<div><p>An interesting use case for the redirection operator is to set a <em>callable</em>
+as its target. In this scenario the whole output of the pipeline will be
+<em>buffered</em> and then passed as an argument to the target function.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;hello&quot;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span>
 <span class="go">6  # len(b&quot;hello\n&quot;)</span>
 </pre></div>
 </div>
 </div></blockquote>
-<p><strong>command</strong> <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code> (<strong>path</strong> | <strong>str</strong>)</p>
+<p><strong>pipeline</strong> <code class="docutils literal notranslate"><span class="pre">&gt;&gt;</span></code> (<strong>path</strong> | <strong>str</strong>)</p>
 <blockquote>
 <div><p>Works exactly like the redirection operator <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> but if the target file
 exists it will append the contents at the end of it instead of replacing
@@ -393,7 +395,7 @@ below.</p>
 </div>
 </div></blockquote>
 <p><strong>command</strong> <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> <strong>any</strong></p>
-<p><strong>callable</strong> <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> <strong>command</strong> 🚧</p>
+<p><strong>callable</strong> <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> <strong>pipeline</strong> 🚧</p>
 <blockquote>
 <div><p>Acts as an <em>application operator</em>, the operand on the left will be called
 with the one on the right as argument. It results in the same operation as
@@ -414,11 +416,11 @@ reproducing the example above: <code class="docutils literal notranslate"><span 
 </div>
 <div class="section" id="reckless">
 <h2>Reckless: ~<a class="headerlink" href="#reckless" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">~</span></code> <strong>command</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">~</span></code> <strong>pipeline</strong></p>
 <blockquote>
-<div><p>Ignores the <em>exit status</em> and <em>stderr</em> of the command. Normally a non 0
-exit status would raise an exception that needs to be handled by the
-script, however some times we expect a command to fail under some conditions.</p>
+<div><p>Ignores the <em>exit status</em> and <em>stderr</em> of the pipeline. Normally a non 0
+exit status would raise an exception that needs to be handled by the script,
+however some times we expect a command to fail under some conditions.</p>
 <p>This is particulary useful since, unlike <em>sh</em>, we do raise errors if they
 happen on a pipeline. For instance, <code class="docutils literal notranslate"><span class="pre">grep</span></code> exits with 1 if it couldn’t
 match anything.</p>
@@ -467,10 +469,10 @@ disabled and not ready for general use until it can prove its utility.</p>
 <p class="first admonition-title">Warning</p>
 <p class="last">🚧 Validate this will work as intended</p>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">with</span></code> <strong>command</strong> <code class="docutils literal notranslate"><span class="pre">as</span></code> <strong>name</strong>: 🚧</p>
+<p><code class="docutils literal notranslate"><span class="pre">with</span></code> <strong>pipeline</strong> <code class="docutils literal notranslate"><span class="pre">as</span></code> <strong>name</strong>: 🚧</p>
 <blockquote>
-<div><p>Commands implement the <a class="reference external" href="https://docs.python.org/3/reference/datamodel.html#context-managers">Context Manager</a> protocol, upon entering one the
-command is invoked and a <a class="reference internal" href="../_apidoc/pysh.command.html#pysh.command.Result" title="pysh.command.Result"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.command.Result</span></code></a> instance is provided.
+<div><p>Pipelines implement the <a class="reference external" href="https://docs.python.org/3/reference/datamodel.html#context-managers">Context Manager</a> protocol, upon entering one the
+pipeline is invoked and a <code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.command.Result</span></code> instance is provided.
 Unlike normal invocation the standard streams are not wired to the script
 ones, allowing to consume them imperatively inside the block.</p>
 <p>Upon reaching the exit of the block, if the standard streams haven’t been
@@ -488,7 +490,7 @@ be harder to read and maintain.</p>
 </div></blockquote>
 <div class="admonition-todo admonition" id="index-0">
 <p class="first admonition-title">Todo</p>
-<p class="last">Move this section to types, not really an operator?</p>
+<p class="last">Move this section out, not really an operator?</p>
 </div>
 </div>
 <div class="section" id="path-operators">
@@ -497,8 +499,9 @@ be harder to read and maintain.</p>
 <h3>Path concatenation: /<a class="headerlink" href="#path-concatenation" title="Permalink to this headline">¶</a></h3>
 <p><strong>path</strong> <code class="docutils literal notranslate"><span class="pre">/</span></code> <strong>str</strong></p>
 <blockquote>
-<div><p>Append the path segment on the right to the path on the left. The path segment
-can itself contain directories.</p>
+<div><p>Append the path referenced on the right to the path on the left. The
+referenced path can itself contain directories, if so all of its segments
+will be appended.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">/</span> <span class="s1">&#39;docs&#39;</span>
 <span class="go">./docs</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">/</span> <span class="s1">&#39;path/to/my/file.txt&#39;</span>
@@ -520,9 +523,21 @@ can itself contain directories.</p>
 </pre></div>
 </div>
 <p>Additionally to <em>globbing</em> it also supports <em>brace expansion</em>, for each
-expansion a globbing operation will be executed and their results merged.</p>
+expansion a globbing operation will be executed and their results merged
+without duplicates.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">//</span> <span class="s1">&#39;{foo,bar}-*.jpg&#39;</span>
 <span class="go">    set(foo-*.jpg) + set(bar-*.jpg)</span>
+</pre></div>
+</div>
+<p>Escaping for globbing or brace expansion special characters <code class="docutils literal notranslate"><span class="pre">*?[{,}</span></code> is
+done with a backslash <code class="docutils literal notranslate"><span class="pre">\</span></code>. Escapes for non special characters are simply
+removed.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">//</span> <span class="sa">r</span><span class="s1">&#39;foo-\*?.jpg&#39;</span>
+<span class="go">  # matches jpg files named as &quot;foo-*&quot; followed by any char</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">//</span> <span class="sa">r</span><span class="s1">&#39;\f\o\o\*\.\j\p\g&#39;</span>
+<span class="go">  # matches the file &quot;foo*.jpg&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">//</span> <span class="s1">&#39;foo-[*].jpg&#39;</span>
+<span class="go">  # uses glob syntax to perform a escape, it&#39;ll match &quot;foo-*.jpg&quot;</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -535,14 +550,14 @@ something like <code class="docutils literal notranslate"><span class="pre">_</s
 for the <a class="reference external" href="https://docs.python.org/3/library/glob.html">glob module</a>, for details about <em>brace expansion</em> check this
 <a class="reference external" href="https://www.linuxjournal.com/content/bash-brace-expansion">article from Linux Journal</a>.</p>
 </div>
-<div class="admonition-todo admonition" id="index-1">
-<p class="first admonition-title">Todo</p>
-<p class="last">comment about escaping rules</p>
+<div class="admonition caution">
+<p class="first admonition-title">Caution</p>
+<p class="last">unlike globbing in an <em>sh</em> shell the output is not sorted alphabetically.</p>
 </div>
 </div></blockquote>
 <p><strong>path</strong> <code class="docutils literal notranslate"><span class="pre">//</span></code> <strong>pattern</strong></p>
 <blockquote>
-<div><p>Tries to match the given <em>regex pattern</em> against entries from the <em>path</em>.
+<div><p>Tries to match the given <em>regex pattern</em> against entries from <em>path</em>.
 The <strong>matching is anchored</strong>, meaning that a <em>pattern</em> only succeeds if it
 can match the whole entry name.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">//</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">&#39;\w+-\d{1,3}\.jpg&#39;</span><span class="p">)</span>
@@ -557,7 +572,13 @@ is performed only against the current path segment.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">entries starting with <code class="docutils literal notranslate"><span class="pre">.</span></code> will be matched except for the navigation
-ones: <code class="docutils literal notranslate"><span class="pre">.</span></code> and <code class="docutils literal notranslate"><span class="pre">..</span></code>.</p>
+ones: <code class="docutils literal notranslate"><span class="pre">.</span></code> and <code class="docutils literal notranslate"><span class="pre">..</span></code>. You can ignore them starting your pattern with
+<code class="docutils literal notranslate"><span class="pre">(?&lt;![.])</span></code> or <code class="docutils literal notranslate"><span class="pre">[^.]</span></code> depending on the use case.</p>
+</div>
+<div class="admonition hint">
+<p class="first admonition-title">Hint</p>
+<p class="last">check the <code class="docutils literal notranslate"><span class="pre">re'...'</span></code> syntax on <a class="reference internal" href="#string-literals"><span class="std std-ref">String literals</span></a> for a concise
+way to define patterns in your scripts.</p>
 </div>
 </div></blockquote>
 <p><strong>path</strong> <code class="docutils literal notranslate"><span class="pre">//</span></code> <strong>callable</strong></p>
@@ -613,6 +634,8 @@ by <em>pysh</em> which are enabled by default when running scripts.</p>
 <a class="reference internal" href="../_apidoc/pysh.transforms.pathstring.html#module-pysh.transforms.pathstring" title="pysh.transforms.pathstring"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pysh.transforms.pathstring</span></code></a> for additional details.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="s1">&#39;images/log.jpg&#39;</span>
 <span class="go">  # _[r&#39;images/logo.jpg&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="s1">&#39;*.jpg&#39;</span>
+<span class="go">  # _[r&#39;*.jpg&#39;]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="s1">&#39;c:\windows&#39;</span>
 <span class="go">  # _[r&#39;c:\windows&#39;]</span>
 </pre></div>
@@ -630,9 +653,9 @@ by <em>pysh</em> which are enabled by default when running scripts.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">while these custom <em>string literals</em> might be useful when writing a quick
-script, there is no guarantee on how they’ll behave on different code editors.
-If the script is to be distributed or maintained by other people, a good
-etiquette would be to avoid its use.</p>
+script, there is no guarantee on how they’ll behave on different code editor
+setups. If the script is to be distributed or maintained by other people a
+good etiquette would be to avoid its use.</p>
 </div>
 <div class="admonition hint">
 <p class="first admonition-title">Hint</p>

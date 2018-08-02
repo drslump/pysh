@@ -1,0 +1,7 @@
+pysh.transforms.shadowing module
+================================
+
+.. automodule:: pysh.transforms.shadowing
+    :members:
+    :undoc-members:
+    :show-inheritance:

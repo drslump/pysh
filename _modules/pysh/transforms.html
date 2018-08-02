@@ -165,12 +165,37 @@
 
 <span class="sd">A transformation module defines at least one of:</span>
 
-<span class="sd">  - ``lexer(code: StringIO, fname: str) -&gt; StringIO``</span>
+<span class="sd">  - ``lexer(code: TextIOBase, fname: str) -&gt; TextIOBase``</span>
 <span class="sd">  - ``parser(root: AST, fname: str) -&gt; AST``</span>
+<span class="sd">  - ``patch(types: Dict[str, type]) -&gt; None``</span>
 
 <span class="sd">Additionally the module symbols referenced on its ``__all__`` will</span>
 <span class="sd">be made available as globals for the script. This allows to define</span>
 <span class="sd">*runtime* functions on the generated code.</span>
+
+<span class="sd">Transform modules might want to patch the DSL types in order to provide</span>
+<span class="sd">additionaly features or modify somehow the standard behaviour. Before</span>
+<span class="sd">compiling some script code the transform will have a chance for doing</span>
+<span class="sd">so via the ``patch`` hook. It&#39;s very important that module transforms</span>
+<span class="sd">don&#39;t try to monkey patch the types by importing them, instead it should</span>
+<span class="sd">use the types provided to the ``patch`` function.</span>
+
+<span class="sd">TODO: Implement patching support for the DSL:</span>
+
+<span class="sd">    - Create a lazy-dict with the types in the DSL</span>
+<span class="sd">    - When a type is required it returns a new subtype</span>
+<span class="sd">    - Pass the dict to the patch function</span>
+<span class="sd">    - Get as result a dict with the types to override</span>
+<span class="sd">    - add a global __PYSH_DSL_OVERRIDES__ with that override</span>
+<span class="sd">    - DSL types implement a __new__ that looks into</span>
+<span class="sd">      __PYSH_DSL_OVERRIDES__, if found return an instance of that</span>
+<span class="sd">      type, otherwise act as normal.</span>
+<span class="sd">    - compiled scripts should get the modified type, a</span>
+<span class="sd">      descendant of the standard one. Other scripts will</span>
+<span class="sd">      not be affected, unless the user interacts with the</span>
+<span class="sd">      DSL directly in some of its code that gets imported</span>
+<span class="sd">      as a module.</span>
+
 
 <span class="sd">.. note:: The code AST is wrapped in a ``FunctionDef`` before calling</span>
 <span class="sd">          a transformer parser. Transforms should expect a top level</span>
@@ -183,13 +208,13 @@
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">tokenize</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">ChainMap</span>
-<span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">IOBase</span><span class="p">,</span> <span class="n">StringIO</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">IOBase</span><span class="p">,</span> <span class="n">TextIOBase</span><span class="p">,</span> <span class="n">StringIO</span>
 <span class="kn">from</span> <span class="nn">importlib</span> <span class="k">import</span> <span class="n">import_module</span>
 <span class="kn">from</span> <span class="nn">types</span> <span class="k">import</span> <span class="n">FunctionType</span><span class="p">,</span> <span class="n">CodeType</span>
 
 <span class="kn">import</span> <span class="nn">pysh</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">TypeVar</span>
 
 
 <span class="n">STARTMARKER</span> <span class="o">=</span> <span class="n">tokenize</span><span class="o">.</span><span class="n">TokenInfo</span><span class="p">(</span><span class="nb">type</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">string</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">line</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -198,7 +223,8 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="zip_prev"><a class="viewcode-back" href="../../_apidoc/pysh.transforms.html#pysh.transforms.zip_prev">[docs]</a><span class="k">def</span> <span class="nf">zip_prev</span><span class="p">(</span><span class="n">generator</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;T&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="zip_prev"><a class="viewcode-back" href="../../_apidoc/pysh.transforms.html#pysh.transforms.zip_prev">[docs]</a><span class="k">def</span> <span class="nf">zip_prev</span><span class="p">(</span><span class="n">generator</span><span class="p">:</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">T</span><span class="p">],</span> <span class="n">initial</span><span class="p">:</span> <span class="n">T</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">T</span><span class="p">],</span><span class="n">T</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot; Helper wrapper for tokens generators that will provide a tuple with</span>
 <span class="sd">        the previous item and the current one. The initial previous item can</span>
 <span class="sd">        be provided.</span>
@@ -221,20 +247,22 @@
 <span class="sd">    It also wraps ``tokenize.tokenize`` so tokens, instead of lines, will be</span>
 <span class="sd">    obtained when iterating.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StringIO</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">StringIO</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">StringIO</span><span class="p">):</span>
-            <span class="n">code</span> <span class="o">=</span> <span class="n">code</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">IOBase</span><span class="p">):</span>
-            <span class="n">code</span> <span class="o">=</span> <span class="n">code</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">code_str</span> <span class="o">=</span> <span class="n">code</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">code</span><span class="p">:</span>
+            <span class="n">code_str</span> <span class="o">=</span> <span class="n">code</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">code_str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
 
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">code_str</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">line</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">column</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TokenIO.iter_tokens"><a class="viewcode-back" href="../../_apidoc/pysh.transforms.html#pysh.transforms.TokenIO.iter_tokens">[docs]</a>    <span class="k">def</span> <span class="nf">iter_tokens</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">tokenize</span><span class="o">.</span><span class="n">TokenInfo</span><span class="p">]:</span>
         <span class="c1">#XXX .generate_tokens is deprecated but .tokenize requires a bytes stream</span>
-        <span class="k">yield from</span> <span class="n">tokenize</span><span class="o">.</span><span class="n">generate_tokens</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">readline</span><span class="p">)</span>
+        <span class="k">yield from</span> <span class="n">tokenize</span><span class="o">.</span><span class="n">generate_tokens</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">readline</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TokenIO.write"><a class="viewcode-back" href="../../_apidoc/pysh.transforms.html#pysh.transforms.TokenIO.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">lines</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
@@ -305,10 +333,11 @@
         <span class="s1">&#39;pysh.transforms.&#39;</span><span class="p">,</span>     <span class="c1"># internal</span>
     <span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transforms</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lexers</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">parsers</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transforms</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lexers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parsers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patchers</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="k">for</span> <span class="n">transform</span> <span class="ow">in</span> <span class="n">transforms</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span>
@@ -358,25 +387,29 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Registering parser from </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">parsers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s1">&#39;parser&#39;</span><span class="p">))</span>
 
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s1">&#39;patch&#39;</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Registering patch from </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">patchers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s1">&#39;patch&#39;</span><span class="p">))</span>
+
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s1">&#39;__all__&#39;</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">symbol</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s1">&#39;__all__&#39;</span><span class="p">):</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Registering symbol </span><span class="si">%s</span><span class="s1"> from </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">transform</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">symbols</span><span class="p">[</span><span class="n">symbol</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">symbol</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Compiler.lex"><a class="viewcode-back" href="../../_apidoc/pysh.transforms.html#pysh.transforms.Compiler.lex">[docs]</a>    <span class="k">def</span> <span class="nf">lex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="n">IOBase</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;&lt;string&gt;&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IOBase</span><span class="p">:</span>
+<div class="viewcode-block" id="Compiler.lex"><a class="viewcode-back" href="../../_apidoc/pysh.transforms.html#pysh.transforms.Compiler.lex">[docs]</a>    <span class="k">def</span> <span class="nf">lex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="n">TextIOBase</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;&lt;string&gt;&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TextIOBase</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">lexer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">lexers</span><span class="p">:</span>
             <span class="n">code</span> <span class="o">=</span> <span class="n">_apply_transform</span><span class="p">(</span><span class="n">lexer</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span>
             <span class="n">code</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># make sure its cursor is reset</span>
 
         <span class="k">return</span> <span class="n">code</span></div>
 
-<div class="viewcode-block" id="Compiler.parse"><a class="viewcode-back" href="../../_apidoc/pysh.transforms.html#pysh.transforms.Compiler.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="n">IOBase</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;&lt;string&gt;&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;_pysh_func&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">:</span>
+<div class="viewcode-block" id="Compiler.parse"><a class="viewcode-back" href="../../_apidoc/pysh.transforms.html#pysh.transforms.Compiler.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="n">TextIOBase</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;&lt;string&gt;&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;_pysh_func&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">:</span>
         <span class="c1"># Get an AST from the input code</span>
-        <span class="n">node</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">code</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+        <span class="n">node</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">code</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>  <span class="c1">#type: ignore</span>
 
         <span class="c1"># Now wrap the script in a function so we can get a reference to it.</span>
         <span class="n">wrapper</span> <span class="o">=</span> <span class="n">ast</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="s1">&#39;def </span><span class="si">{}</span><span class="s1">(): pass&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
-        <span class="n">wrapper</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">body</span>
+        <span class="n">wrapper</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">body</span>  <span class="c1">#type: ignore</span>
 
         <span class="k">for</span> <span class="n">parser</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parsers</span><span class="p">:</span>
             <span class="n">wrapper</span> <span class="o">=</span> <span class="n">_apply_transform</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">wrapper</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span>
@@ -386,7 +419,7 @@
 
         <span class="k">return</span> <span class="n">wrapper</span></div>
 
-<div class="viewcode-block" id="Compiler.compile"><a class="viewcode-back" href="../../_apidoc/pysh.transforms.html#pysh.transforms.Compiler.compile">[docs]</a>    <span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="n">StringIO</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;&lt;string&gt;&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">Any</span><span class="p">]:</span>
+<div class="viewcode-block" id="Compiler.compile"><a class="viewcode-back" href="../../_apidoc/pysh.transforms.html#pysh.transforms.Compiler.compile">[docs]</a>    <span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">:</span> <span class="n">TextIOBase</span><span class="p">,</span> <span class="n">fname</span><span class="o">=</span><span class="s1">&#39;&lt;string&gt;&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[],</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Given some script code it&#39;ll perform any configured transformation</span>
 <span class="sd">        and return a function containing the compiled code. That function can</span>

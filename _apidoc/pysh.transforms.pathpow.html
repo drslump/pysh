@@ -190,7 +190,7 @@ its overload.</p>
 <p>Since <code class="docutils literal notranslate"><span class="pre">**</span></code> has a higher binding precedence than <code class="docutils literal notranslate"><span class="pre">/</span></code> or <code class="docutils literal notranslate"><span class="pre">//</span></code>, it won’t
 evaluate as expected when we have something like:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span> <span class="o">/</span> <span class="s1">&#39;subdir&#39;</span> <span class="o">**</span> <span class="s1">&#39;*.jpg&#39;</span>
-<span class="go">    _ / (&#39;subdir&#39; ** &#39;*.jpg&#39;)  # TypeError: pow not defined for str</span>
+<span class="go">  # _ / (&#39;subdir&#39; ** &#39;*.jpg&#39;)  # TypeError: pow not defined for str</span>
 </pre></div>
 </div>
 <p>With this transform all the <code class="docutils literal notranslate"><span class="pre">**</span></code> operators in the script are modified as to

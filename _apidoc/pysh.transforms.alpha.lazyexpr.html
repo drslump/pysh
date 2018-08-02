@@ -1,0 +1,387 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysh.transforms.alpha.lazyexpr module &mdash; pysh 0.0.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pysh.transforms.alpha.spacey module" href="pysh.transforms.alpha.spacey.html" />
+    <link rel="prev" title="pysh.transforms.alpha.lazybools module" href="pysh.transforms.alpha.lazybools.html" /> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dsl/index.html">Domain Specific Language</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="pysh.html">pysh package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="pysh.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="pysh.transforms.html">pysh.transforms package</a><ul class="current">
+<li class="toctree-l4 current"><a class="reference internal" href="pysh.transforms.html#subpackages">Subpackages</a></li>
+<li class="toctree-l4"><a class="reference internal" href="pysh.transforms.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pysh.html#submodules">Submodules</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Changelog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Unreleased</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html#version-0-0-3">Version 0.0.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html#version-0-0-1">Version 0.0.1</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="pysh.html">pysh package</a> &raquo;</li>
+        
+          <li><a href="pysh.transforms.html">pysh.transforms package</a> &raquo;</li>
+        
+          <li><a href="pysh.transforms.alpha.html">pysh.transforms.alpha package</a> &raquo;</li>
+        
+      <li>pysh.transforms.alpha.lazyexpr module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/_apidoc/pysh.transforms.alpha.lazyexpr.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-pysh.transforms.alpha.lazyexpr">
+<span id="pysh-transforms-alpha-lazyexpr-module"></span><h1>pysh.transforms.alpha.lazyexpr module<a class="headerlink" href="#module-pysh.transforms.alpha.lazyexpr" title="Permalink to this headline">¶</a></h1>
+<p>Infers the requirement of a lambda by detecting which expressions use the
+<code class="docutils literal notranslate"><span class="pre">?</span></code> placeholder.</p>
+<p>Only expressions in an assignment or in parameter positions are transformed.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; pipe.map( &#39;foo&#39; + ?.lower() )
+  # pipe.map( lambda __1, *args: &#39;foo&#39; + __1.lower() )
+</pre></div>
+</div>
+<p>TODO: Support multiple placeholders <cite>?1 + ?2</cite> – <cite>??</cite> is whole varargs</p>
+<dl class="class">
+<dt id="pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer">
+<em class="property">class </em><code class="descclassname">pysh.transforms.alpha.lazyexpr.</code><code class="descname">InferredLambdaTransformer</code><a class="reference internal" href="../_modules/pysh/transforms/alpha/lazyexpr.html#InferredLambdaTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ast.NodeTransformer</span></code></p>
+<dl class="method">
+<dt id="pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer.do_placeholder">
+<code class="descname">do_placeholder</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/alpha/lazyexpr.html#InferredLambdaTransformer.do_placeholder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer.do_placeholder" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">expr</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer.visit_Assign">
+<code class="descname">visit_Assign</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/alpha/lazyexpr.html#InferredLambdaTransformer.visit_Assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer.visit_Assign" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Assign</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer.visit_Call">
+<code class="descname">visit_Call</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/alpha/lazyexpr.html#InferredLambdaTransformer.visit_Call"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer.visit_Call" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Call</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer.visit_Name">
+<code class="descname">visit_Name</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/alpha/lazyexpr.html#InferredLambdaTransformer.visit_Name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.alpha.lazyexpr.InferredLambdaTransformer.visit_Name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Name</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.transforms.alpha.lazyexpr.PlaceholderTransformer">
+<em class="property">class </em><code class="descclassname">pysh.transforms.alpha.lazyexpr.</code><code class="descname">PlaceholderTransformer</code><a class="reference internal" href="../_modules/pysh/transforms/alpha/lazyexpr.html#PlaceholderTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.alpha.lazyexpr.PlaceholderTransformer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ast.NodeTransformer</span></code></p>
+<dl class="method">
+<dt id="pysh.transforms.alpha.lazyexpr.PlaceholderTransformer.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/alpha/lazyexpr.html#PlaceholderTransformer.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.alpha.lazyexpr.PlaceholderTransformer.reset" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pysh.transforms.alpha.lazyexpr.PlaceholderTransformer.visit_Name">
+<code class="descname">visit_Name</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/alpha/lazyexpr.html#PlaceholderTransformer.visit_Name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.alpha.lazyexpr.PlaceholderTransformer.visit_Name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Name</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pysh.transforms.alpha.lazyexpr.PlaceholderVisitor">
+<em class="property">class </em><code class="descclassname">pysh.transforms.alpha.lazyexpr.</code><code class="descname">PlaceholderVisitor</code><span class="sig-paren">(</span><em>fname</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/alpha/lazyexpr.html#PlaceholderVisitor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.alpha.lazyexpr.PlaceholderVisitor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ast.NodeVisitor</span></code></p>
+<dl class="method">
+<dt id="pysh.transforms.alpha.lazyexpr.PlaceholderVisitor.visit_Name">
+<code class="descname">visit_Name</code><span class="sig-paren">(</span><em>node</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/alpha/lazyexpr.html#PlaceholderVisitor.visit_Name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.alpha.lazyexpr.PlaceholderVisitor.visit_Name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Name</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pysh.transforms.alpha.lazyexpr.lexer">
+<code class="descclassname">pysh.transforms.alpha.lazyexpr.</code><code class="descname">lexer</code><span class="sig-paren">(</span><em>code</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/alpha/lazyexpr.html#lexer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.alpha.lazyexpr.lexer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lexer just replaces the <code class="docutils literal notranslate"><span class="pre">?</span></code> placeholder with something that doesn’t
+make the Python parser chock up.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringIO</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pysh.transforms.alpha.lazyexpr.parser">
+<code class="descclassname">pysh.transforms.alpha.lazyexpr.</code><code class="descname">parser</code><span class="sig-paren">(</span><em>node</em>, <em>fname</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/alpha/lazyexpr.html#parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.alpha.lazyexpr.parser" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">AST</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pysh.transforms.alpha.spacey.html" class="btn btn-neutral float-right" title="pysh.transforms.alpha.spacey module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="pysh.transforms.alpha.lazybools.html" class="btn btn-neutral" title="pysh.transforms.alpha.lazybools module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.0.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

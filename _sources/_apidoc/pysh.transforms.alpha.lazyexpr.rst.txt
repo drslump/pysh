@@ -1,0 +1,7 @@
+pysh.transforms.alpha.lazyexpr module
+=====================================
+
+.. automodule:: pysh.transforms.alpha.lazyexpr
+    :members:
+    :undoc-members:
+    :show-inheritance:

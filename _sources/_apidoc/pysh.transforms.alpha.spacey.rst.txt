@@ -1,0 +1,7 @@
+pysh.transforms.alpha.spacey module
+===================================
+
+.. automodule:: pysh.transforms.alpha.spacey
+    :members:
+    :undoc-members:
+    :show-inheritance:

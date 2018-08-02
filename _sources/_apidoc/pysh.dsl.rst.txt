@@ -1,0 +1,7 @@
+pysh.dsl module
+===============
+
+.. automodule:: pysh.dsl
+    :members:
+    :undoc-members:
+    :show-inheritance:

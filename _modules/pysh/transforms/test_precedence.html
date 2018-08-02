@@ -1,0 +1,289 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysh.transforms.test_precedence &mdash; pysh 0.0.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+
+  
+  <script src="../../../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pysh
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../preface.html">Preface</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../dsl/index.html">Domain Specific Language</a></li>
+</ul>
+<p class="caption"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../_apidoc/pysh.html">pysh package</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Changelog:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Unreleased</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html#version-0-0-3">Version 0.0.3</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html#version-0-0-1">Version 0.0.1</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pysh</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../pysh.html">pysh</a> &raquo;</li>
+        
+          <li><a href="../transforms.html">pysh.transforms</a> &raquo;</li>
+        
+      <li>pysh.transforms.test_precedence</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pysh.transforms.test_precedence</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+<span class="kn">import</span> <span class="nn">pytest</span>
+
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="k">import</span> <span class="n">PurePath</span>
+
+<span class="kn">from</span> <span class="nn">pysh.transforms</span> <span class="k">import</span> <span class="n">precedence</span><span class="p">,</span> <span class="n">testutils</span>
+<span class="kn">from</span> <span class="nn">pysh.dsl</span> <span class="k">import</span> <span class="n">Pipeline</span><span class="p">,</span> <span class="n">Redirect</span><span class="p">,</span> <span class="n">Command</span><span class="p">,</span> <span class="n">Pipe</span><span class="p">,</span> <span class="n">Piperr</span>
+
+<span class="n">lex</span><span class="p">,</span> <span class="n">parse</span><span class="p">,</span> <span class="n">comp</span><span class="p">,</span> <span class="n">auto</span> <span class="o">=</span> <span class="n">testutils</span><span class="o">.</span><span class="n">factory</span><span class="p">(</span><span class="n">precedence</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="test_cmd_gt_value"><a class="viewcode-back" href="../../../_apidoc/pysh.transforms.test_precedence.html#pysh.transforms.test_precedence.test_cmd_gt_value">[docs]</a><span class="k">def</span> <span class="nf">test_cmd_gt_value</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="n">lex</span><span class="p">(</span><span class="s1">&#39;cmd &gt; fname&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;cmd ^__PYSH_GT__&amp; fname&#39;</span></div>
+
+<div class="viewcode-block" id="test_value_lt_cmd"><a class="viewcode-back" href="../../../_apidoc/pysh.transforms.test_precedence.html#pysh.transforms.test_precedence.test_value_lt_cmd">[docs]</a><span class="k">def</span> <span class="nf">test_value_lt_cmd</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="n">lex</span><span class="p">(</span><span class="s1">&#39;fname &lt; cmd&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;fname ^__PYSH_LT__&amp; cmd&#39;</span></div>
+
+<div class="viewcode-block" id="test_chaining_redirects_no_warning"><a class="viewcode-back" href="../../../_apidoc/pysh.transforms.test_precedence.html#pysh.transforms.test_precedence.test_chaining_redirects_no_warning">[docs]</a><span class="k">def</span> <span class="nf">test_chaining_redirects_no_warning</span><span class="p">(</span><span class="n">recwarn</span><span class="p">):</span>
+    <span class="n">comp</span><span class="p">(</span><span class="s1">&#39;10 &gt; 20 &gt; 30&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">recwarn</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="test_chaining_comparisons_warns"><a class="viewcode-back" href="../../../_apidoc/pysh.transforms.test_precedence.html#pysh.transforms.test_precedence.test_chaining_comparisons_warns">[docs]</a><span class="k">def</span> <span class="nf">test_chaining_comparisons_warns</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">warns</span><span class="p">(</span><span class="ne">SyntaxWarning</span><span class="p">):</span>
+        <span class="n">comp</span><span class="p">(</span><span class="s1">&#39;10 &lt;= 20 &lt;= 30&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="test_chaining_comparisons_and_redirects_warns"><a class="viewcode-back" href="../../../_apidoc/pysh.transforms.test_precedence.html#pysh.transforms.test_precedence.test_chaining_comparisons_and_redirects_warns">[docs]</a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s1">&#39;not detected yet&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">test_chaining_comparisons_and_redirects_warns</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">warns</span><span class="p">(</span><span class="ne">SyntaxWarning</span><span class="p">):</span>
+        <span class="n">comp</span><span class="p">(</span><span class="s1">&#39;10 &lt; 20 &lt;= 30&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="test_comparisons_with_values"><a class="viewcode-back" href="../../../_apidoc/pysh.transforms.test_precedence.html#pysh.transforms.test_precedence.test_comparisons_with_values">[docs]</a><span class="k">def</span> <span class="nf">test_comparisons_with_values</span><span class="p">():</span>
+    <span class="k">assert</span> <span class="n">auto</span><span class="p">(</span><span class="s1">&#39;10 &gt; 5 and 5 &lt; 10&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span>
+    <span class="k">assert</span> <span class="n">auto</span><span class="p">(</span><span class="s1">&#39;10 &gt; 5 &lt; 10&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span>
+    <span class="k">assert</span> <span class="n">auto</span><span class="p">(</span><span class="s1">&#39;1 &lt; 2 &lt; 3 &lt;= 3&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="test_pipeline_bind_redirects"><a class="viewcode-back" href="../../../_apidoc/pysh.transforms.test_precedence.html#pysh.transforms.test_precedence.test_pipeline_bind_redirects">[docs]</a><span class="k">def</span> <span class="nf">test_pipeline_bind_redirects</span><span class="p">():</span>
+    <span class="n">expr</span> <span class="o">=</span> <span class="n">auto</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span><span class="se">\</span>
+<span class="s1">        cmd = command(&#39;cat&#39;)</span>
+<span class="s1">        expr = &#39;/dev/null&#39; &lt; cmd ^ &#39;errors.txt&#39; | cmd &gt; &#39;output.txt&#39;</span>
+<span class="s1">        return expr</span>
+<span class="s1">    &#39;&#39;&#39;</span><span class="p">)</span>
+    <span class="c1">#print(repr(expr))</span>
+
+    <span class="c1"># We expect the following grouping:</span>
+    <span class="c1"># ((cmd &gt; &#39;/dev/null&#39;) ^ &#39;errors.txt&#39;) | (cmd &gt; &#39;output.txt&#39;)</span>
+    <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Pipe</span>
+    <span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span> <span class="n">expr</span><span class="o">.</span><span class="n">rhs</span>
+    <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">lhs</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Piperr</span>
+    <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">lhs</span><span class="o">.</span><span class="n">lhs</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Redirect</span>
+    <span class="k">assert</span> <span class="n">lhs</span><span class="o">.</span><span class="n">lhs</span><span class="o">.</span><span class="n">rhs</span> <span class="o">==</span> <span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;/dev/null&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">lhs</span><span class="o">.</span><span class="n">rhs</span> <span class="o">==</span> <span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;errors.txt&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">rhs</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Redirect</span>
+    <span class="k">assert</span> <span class="n">rhs</span><span class="o">.</span><span class="n">rhs</span> <span class="o">==</span> <span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;output.txt&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="test_multiline"><a class="viewcode-back" href="../../../_apidoc/pysh.transforms.test_precedence.html#pysh.transforms.test_precedence.test_multiline">[docs]</a><span class="k">def</span> <span class="nf">test_multiline</span><span class="p">():</span>
+    <span class="c1">#TODO: this should be a TokenIO test</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="n">lex</span><span class="p">(</span><span class="s1">&#39;( cmd</span><span class="se">\n</span><span class="s1">    &gt;       </span><span class="se">\n</span><span class="s1">fname</span><span class="se">\n</span><span class="s1">)&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">code</span> <span class="o">==</span> <span class="s1">&#39;( cmd</span><span class="se">\n</span><span class="s1">    ^__PYSH_GT__&amp;       </span><span class="se">\n</span><span class="s1">fname</span><span class="se">\n</span><span class="s1">)&#39;</span></div>
+
+<div class="viewcode-block" id="test_continuation"><a class="viewcode-back" href="../../../_apidoc/pysh.transforms.test_precedence.html#pysh.transforms.test_precedence.test_continuation">[docs]</a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s1">&#39;TokenIO doesn</span><span class="se">\&#39;</span><span class="s1">t handle continuations???!!!!&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">test_continuation</span><span class="p">():</span>
+    <span class="c1">#TODO: this should be a TokenIO test</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="n">lex</span><span class="p">(</span><span class="s1">&#39;cmd </span><span class="se">\\\n</span><span class="s1">&gt;</span><span class="se">\\\n</span><span class="s1">fname&#39;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">code</span> <span class="o">==</span> <span class="s1">&#39;cmd </span><span class="se">\n</span><span class="s1">^__PYSH_GT__&amp;</span><span class="se">\n</span><span class="s1">fname&#39;</span></div>
+
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Iván Montes.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.0.3',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

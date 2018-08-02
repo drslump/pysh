@@ -20,8 +20,8 @@ Submodules
 
    pysh.cli
    pysh.command
+   pysh.dsl
    pysh.env
-   pysh.path
    pysh.stream
    pysh.version
 

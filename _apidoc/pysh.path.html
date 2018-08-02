@@ -27,9 +27,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="pysh.stream module" href="pysh.stream.html" />
-    <link rel="prev" title="pysh.env module" href="pysh.env.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -89,20 +87,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../dsl/index.html">Domain Specific Language</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="pysh.html">pysh package</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="pysh.html#subpackages">Subpackages</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="pysh.html#submodules">Submodules</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="pysh.cli.html">pysh.cli module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysh.command.html">pysh.command module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysh.env.html">pysh.env module</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">pysh.path module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysh.stream.html">pysh.stream module</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pysh.version.html">pysh.version module</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pysh.html">pysh package</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Changelog:</span></p>
 <ul>
@@ -154,8 +140,6 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="pysh.html">pysh package</a> &raquo;</li>
-        
       <li>pysh.path module</li>
     
     
@@ -175,173 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pysh.path">
-<span id="pysh-path-module"></span><h1>pysh.path module<a class="headerlink" href="#module-pysh.path" title="Permalink to this headline">¶</a></h1>
-<div class="admonition-todo admonition" id="index-0">
-<p class="first admonition-title">Todo</p>
-<p>Paths globbing should be lazy too. This means that we need to use
-pathlib internally and expose a custom interface that resolves on str and
-iter. That would allow to do this:</p>
-<div class="last highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">imgs</span> <span class="o">=</span> <span class="n">_</span> <span class="o">//</span> <span class="s1">&#39;*.jpg&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>  <span class="c1"># globbing is computed</span>
-<span class="gp">&gt;&gt;&gt; </span>  <span class="nb">zip</span><span class="p">(</span><span class="n">imgs</span><span class="p">)</span>        <span class="c1"># globbing is computed again</span>
-</pre></div>
-</div>
-</div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">_</span><span class="p">[</span><span class="s1">&#39;*.jpg&#39;</span><span class="p">]</span>  <span class="c1"># slice supports globbing</span>
-</pre></div>
-</div>
-<dl class="docutils">
-<dt>TODO: Implement brace expansion? <a class="reference external" href="https://pypi.org/project/braceexpand/">https://pypi.org/project/braceexpand/</a></dt>
-<dd>Note though that in sh it’s not part of globbing, it just executes
-first and can generate multiple variants of a glob.</dd>
-</dl>
-<p>globbing applies only to a path segment, be it a shell style glob or a
-regex. For shell style though there is automatic segment extraction, so
-<code class="docutils literal notranslate"><span class="pre">foo-*/*.jpg</span></code> is converted to <code class="docutils literal notranslate"><span class="pre">foo-*</span></code> * <code class="docutils literal notranslate"><span class="pre">*.jpg</span></code>. In the case of
-regex this is not possible so only a single segment is allowed. This
-solves one of the main issues with using regexes that was having to
-traverse the whole directory structure to match, now it just applies to
-the current level.</p>
-<blockquote>
-<div>_* ‘<em>.jpg’
-_*</em> ‘{foo,bar}-<a href="#id1"><span class="problematic" id="id2">*</span></a>.jpg’
-_// r’.jpg$’</div></blockquote>
-<p>also functions can be given to <code class="docutils literal notranslate"><span class="pre">//</span></code>, which also operate on a single level:</p>
-<blockquote>
-<div>_// lambda path: path.isFile()</div></blockquote>
-<p>returning True means that the match should be kept. They are left associative,
-so:</p>
-<blockquote>
-<div>_// Path.isFile / ‘.*’ // lambda p: p.name.startswith(‘foo’)</div></blockquote>
-<p>Problem is that there is no clean way to apply a regex recursively, so perhaps
-regexes should always traverse? and try to optimize by look for <code class="docutils literal notranslate"><span class="pre">^</span></code> in it.</p>
-<blockquote>
-<div>_ // ‘.jpg$’  # traverses
-_ // ‘^(foo|bar|baz).*.jpg$   # anchored to a single level
-_ // ‘(foo|bar|baz)/.*.jpg$   # detect directories? won’t work :(</div></blockquote>
-<p>A mitigation might be to allow regex to expand multiple segments but use
-.match semantics, so it’s always anchored and requires the user to opt out
-by using <code class="docutils literal notranslate"><span class="pre">.*</span></code> at the start. WARNING: even if we start anchored, the common
-<code class="docutils literal notranslate"><span class="pre">.*</span></code> will traverse directories, unless we modify the regex so the <cite>.</cite>
-doesn’t match <code class="docutils literal notranslate"><span class="pre">/</span></code> it’s very dangerous and it’s best to keep it at the
-segment level. For traversal we can always do:</p>
-<blockquote>
-<div>paths = _ // ‘**’
-matching = [ x for x in paths if rex.search(str(x)) ]</div></blockquote>
-<p>TODO: Having * for globbing is a bit ugly, ideally we should have 4 ops:</p>
-<blockquote>
-<div><ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">/</span></code>: path segment</li>
-<li><code class="docutils literal notranslate"><span class="pre">//</span></code>: glob or filter-function</li>
-<li><code class="docutils literal notranslate"><span class="pre">**</span></code>: recursive glob or filter-function</li>
-<li><code class="docutils literal notranslate"><span class="pre">^</span></code>: anchored regex glob</li>
-</ul>
-<p>Will binding precedence be an issue here?</p>
-<p>_ / ‘foo’ // ‘<em>.jpg’
-( _ / ‘foo’ ) // ‘</em>.jpg’</p>
-<p>_ / ‘foo’ ** ‘<em>.jpg’
-(_ / (‘foo’ *</em> ‘<a href="#id3"><span class="problematic" id="id4">*</span></a>.jpg’))  # WRONG!!!!!</p>
-<p>_ / ‘foo’ ^ ‘.*.jpg$’
-(_ / ‘foo’) ^ ‘.*.jpg$’</p>
-<p>_ / ‘foo’ ^ ‘(foo|bar).*’ / ‘baz’
-(_ / ‘foo’) ^ (‘(foo|bar)’ / ‘baz’)  # WRONG!</p>
-<p>So ** is out, unless we can solve it easily and without caveats in precedence
-transform, for recursive we can always do:</p>
-<blockquote>
-<div>_ // ‘<strong>/*.jpg’
-_ // ‘</strong>’ // filter_fn   # better, because it can be very expensive! :)
-_ // ‘**’ ^ ‘(foo|bar).*.jpg’ /</div></blockquote>
-<p>The <code class="docutils literal notranslate"><span class="pre">^</span></code> case is more complicated because we can’t mess with it in precedence
-or we would break piperr surely. We could use a different symbol for regex,
-for instance <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>:</p>
-<blockquote>
-<div>_ / ‘foo’ &#64; ‘(foo|bar).*’ / ‘bar.txt’</div></blockquote>
-<p>Or just don’t have an operator for regex, we can always provide a pattern and
-do as with filter functions:</p>
-<blockquote>
-<div>_ / ‘foo’ / _.re(‘(foo|bar).*’) / ‘bar.txt’</div></blockquote>
-<p>And we can make more ergonomic by having a transform for “regex strings”,
-which is probably useful for other use cases:</p>
-<blockquote>
-<div><p>re’(foo|bar).*’  -&gt;  re.compile(r’(foo|bar)’, re.X)</p>
-<p>_’foo’ // re’(foo|bar).*’ / ‘bar.txt’</p>
-</div></blockquote>
-<p>So to sumarize:</p>
-<blockquote>
-<div><code class="docutils literal notranslate"><span class="pre">/</span></code>: path segment(s) verbatim
-<code class="docutils literal notranslate"><span class="pre">//</span></code>: glob + brace-expansion segment(s)
-<code class="docutils literal notranslate"><span class="pre">//</span></code>: segment with anchored regex pattern or function
-<code class="docutils literal notranslate"><span class="pre">**</span></code>: same as // but recursive (ONLY if possible with transform)</div></blockquote>
-</div></blockquote>
-<dl class="docutils">
-<dt>TODO: how to handle in command when a glob expansion produces 0 results?</dt>
-<dd>in Sh and Bash it just provides as argument the actual glob (i.e <a href="#id5"><span class="problematic" id="id6">*</span></a>.jpg),
-(unless globfail is set), but with support for regexes/funcs this is not
-an option. Csh/Fish raise an error.</dd>
-</dl>
-<p>TODO: Sort matches (joining digits so 4&lt;11) ??</p>
-<dl class="class">
-<dt id="pysh.path.Glob">
-<em class="property">class </em><code class="descclassname">pysh.path.</code><code class="descname">Glob</code><span class="sig-paren">(</span><em>path: Union[pysh.path.Path, _ForwardRef('Glob')], pattern: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/path.html#Glob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.path.Glob" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="method">
-<dt id="pysh.path.Glob.filter">
-<code class="descname">filter</code><span class="sig-paren">(</span><em>fn</em><span class="sig-paren">)</span> &#x2192; Generator[[pysh.path.Path, NoneType], NoneType]<a class="reference internal" href="../_modules/pysh/path.html#Glob.filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.path.Glob.filter" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.path.Glob.map">
-<code class="descname">map</code><span class="sig-paren">(</span><em>fn</em><span class="sig-paren">)</span> &#x2192; Generator[[pysh.path.Path, NoneType], NoneType]<a class="reference internal" href="../_modules/pysh/path.html#Glob.map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.path.Glob.map" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.path.Glob.path">
-<code class="descname">path</code><a class="headerlink" href="#pysh.path.Glob.path" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="pysh.path.Glob.pattern">
-<code class="descname">pattern</code><a class="headerlink" href="#pysh.path.Glob.pattern" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.path.Glob.reduce">
-<code class="descname">reduce</code><span class="sig-paren">(</span><em>fn</em>, <em>initial=None</em><span class="sig-paren">)</span> &#x2192; Any<a class="reference internal" href="../_modules/pysh/path.html#Glob.reduce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.path.Glob.reduce" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="pysh.path.GlobRecursive">
-<em class="property">class </em><code class="descclassname">pysh.path.</code><code class="descname">GlobRecursive</code><span class="sig-paren">(</span><em>path: Union[pysh.path.Path, _ForwardRef('Glob')], pattern: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/path.html#GlobRecursive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.path.GlobRecursive" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pysh.path.Glob" title="pysh.path.Glob"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.path.Glob</span></code></a></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pysh.path.GlobRegex">
-<em class="property">class </em><code class="descclassname">pysh.path.</code><code class="descname">GlobRegex</code><span class="sig-paren">(</span><em>path: Union[pysh.path.Path, _ForwardRef('Glob')], pattern: str = None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/path.html#GlobRegex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.path.GlobRegex" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#pysh.path.Glob" title="pysh.path.Glob"><code class="xref py py-class docutils literal notranslate"><span class="pre">pysh.path.Glob</span></code></a></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pysh.path.Path">
-<em class="property">class </em><code class="descclassname">pysh.path.</code><code class="descname">Path</code><a class="reference internal" href="../_modules/pysh/path.html#Path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.path.Path" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">pathlib.PosixPath</span></code></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="pysh.path.Segment">
-<em class="property">class </em><code class="descclassname">pysh.path.</code><code class="descname">Segment</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/path.html#Segment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.path.Segment" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Helper to wrap a value to signal it’s part of a path</p>
-<dl class="attribute">
-<dt id="pysh.path.Segment.value">
-<code class="descname">value</code><a class="headerlink" href="#pysh.path.Segment.value" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
+  <div class="section" id="pysh-path-module">
+<h1>pysh.path module<a class="headerlink" href="#pysh-path-module" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
@@ -349,15 +168,6 @@ an option. Csh/Fish raise an error.</dd>
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="pysh.stream.html" class="btn btn-neutral float-right" title="pysh.stream module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="pysh.env.html" class="btn btn-neutral" title="pysh.env module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

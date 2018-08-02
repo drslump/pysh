@@ -69,6 +69,8 @@ there is a setup step that is later used as many times as required.
 Path factory: _
 ~~~~~~~~~~~~~~~
 
+.. TODO:: move to operators path section??
+
 Allows to easily define paths in a concise style. The symbol by itself refers
 to the *current working directory* (the ``$PWD`` variable in *Bash*).
 
@@ -141,7 +143,7 @@ Creating a command for an external utility is as simple as calling the ``command
 factory function:
 
 >>> grep = command('grep')
-    CommandBuilder<grep>
+    Command<grep>
 
 Now we can *build an invocation* by providing arguments to it. There are two
 ways to do so, with slightly different behaviors:
@@ -152,13 +154,13 @@ ways to do so, with slightly different behaviors:
         No need to think about strange quoting and escaping rules.
 
         >>> grep('-e', 'foo bar')
-            grep -e 'foo bar'
+          # grep -e 'foo bar'
 
         Keyword arguments are automatically converted to options following a
         set of rules which can be tuned when creating a command.
 
         >>> grep('foo bar', 'myfile.txt', A=3, line_buffered=True)
-            grep -A 3 --line-buffered 'foo bar' myfile.txt
+          # grep -A 3 --line-buffered 'foo bar' myfile.txt
 
         .. Hint:: See :class:`pysh.command.ExternalCommandSpec` for more details.
 
@@ -168,48 +170,64 @@ ways to do so, with slightly different behaviors:
         shell would do, so one or more arguments can be added to the command.
 
         >>> grep['-e   foo    bar']
-            grep -e foo bar
+            grep('-e', 'foo', 'bar')
+          # grep -e foo bar
         >>> grep[r'-e escaped\ whitespace\ \ is\ \ preserved']
-            grep -e "escaped whitespace  is  preserved"
+            grep('-e', 'escaped whitespace  is  preserved')
+          # grep -e "escaped whitespace  is  preserved"
 
-        .. Caution:: There is no parsing of quoted strings on the value, **only
-                     whitespace** has special meaning. If you need to provide some
-                     text with quotes use the **call** style.
 
-        .. TODO:: experiment with supporing globing inside slice syntax.
+        Additionally it detects paths and globbing syntax, automatically creating
+        :class:`pysh.dsl.Path` and :class:`pysh.dsl.GlobMatcher` instances for
+        those.
 
-Each time we *call* or *slice* on a command a cloned instance is returned with the
-changes, this usually works transparently due to the chained nature of the DSL.
+        >>> ls['*.jpg']
+            ls( _['*.jpg'] )
+          # ls file1.jpg file2.jpg ...
+        >>> tar['-cvf archive.tar imgs/*.{jpg,gif}']
+            tar( '-cvf', archive.tar, _['imgs/*.{jpg,gif}'] )
+          # tar -cvf archive.tar imgs/file1.jpg imgs/file2.gif ...
+
+        .. Caution::
+            There is no parsing of quoted strings on the value, only *whitespace*
+            and *globbing syntax* have special meaning. If you need to provide some
+            text with quotes use the **call** style.
+
+
+Each time we *call* or *slice* on a command a **cloned instance is returned** with
+the changes, this usually works transparently due to the chained nature of the DSL.
 However if you try to use a more imperative style you need to be aware of it:
 
 >>> grep['-e']
 >>> grep('foo')
-    grep foo  # not what we might be expecting
+  # grep foo  # not what we might be expecting
 >>> grep['-e']('foo')
-    grep -e foo  # now it works
+  # grep -e foo  # now it works
 >>> a_grep = grep['-e']
 >>> a_grep = a_grep('foo')
 >>> a_grep
-    grep -e foo  # also works since we're using the returned copy
+  # grep -e foo  # also works since we're using the returned copy
 
-Evaluation of the built command happens explicitly when we cast it to a
-primitive value:
+Evaluation of the built command happens explicitly when we cast it to a primitive
+value:
 
 >>> str( grep['foo'] )
-    executes and returns stdout as a string
+  # executes and returns stdout as a string
 >>> bytes( grep['foo'] )
-    executes and returns stdout as binary data
+  # executes and returns stdout as binary data
 >>> int( grep['foo'] )
-    executes and returns the exit status code
+  # executes and returns the exit status code
 >>> bool( grep['foo'] )
-    executes and returns True if it exited with 0, False otherwise
+  # executes and returns True if it exited with 0, False otherwise
 >>> for line in grep['foo']:
 >>>     print(line)
-    execution is also triggered by iteration
+  # execution is also triggered by iteration
 
 
 AutoExpr transformation
 ~~~~~~~~~~~~~~~~~~~~~~~
+
+.. TODO:: move to operators??
 
 A key ergonomics feature is a transformation applied to scripts by *pysh*
 where it will detect expressions that form a statement on their own,
@@ -228,6 +246,8 @@ to overcome the requirement of casting it to force its evaluation.
 
 Shell command: sh
 ~~~~~~~~~~~~~~~~~
+
+.. TODO:: move out to a section about utilities.
 
 There are many good reasons to use an *sh compatible shell* to run a command,
 sometimes it's just easier to express something with its syntax, maybe we're
@@ -281,6 +301,25 @@ to use the :ref:`Lazy: <= 🚧` operator with a raw multiline literal:
     *dash* in *posix mode*. However restricting to *posix syntax* is recommended
     if you want to keep the script portable.
 
+
+Pipeline
+--------
+
+A pipeline groups *one or more commands* with their redirection configurations.
+It's a helpful abstraction to handle arbitrarily complex chains of commands as
+a simple entity.
+
+>>> pipeline = cat | wc['-l']
+  # the above generates a pipeline composed of two commands
+>>> pipeline > 'results.txt'
+  # redirects the output of the pipeline to a file
+>>> echo("foo") | pipeline
+  # feed some content to the first command in the pipeline
+
+
+.. Note::
+    *Command* and *Pipeline* are used interchangeably in the documentation since
+    almost all operations available for a command are also exposed in a pipeline.
 
 
 

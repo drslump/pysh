@@ -27,9 +27,7 @@
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="pysh.transforms.restring module" href="pysh.transforms.restring.html" />
-    <link rel="prev" title="pysh.transforms.precedence module" href="pysh.transforms.precedence.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 
   
   <script src="../_static/js/modernizr.min.js"></script>
@@ -89,19 +87,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../dsl/index.html">Domain Specific Language</a></li>
 </ul>
 <p class="caption"><span class="caption-text">API Reference:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="pysh.html">pysh package</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="pysh.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="pysh.transforms.html">pysh.transforms package</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="pysh.transforms.html#subpackages">Subpackages</a></li>
-<li class="toctree-l4 current"><a class="reference internal" href="pysh.transforms.html#submodules">Submodules</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="pysh.html#submodules">Submodules</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="pysh.html">pysh package</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Changelog:</span></p>
 <ul>
@@ -153,10 +140,6 @@
     
       <li><a href="../index.html">Docs</a> &raquo;</li>
         
-          <li><a href="pysh.html">pysh package</a> &raquo;</li>
-        
-          <li><a href="pysh.transforms.html">pysh.transforms package</a> &raquo;</li>
-        
       <li>pysh.transforms.protectnames module</li>
     
     
@@ -176,64 +159,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-pysh.transforms.protectnames">
-<span id="pysh-transforms-protectnames-module"></span><h1>pysh.transforms.protectnames module<a class="headerlink" href="#module-pysh.transforms.protectnames" title="Permalink to this headline">¶</a></h1>
-<p>Detects shadowings of the <code class="docutils literal notranslate"><span class="pre">_</span></code> variable (used for <em>paths</em>), producing a
-syntax error when detected.</p>
-<p>Some programing styles use <code class="docutils literal notranslate"><span class="pre">_</span></code> as a way to ignore a result, which would
-break the DSL.</p>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">At some point this transformation should not report an error but
-rename the references to the protected name.</p>
-</div>
-<dl class="class">
-<dt id="pysh.transforms.protectnames.ProtectNamesTransformer">
-<em class="property">class </em><code class="descclassname">pysh.transforms.protectnames.</code><code class="descname">ProtectNamesTransformer</code><span class="sig-paren">(</span><em>names: Iterable[str]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysh/transforms/protectnames.html#ProtectNamesTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.protectnames.ProtectNamesTransformer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ast.NodeTransformer</span></code></p>
-<p>Shadowing of the given names is forbidden.</p>
-<dl class="method">
-<dt id="pysh.transforms.protectnames.ProtectNamesTransformer.visit_AnnAssign">
-<code class="descname">visit_AnnAssign</code><span class="sig-paren">(</span><em>node: _ast.AnnAssign</em><span class="sig-paren">)</span> &#x2192; _ast.AnnAssign<a class="reference internal" href="../_modules/pysh/transforms/protectnames.html#ProtectNamesTransformer.visit_AnnAssign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.protectnames.ProtectNamesTransformer.visit_AnnAssign" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.transforms.protectnames.ProtectNamesTransformer.visit_Assign">
-<code class="descname">visit_Assign</code><span class="sig-paren">(</span><em>node: _ast.Assign</em><span class="sig-paren">)</span> &#x2192; _ast.Assign<a class="reference internal" href="../_modules/pysh/transforms/protectnames.html#ProtectNamesTransformer.visit_Assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.protectnames.ProtectNamesTransformer.visit_Assign" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.transforms.protectnames.ProtectNamesTransformer.visit_AsyncFor">
-<code class="descname">visit_AsyncFor</code><span class="sig-paren">(</span><em>node: _ast.AsyncFor</em><span class="sig-paren">)</span> &#x2192; _ast.AsyncFor<a class="reference internal" href="../_modules/pysh/transforms/protectnames.html#ProtectNamesTransformer.visit_AsyncFor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.protectnames.ProtectNamesTransformer.visit_AsyncFor" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.transforms.protectnames.ProtectNamesTransformer.visit_AugAssign">
-<code class="descname">visit_AugAssign</code><span class="sig-paren">(</span><em>node: _ast.AugAssign</em><span class="sig-paren">)</span> &#x2192; _ast.AugAssign<a class="reference internal" href="../_modules/pysh/transforms/protectnames.html#ProtectNamesTransformer.visit_AugAssign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.protectnames.ProtectNamesTransformer.visit_AugAssign" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.transforms.protectnames.ProtectNamesTransformer.visit_For">
-<code class="descname">visit_For</code><span class="sig-paren">(</span><em>node: _ast.For</em><span class="sig-paren">)</span> &#x2192; _ast.For<a class="reference internal" href="../_modules/pysh/transforms/protectnames.html#ProtectNamesTransformer.visit_For"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.protectnames.ProtectNamesTransformer.visit_For" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.transforms.protectnames.ProtectNamesTransformer.visit_alias">
-<code class="descname">visit_alias</code><span class="sig-paren">(</span><em>node: _ast.alias</em><span class="sig-paren">)</span> &#x2192; _ast.alias<a class="reference internal" href="../_modules/pysh/transforms/protectnames.html#ProtectNamesTransformer.visit_alias"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.protectnames.ProtectNamesTransformer.visit_alias" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="pysh.transforms.protectnames.ProtectNamesTransformer.visit_withitem">
-<code class="descname">visit_withitem</code><span class="sig-paren">(</span><em>node: _ast.withitem</em><span class="sig-paren">)</span> &#x2192; _ast.withitem<a class="reference internal" href="../_modules/pysh/transforms/protectnames.html#ProtectNamesTransformer.visit_withitem"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.protectnames.ProtectNamesTransformer.visit_withitem" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="pysh.transforms.protectnames.parser">
-<code class="descclassname">pysh.transforms.protectnames.</code><code class="descname">parser</code><span class="sig-paren">(</span><em>node: _ast.AST</em><span class="sig-paren">)</span> &#x2192; _ast.AST<a class="reference internal" href="../_modules/pysh/transforms/protectnames.html#parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysh.transforms.protectnames.parser" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
+  <div class="section" id="pysh-transforms-protectnames-module">
+<h1>pysh.transforms.protectnames module<a class="headerlink" href="#pysh-transforms-protectnames-module" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
@@ -241,15 +168,6 @@ rename the references to the protected name.</p>
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="pysh.transforms.restring.html" class="btn btn-neutral float-right" title="pysh.transforms.restring module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="pysh.transforms.precedence.html" class="btn btn-neutral" title="pysh.transforms.precedence module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

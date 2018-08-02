@@ -1,0 +1,7 @@
+pysh.transforms.test\_shadowing module
+======================================
+
+.. automodule:: pysh.transforms.test_shadowing
+    :members:
+    :undoc-members:
+    :show-inheritance:

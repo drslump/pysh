@@ -13,4 +13,6 @@ Submodules
 
    pysh.transforms.alpha.bangexpr
    pysh.transforms.alpha.lazybools
+   pysh.transforms.alpha.lazyexpr
+   pysh.transforms.alpha.spacey
 
