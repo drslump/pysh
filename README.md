@@ -11,7 +11,7 @@ Python for shell scripting
  - Syntax is standard Python (full IDE support)
  - Ergonomic (pipes, redirections, autoexpr, paths, ...)
  - Sensible defaults (i.e. docopt, env defaults, logging, ...)
- - Strong support for paralelism
+ - Strong support for parallelism
  - Biased towards unix scripting (barebones windows support)
  - Wrappers for common commands (cat, head, xargs, ...)
  - No support for interactive mode!
