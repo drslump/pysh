@@ -75,6 +75,8 @@ class Path(pathlib.PosixPath):
         an external crate for natural sorting.
         http://natsort.readthedocs.io/en/master/howitworks.html#sorting-filesystem-paths
 
+    TODO: ``with _/'path':`` changes directory
+
     """
 
     def __hash__(self):
@@ -179,6 +181,7 @@ class Path(pathlib.PosixPath):
         return self.exists()
 
     ## Helpers accept an optional subpath unlike pahtlib
+    #TODO: support for the other helpers in pathlib and equivalents to bash -X tests
 
     def exists(self, subpath=None):
         """
@@ -189,8 +192,6 @@ class Path(pathlib.PosixPath):
         else:
             return super().exists()
 
-    #TODO: support for the other helpers in pathlib
-
     def is_empty(self, subpath=None):
         """
         Check if a path refers to an empty file.
@@ -200,6 +201,7 @@ class Path(pathlib.PosixPath):
         return p.stat().st_size() == 0
 
 
+#TODO: support comparisons against paths/str: if fname == _'foo?.jpg' -- if fname in _'foo?.jpg'
 class PathMatcher:
     """
     Base class for path matcher types.
@@ -411,8 +413,6 @@ class ExpansionMatcher(PathMatcher):
 Arg = namedtuple('Arg', ('positional', 'keywords'))
 
 
-
-
 class BaseSpec:  #TODO: (meta=ABCMeta) breaks?
     """
     Base abstract class for representing how a command should execute.
@@ -566,6 +566,57 @@ class Pipeline:  #TODO: breaks?? (meta=ABCMeta):
         return Reckless(self)
 
 
+def lex_command_slice(text):
+    """
+    Custom lexer for the command slices:
+
+    - whitespace separates arguments
+    - detects paths/globs
+    - preserves escapes
+    """
+    opens = ('{', '[')
+    closes = {'}': '{', ']': '['}
+    counters = {'{':0, '[': 0}
+    value = []
+    esc = ispath = False
+    for ch in text + '  ':  # suffix with space so we trigger the last value
+        if esc:
+            value.append(ch)
+            esc = False
+            continue
+
+        if ch == '\\':
+            esc = True
+            value.append(ch)
+            continue
+
+        if ch in opens:
+            counters[ch] += 1
+            ispath = True
+        elif ch in closes:
+            counters[closes[ch]] -= 1
+        elif ch in ('*', '?', '/', '\\'):
+            ispath = True
+        elif ch.isspace() and all(x == 0 for x in counters.values()):
+            if len(value) == 0:
+                continue
+            elif ispath:
+                yield Path()[ ''.join(value) ]
+                ispath = False
+            else:
+                yield ''.join(value)
+
+            value = []
+            continue
+
+        value.append(ch)
+
+    assert len(value) == 0
+
+    if any(x != 0 for x in counters.values()):
+        raise SyntaxError('Unbalanced expression')
+
+
 class Command(Pipeline):
     """
     .. automethod:: __lshift__
@@ -592,7 +643,7 @@ class Command(Pipeline):
             args.extend('{!r}'.format(v) for v in arg.positional)
             args.extend('{}={!r}'.format(k,v) for k,v in arg.keyword.items())
 
-        cmd = '{} {}'.format(self._spec.command, ' '.join(args))
+        cmd = '{} {}'.format(self._spec.program, ' '.join(args))
         return '`{}`'.format(cmd.strip())
 
     def __getitem__(self, key) -> 'Command':
@@ -608,17 +659,13 @@ class Command(Pipeline):
 
         clone: Command = self.__copy__()
 
-        #TODO: detect paths/globs and create Path instances as args
-
         if type(key) != str:
             clone._args.append(Arg((key,), {}))
             return clone
 
-        args = re.split(r'(?<!\\)\s', key)
-        for arg in args:
-            if arg == '' or arg.isspace():
-                continue
-            arg = re.sub(r'\\(\s)', r'\1', arg)  # unescape white space
+        for arg in lex_command_slice(key):
+            if isinstance(arg, str):
+                arg = unescape(arg)
             clone._args.append(Arg((arg,), {}))
 
         return clone

@@ -39,10 +39,10 @@ class Arguments:
             - short options can be grouped ``-abc``
             - options have their value after ``=``
             - ``--`` stops interpreting options
-            - anything else is an argument under ``_``
+            - anything else is an argument under ``...`` (Ellipsis type)
         """
         args = cast(Dict[str, List[TArgItem]], defaultdict(lambda: []))
-        args['_'] = []
+        args[...] = []
 
         parse_options = True
         for arg in argv:
@@ -64,16 +64,16 @@ class Arguments:
 
                     continue
 
-            args['_'].append(arg)
+            args[...].append(arg)
 
-        #hack: mypy breaks if we construct with cls(...)
+        #XXX mypy breaks if we construct with cls(...)
         return Arguments(dict(args), raise_missing=False)
 
     @classmethod
     def from_docopt(cls, args: TArgDict):
         """ Wraps the result of docopt parser.
         """
-        #hack: mypy breaks if we construct with cls(...)
+        #XXX mypy breaks if we construct with cls(...)
         return Arguments(args)
 
     def __init__(self, args: TArgDict, *, raise_missing=True) -> None:

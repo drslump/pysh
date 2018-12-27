@@ -14,15 +14,15 @@ def test_command_factory():
     cmd = command('cmd')
     assert type(cmd) is Command
     assert type(cmd._spec) is ExternalSpec
-    assert cmd._spec.command == 'cmd'
+    assert cmd._spec.program == 'cmd'
 
     cmd1, cmd2 = command('cmd1', 'cmd2')
     assert type(cmd1) is Command
     assert type(cmd1._spec) is ExternalSpec
-    assert cmd1._spec.command == 'cmd1'
+    assert cmd1._spec.program == 'cmd1'
     assert type(cmd2) is Command
     assert type(cmd2._spec) is ExternalSpec
-    assert cmd2._spec.command == 'cmd2'
+    assert cmd2._spec.program == 'cmd2'
 
 
 # pipe

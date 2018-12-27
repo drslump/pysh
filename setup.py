@@ -79,6 +79,7 @@ setup(
             "sphinx",
             "sphinx_rtd_theme",
             "sphinxcontrib-plantuml",
+            "sphinx-autodoc-typehints",
             "recommonmark",
         ],
     },

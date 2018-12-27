@@ -56,31 +56,32 @@ class ExternalSpec(BaseSpec):
     Handles arguments according to the following rules:
 
     - keywords always go before *positional* arguments except for ``_``
-    - single char keywords get a ``-`` prefix (*shortpre* setting)
-    - multi char keywords get a ``--`` prefix (*longpre* setting)
+    - single char keywords get a ``-`` prefix (*short* setting)
+    - multi char keywords get a ``--`` prefix (*long* setting)
     - keywords starting with ``_`` are not prefixed (with *hyphenate* setting)
     - keyword ``_`` can contain *positional arguments*
     - ``an_option`` -> ``an-option`` (*hyphenate* setting)
     - *False* and *None* values for keywords don't produce an option
-    - when *argspre* is set it's used before the positional arguments
-    - keyword values produce an additional argument (*valuepre* setting)
+    - when *args* is set it's used before the positional arguments
+    - keyword values produce an additional argument (*value* setting)
     - iterables get expanded, repeating keyword if *repeat* is *True* or
       joining them with the value of *repeat* if it's a string. When *repeat*
       is *False* additional arguments are placed after the option.
     """
-    __slots__ = ('command', 'ok_status', 'hyphenate', 'repeat', 'shortpre', 'longpre', 'valuepre', 'falsepre', 'argspre')
+    __slots__ = ('command', 'ok_status', 'hyphenate', 'repeat', 'short', 'long', 'value', 'false', 'args')
 
-    def __init__(self, command: str, *,
+    def __init__(self, program: str, *,
                  ok_status=(0,), hyphenate=True, repeat: Union[bool,str] = True,
-                 shortpre='-', longpre='--',
-                 valuepre: Optional[str] = None, argspre: Optional[str] = None) -> None:
-        self.command = command
+                 short='-', long='--',
+                 value: Optional[str] = None, args: Optional[str] = None) -> None:
+
+        self.program = program
         self.ok_status = tuple([ok_status]) if isinstance(ok_status, int) else ok_status
         self.hyphenate = hyphenate
-        self.shortpre = shortpre
-        self.longpre = longpre
-        self.valuepre = valuepre
-        self.argspre = argspre
+        self.shortpre = short
+        self.longpre = long
+        self.valuepre = value
+        self.argspre = args
         self.repeat = repeat
 
     def _parse_option(self, option, value) -> List[str]:
@@ -126,9 +127,7 @@ class ExternalSpec(BaseSpec):
             #TODO: We need to resolve value at this point to make repeated options reliable
             result.extend(self._parse_option(option, value))
 
-        #TODO: Output only once for run of arguments (and only if one of them starts with shortpre or longpre)
-        if self.argspre:
-            result.append(self.argspre)
+        idx_positional = len(result)
 
         #TODO: We need to resolve arg at this point
         for arg in positional:
@@ -137,19 +136,32 @@ class ExternalSpec(BaseSpec):
 
             result.extend(str(x) for x in arg)
 
+        if self.argspre and self.argspre not in result:
+            test = lambda x: x.startswith(self.shortpre) or x.startswith(self.longpre)
+            if any(test(x) for x in result[idx_positional:]):
+                result.insert(idx_positional, self.argspre)
+
         return result
 
     def get_args_for(self, builder: 'Command'):
         args = []
         for arg in builder._args:
-            args.extend(self.parse_args(arg.positional, arg.keywords))
+            result = self.parse_args(arg.positional, arg.keywords)
+
+            # Make sure we only output argspre once
+            if self.argspre and self.argspre in result:
+                if self.argspre in args:
+                    result = [x for x in result if x != self.argspre]
+
+            args.extend(result)
+
         return args
 
     def run(self, builder: 'Command'):
         raise NotImplementedError('sorry!')
 
     def __repr__(self):
-        return '{}{{{}}})'.format(self.__class__.__name__, self.command)
+        return '{}{{{}}})'.format(self.__class__.__name__, self.program)
 
 
 

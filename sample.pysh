@@ -1,0 +1,123 @@
+#!/usr/bin/env pysh
+#pysh: --verbose
+"""
+Performs a search on YT (using web crawling) and for each video it'll analyze the links
+on the description
+
+Usage:
+    gather-campaign.pysh QUERY FILTER...
+
+i.e:
+    gather-campaign.pysh '"World of Tanks" AND ("bit.ly" OR "goo.gl")' com.plarium.vikings id96681231441
+"""
+
+import sys
+from pysh import _, command, ENV, exec, Exit1Error
+from pysh.dsl import Pipeline
+from pysh.dsl.sh import ShCommand, ShSpec
+sh = ShCommand(ShSpec())
+
+import logging
+log = logging.getLogger(__name__)
+
+from pysh.cli import Arguments
+from docopt import docopt
+argv = sys.argv
+args = Arguments.from_docopt(docopt(__doc__))
+
+cat = command('cat')
+echo = command('echo')
+errcho = echo > sys.stderr
+
+import json
+class pipe:
+    json = command(json.dumps)
+    map = lambda *args, **kwargs: None
+    class text:
+        map = lambda *args, **kwargs: None
+
+
+#############
+
+py, jq, sort, uniq, gzip, grep = command('python', 'jq', 'sort', 'uniq', 'gzip', 'grep')
+
+yt_web_search = py('scripts/yt-web-search.py')
+grab_video = py('views/grab-video.py')
+links_extract = py('scripts/influencers/links-extract.py')
+links_resolve = py('scripts/influencers/links-resolve.py')
+links_clicks = py('scripts/influencers/links-clicks.py')
+
+
+exec <<= yt_web_search(args['QUERY']) >'campaign.ids.txt'
+
+_/'campaign.ids.txt' \
+| grab_video.details('-') \
+>'campaign.videos.jsonl'
+
+_/'campaign.videos.jsonl' | links_extract >'campaign.links.jsonl'
+
+( _/'campaign.links.jsonl'
+| jq.raw ('.link')
+| sort | uniq
+| links_resolve
+> _/'campaign.resolved.jsonl'
+)
+
+
+log.info('Filtering links with: %s', args['FILTER'])
+
+(
+    cat('campaign.resolved.jsonl')
+    | ~grep.i(regexp=args.as_strs('FILTER'))
+    >'campaign.targets.jsonl'
+)
+
+if _('campaign.targets.jsonl').is_empty():
+    raise Exit1Error(f"No links matched the given filters: {args['FILTER']}")
+
+exec(
+    _/'campaign.targets.jsonl'
+    | jq.raw('.link')
+    | sort | uniq
+    | links_clicks
+    > 'campaign.clicks.jsonl'
+)
+
+if _.is_empty('campaign.clicks.jsonl'):
+    # Generate dummy contents for clicks if we couldn't fetch any
+    dict(link='dummy.com', clicks=0, created=1512469822) \
+    | pipe.map(json.dumps) \
+    > 'campaign.clicks.jsonl'
+
+(
+    r"""
+        WITH link_count AS (
+        SELECT link, COUNT(*) as link_count
+        FROM links
+        GROUP BY link
+        )
+        SELECT
+            v.channel, v.ident, l.link,
+            t.target, l.line, lc.link_count, c.clicks,
+            json_extract(v.stats, '$.views') as views,
+            REPLACE(ROUND(c.clicks*1.0/json_extract(v.stats, '$.views'), 6), '.', ',') as ctr,
+            DATE(v.published_at, 'unixepoch', 'utc') as published_at,
+            DATE(c.created, 'unixepoch', 'utc') as created_at
+        FROM videos v
+        INNER JOIN links l
+        ON v.ident = l.video
+        INNER JOIN link_count lc
+        ON l.link = lc.link
+        INNER JOIN targets t
+        ON l.link = t.link
+        LEFT JOIN clicks c
+        ON l.link = c.link
+        ORDER BY v.published_at
+    """
+    | sh.jqlite(format='tsv')(
+        'campaign.videos.jsonl@videos',
+        'campaign.clicks.jsonl@clicks',
+        'campaign.targets.jsonl@targets',
+        'campaign.links.jsonl@links')
+    | pipe.text.map(str.replace, ..., '\t', ';')
+)

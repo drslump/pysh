@@ -12,9 +12,8 @@ __all__ = [
     '_', 'PWD',
     'ENV',
     'exec',
-    #TODO: these break sphinx!
-    # 'command',
-    # 'sh',
+    'command',
+    'sh',
     # Augmented at the bottom for all the Exit stuff
 ]
 
@@ -26,6 +25,16 @@ sh = Command(ShSpec())
 
 
 class ExecOverride:
+    """
+    Implements the override for the ``exec`` builtin that allows to invoke
+    pysh pipelines. While normally we can rely on the autoexpr transform to
+    automatically call expressions, some IDEs will warn about having an
+    statement without side-effects, to accomodate for that users can use this
+    augmented ``exec``.
+
+    TODO: Merge this interface with ``sh``?
+    """
+
     def __lshift__(self, rhs):
         """
         Allows the ``<<`` operator to provide the pipeline to execute.
@@ -35,8 +44,8 @@ class ExecOverride:
     def __ilshift__(self, rhs):
         """
         To ensure we evaluate the whole pipeline we override the inplace operator
-        ``<<=`` so it doesn't replace the value of ``exec``, it simply invokes the
-        the pipeline and discards the result.
+        ``<<=`` so it doesn't replace ``exec``, it simply invokes the the pipeline
+        and discards the result.
         """
         self(rhs)
         return self

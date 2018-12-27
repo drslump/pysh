@@ -42,6 +42,20 @@ When interacting with Python functions it's interesting to read text though:
 
 
 
+TODO: Add a `unless` stream that buffers the data and only outputs if the
+      command exited with error. This is handy for stderr since we might
+      only want to check the output if it failed but not get normal progress.
+
+      >>> git['status'] ^ unless
+
+      Also a way to redirect to the logger:
+
+      >>> git['status'] > log
+      # outputs to log, tries to infer severity by checking the lines for patterns
+      >>> git['status'] > log.debug
+      # outputs to log, always in debug
+
+
 
 stdin | wc['-l']        # buffered input
 stdin.raw | wc['-l']    # unbuffered input
